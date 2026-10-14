@@ -213,15 +213,17 @@ static int m1_thcm1_fixture_unique_ids(
   /* Sort borrowed IDs, not records: replay order stays unchanged. */
   for(int pair_ids = 0; pair_ids < 2; ++pair_ids) {
     for(size_t i = 0; i < collection->record_count; ++i) {
-      ids[i] = pair_ids ? collection->records[i].pair_id : collection->records[i].case_id;
+      ids[i]
+            = pair_ids ? collection->records[i].pair_id : collection->records[i].case_id;
     }
     qsort(ids, collection->record_count, sizeof(*ids), m1_thcm1_fixture_compare_ids);
     for(size_t i = 1; i < collection->record_count; ++i) {
       if(strcmp(ids[i - 1], ids[i]) == 0) {
         free(ids);
         m1_thcm1_fixture_set_error(
-              error, error_size, pair_ids ? "fixture has duplicate pair IDs"
-                                         : "fixture has duplicate case IDs");
+              error, error_size,
+              pair_ids ? "fixture has duplicate pair IDs"
+                       : "fixture has duplicate case IDs");
         return 0;
       }
     }
@@ -532,7 +534,8 @@ int m1_thcm1_fixture_load(
   fclose(file);
   if(!valid_end) {
     m1_thcm1_fixture_set_error(
-          error, error_size, "fixture has a missing end marker, trailing data or a read error");
+          error, error_size,
+          "fixture has a missing end marker, trailing data or a read error");
     m1_thcm1_fixture_free(collection);
     return 0;
   }

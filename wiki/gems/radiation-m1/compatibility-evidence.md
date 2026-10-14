@@ -2,9 +2,30 @@
 
 This page limits claims to the library operations present in the checkout.
 The neutrino M1 implementation has one primary numerical path, with
-a flagged Eulerian Minerbo admissibility fallback for finite non-PSD or
-invalid exact-zero-flux closure candidates. The pointwise operations and source-update contract below describe
-that path; they do not establish a downstream grid evolution.
+a flagged Eulerian Minerbo admissibility fallback for finite candidates that
+fail pressure or Eulerian covariance positivity, or fail tensor validation at
+exact zero flux. The pointwise operations and source-update contract below
+describe that path; they do not establish a downstream grid evolution.
+
+Within the retained pointwise corpus, each named record whose THC reference
+output fails the runtime pressure-trace or Eulerian covariance positivity
+guard is classified by name as a fallback-policy local check, not a cross-code
+replay verdict. For
+`rngpkt-v2-rd-radiation-anchor-realizability-cone-a01`, whose endpoints share
+the identity spatial metric and an x-aligned flux, the test classifies the
+retained reference with a negative-Cxx/E witness computed from the reference
+independently of the production covariance validator: current GRHayL publishes
+its finite Eulerian covariance admissibility fallback, with the analytic
+Eulerian Minerbo fallback pressure and closure factor, instead of reproducing
+the nonrealizable reference pressure. The species source records derived from
+this anchor are classified the same way, because the corrected current closure
+fallback changes the comoving moments feeding the frozen-rate source
+evaluation; their comparison uses the named operation under the published
+closure fallback, with finite sources and the established radiation/matter
+exchange check. Records outside
+the named fallback-policy classifications retain strict paired cross-code
+comparison; no trusted expected value is refreshed from current GRHayL
+output.
 
 ## What is testable here
 
@@ -33,13 +54,14 @@ downstream host or physical-validation evidence.
 ## What is not claimed
 
 Repository-local tests can replay inputs against THC_M1 discrete-operation
-outputs, as described in [M1 tests and fixtures](tests-and-fixtures.md). A
-fresh candidate now has new producer records and consumed inputs for every
-family and is published as TestData members for default replay. The imported
-[`radiation-testdata-ref`](../../../.github/radiation-testdata-ref)
-pin selects the TestData revision for the ordinary download route; that
-revision must be published before either the runner or the action can acquire
-it.
+outputs, as described in [M1 tests and fixtures](tests-and-fixtures.md).
+The ordinary runner acquires published `GRHayL/TestData` Radiation members
+selected by [radiation-testdata-ref](../../../.github/radiation-testdata-ref),
+or consumes a supplied package through `M1_FIXTURE_DIR`. Fixture layout and
+producer provenance route through the tests-and-fixtures leaf and
+[production record](../../../docs/raw/Radiation_fresh_fixture_production.md).
+A missing selected revision or incomplete package fails acquisition; replay
+is not silently skipped.
 Replay compares the supplied
 records; it does not execute THC_M1 live. It does not establish downstream
 framework execution, grid evolution,

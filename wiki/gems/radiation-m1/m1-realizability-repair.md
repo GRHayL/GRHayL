@@ -29,7 +29,11 @@ $$
 Thus the permitted norm ratio is \(\sqrt{1-\epsilon_c}\), not
 \(1-\epsilon_c\). The squared bound is computed on demand from `epsilon_c`;
 no stored member carries it. The metric is required to be symmetric
-positive-definite and inverse-consistent before the norm is evaluated.
+positive-definite and inverse-consistent before the norm is evaluated. These
+are caller prerequisites. The shared norm checks finite entries and positive
+Cholesky pivots for a nonzero vector, with a zero-vector return before
+factorization; it does not compare `gammaDD` and `gammaUU` or check metric
+symmetry. See the [closure's local metric checks](m1-four-dimensional-minerbo-closure.md#spacetime-data-used-by-the-closure).
 
 ## Canonical repair map
 
@@ -74,6 +78,12 @@ $$
 U_\nu=(N,E,F_i).
 $$
 
+The separate `ghl_m1_apply_neutrino_number_floor` entry point applies only
+`N_floor`, leaves E/F unchanged, and leaves its number output unchanged on
+error; its optional flag records whether the number changed. See
+[ghl_m1.h](../../../GRHayL/include/ghl_m1.h) and
+[neutrino repair](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_repair.c).
+
 `ghl_m1_repair_neutrino_state` applies the independent number floor
 
 $$
@@ -95,8 +105,10 @@ observable admissibility fallback policy.
 ## Transaction and accounting rules
 
 The shared repair computes a local candidate and writes it only after all
-validation succeeds. A nonfinite state, invalid metric, invalid parameter
-bundle, or failed norm check leaves the state unchanged. The neutrino repair
+performed checks succeed. A nonfinite input state, rejected `E_floor`, or
+failed norm/cone check leaves the state unchanged. The caller supplies an
+initialized parameter bundle and valid metric; these checks do not validate
+either complete struct. The neutrino repair
 also increments caller-owned counters and absolute component-wise repair
 budgets when diagnostics are supplied; those budgets are not signed physical
 exchange deltas.

@@ -932,11 +932,14 @@ test/unit_test_rusanov_flux: \$(M1_RUSANOV_FIXTURE_OBJS)
 \$(BUILDDIR)/Unit_Tests/unit_test_m1_diffusion_flux.o: Unit_Tests/m1_helpers/m1_thcm1_fixture_utils.h
 \$(BUILDDIR)/Unit_Tests/unit_test_m1_error_handling.o: Unit_Tests/m1_helpers/m1_thcm1_fixture_utils.h Unit_Tests/m1_helpers/m1_thcm1_transport_fixture.h
 \$(BUILDDIR)/Unit_Tests/unit_test_m1_neutrino_seeded_invariants.o: Unit_Tests/m1_helpers/m1_thcm1_fixture_utils.h Unit_Tests/m1_helpers/m1_thcm1_source_fixture.h Unit_Tests/m1_helpers/m1_thcm1_stress_energy_fixture.h
-\$(BUILDDIR)/Unit_Tests/unit_test_m1_neutrino_rusanov_flux.o: Unit_Tests/m1_helpers/m1_thcm1_fixture_utils.h Unit_Tests/m1_helpers/m1_thcm1_rusanov_fixture.h
+\$(BUILDDIR)/Unit_Tests/unit_test_m1_neutrino_rusanov_flux.o: Unit_Tests/m1_helpers/m1_thcm1_fixture_utils.h Unit_Tests/m1_helpers/m1_thcm1_rusanov_fixture.h Unit_Tests/m1_helpers/m1_thcm1_transport_fixture.h
 \$(BUILDDIR)/Unit_Tests/unit_test_m1_thcm1_blended_rusanov.o: Unit_Tests/m1_helpers/m1_thcm1_fixture_utils.h Unit_Tests/m1_helpers/m1_thcm1_transport_fixture.h
-\$(BUILDDIR)/Unit_Tests/unit_test_rusanov_flux.o: Unit_Tests/m1_helpers/m1_thcm1_fixture_utils.h Unit_Tests/m1_helpers/m1_thcm1_rusanov_fixture.h
+\$(BUILDDIR)/Unit_Tests/unit_test_rusanov_flux.o: Unit_Tests/m1_helpers/m1_thcm1_fixture_utils.h Unit_Tests/m1_helpers/m1_thcm1_rusanov_fixture.h Unit_Tests/m1_helpers/m1_thcm1_transport_fixture.h
 \$(BUILDDIR)/Unit_Tests/unit_test_m1_rate_provider.o: Unit_Tests/m1_neutrino_rate_provider_reference.inc
-\$(BUILDDIR)/Unit_Tests/m1_helpers/m1_thcm1_rusanov_fixture.o: Unit_Tests/m1_test_utils.h
+\$(BUILDDIR)/Unit_Tests/m1_helpers/m1_thcm1_source_fixture.o: Unit_Tests/m1_helpers/m1_thcm1_fixture_utils.h
+\$(BUILDDIR)/Unit_Tests/m1_helpers/m1_thcm1_stress_energy_fixture.o: Unit_Tests/m1_helpers/m1_thcm1_fixture_utils.h
+\$(BUILDDIR)/Unit_Tests/m1_helpers/m1_thcm1_transport_fixture.o: Unit_Tests/m1_helpers/m1_thcm1_fixture_utils.h
+\$(BUILDDIR)/Unit_Tests/m1_helpers/m1_thcm1_rusanov_fixture.o: Unit_Tests/m1_test_utils.h Unit_Tests/m1_helpers/m1_thcm1_fixture_utils.h Unit_Tests/m1_helpers/m1_thcm1_transport_fixture.h
 
 \$(TEXES): test/%: \$(BUILDDIR)/Unit_Tests/%.o \$(TOBJS) \$(LIBS)
 ${LINKEXE_MESSAGE}

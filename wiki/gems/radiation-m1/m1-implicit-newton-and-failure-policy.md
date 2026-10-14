@@ -66,9 +66,12 @@ trial becomes an invalid-Jacobian failure.
 
 Because the rates and primitives are frozen, a perturbation changes only the
 trial E/F state, closure, comoving moments, and source evaluation. It does not
-invoke a provider, EOS callback, or matter recovery. The public diagnostic
-helpers for residual and Jacobian inspection are declared in
-[`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h).
+invoke a provider, EOS callback, or matter recovery. The neutrino residual
+and Jacobian inspection helpers are private implementation/test boundaries
+declared in
+[`ghl_m1_neutrino_implicit.h`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_implicit.h).
+The shared Newton driver, diagnostic callbacks, and diagnostic structs are
+the public surface in [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h).
 
 ## Newton step and acceptance
 
@@ -78,8 +81,9 @@ The shared driver:
 2. stops when the merit is at most one;
 3. builds the finite-difference Jacobian and solves the 4-by-4 linear system;
 4. backtracks a trial step while its residual and admissibility are tested; and
-5. optionally projects a trial E/F vector through the shared realizability
-   repair before retrying the residual.
+5. when the residual callback returns `ghl_error_m1_implicit_admissibility`,
+   attempts to project the densitized trial E/F vector through the shared
+   realizability repair and reevaluates the residual if projection succeeds.
 
 A small Newton correction alone does not establish convergence. The published
 iterate must be admissible and its weighted residual merit must be at most one.
@@ -100,8 +104,13 @@ are reported rather than silently discarded.
 
 ## Fallback schedule and endpoint
 
-If a Newton attempt fails with a retryable solve/admissibility status, the
-solver retries the complete local interval with the fixed substep schedule
+The retryable statuses are `ghl_error_m1_implicit_admissibility`,
+`ghl_error_m1_invalid_implicit_jacobian`, and
+`ghl_error_m1_implicit_solve_failure`, as classified by
+`ghl_m1_schedule_error_allows_retry` in
+[`ghl_m1_utils.h`](../../../GRHayL/Radiation/ghl_m1_utils.h).
+If an attempt returns one of these statuses, the solver retries the complete
+local interval with the fixed substep schedule
 
 ```text
 1, 2, 4, 8, 16 substeps.
@@ -132,8 +141,8 @@ subset after the final state is known.
 ## Transactional failures
 
 Outputs are initialized to the source base and a zero exchange packet. A hard
-failure—invalid inputs, invalid rates, closure failure, invalid Jacobian,
-unaccepted endpoint, or disallowed fallback—does not publish a partial
+failure—invalid inputs, invalid rates, closure failure, an unaccepted
+endpoint, or disallowed fallback—does not publish a partial
 candidate. Exhausting the retry schedule returns the explicit terminal
 no-update status and likewise leaves the source base and exchange packet
 unchanged. Diagnostics may record the failure and retry path; they do not

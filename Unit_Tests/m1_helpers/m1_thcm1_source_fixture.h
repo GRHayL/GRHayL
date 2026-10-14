@@ -12,8 +12,8 @@
  * and perturbed outputs for paired-response comparison.  Ordinary replay
  * evaluates the current API at both endpoints and compares the paired
  * response.
- * The six named zero-flux policy records remain
- * explicit local two-state checks.
+ * Named zero-flux and covariance fallback-policy records remain explicit
+ * local two-state admissibility/exchange checks.
  */
 
 #include "ghl_m1.h"
@@ -79,8 +79,8 @@ enum {
 };
 
 /* Ordinary records reach the current source API at both paired endpoints and
- * use the common baseline/perturbed/response comparator.  The six named
- * zero-flux policy cases have local admissibility/exchange checks, not
+ * use the common baseline/perturbed/response comparator. Named zero-flux and
+ * covariance policy cases have local admissibility/exchange checks, not
  * reference agreement.  records_run counts only paired-agreement records. */
 int m1_thcm1_run_instantaneous_source_fixtures(
       const char *restrict fixture_path,

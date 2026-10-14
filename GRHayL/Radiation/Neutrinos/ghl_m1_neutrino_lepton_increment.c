@@ -17,8 +17,9 @@
  *
  * The provider supplies the lepton weight via ghl_m1_neutrino_rates and is
  * responsible for ensuring species consistency. baryon_density_conserved
- * must be positive; the host may substitute its own densitized baryon-mass
- * normalization when applying the increment.
+ * must be the positive undensitized Eulerian baryon number density, W*rho/m_b.
+ * A host storing a densitized baryon-mass variable must convert its
+ * normalization before calling this helper.
  *
  */
 

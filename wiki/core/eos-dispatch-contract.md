@@ -109,7 +109,9 @@ zero-initialized pointer storage is not a checked error path.
 
 Wrappers install global dispatch before parameter validation. If simple or
 hybrid parameter initialization returns an error, the process-wide pointers
-remain assigned; there is no rollback. Tabulated initialization also mutates
+remain assigned; there is no rollback. The simple/hybrid parameter initializers
+leave the destination object unchanged on error and replace it with the completed
+aggregate on success. Tabulated initialization also mutates
 global dispatch before parameter validation, so that process-wide selection is
 not rolled back. Its object construction is transactional: failure frees the
 candidate and publishes an empty tagged aggregate. A live table must be cleaned
@@ -174,11 +176,10 @@ through table-backed interpolation. Source:
 For atmosphere reset behavior after EOS setup, use
 [`wiki/gems/atmosphere/prescription-contract.md`](../gems/atmosphere/prescription-contract.md).
 
-`tau_atm` has family-dependent current initialization: simple and hybrid use
-`rho_atm * eps_atm`, while tabulated setup uses `rho_min * eps_min`. The public
-struct comment describes `_atm` fields as atmosphere values, and Con2Prim later
-uses `tau_atm` as a conservative floor. Do not assume these formulas are
-equivalent; intended tabulated semantics need maintainer resolution
+`tau_atm` has the family-specific floor semantics documented by the public
+struct: simple and hybrid use `rho_atm * eps_atm`, while tabulated setup uses
+`rho_min * eps_min`. Con2Prim consumes it as a conservative energy floor.
+These formulas are not assumed equivalent
 ([`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h),
 [`GRHayL/GRHayL_Core/initialize_eos.c`](../../GRHayL/GRHayL_Core/initialize_eos.c),
 [`GRHayL/Con2Prim/apply_conservative_limits.c`](../../GRHayL/Con2Prim/apply_conservative_limits.c)).
@@ -188,7 +189,7 @@ equivalent; intended tabulated semantics need maintainer resolution
 The Core suite tests simple EOS rectangular extrema and explicit/default zero
 floors, hybrid zero-floor metadata, and simple EOS default density/pressure
 floor and ceiling behavior. It initializes hybrid EOS atmosphere data and
-checks `ghl_set_prims_to_constant_atm` for simple and hybrid EOS cases. Finite
+checks `ghl_set_prims_to_constant_atm` for simple and hybrid EOS cases. Nonfinite
 outputs are rejected before tolerance comparisons. Source:
 [`Unit_Tests/unit_test_grhayl_core_test_suite.c`](../../Unit_Tests/unit_test_grhayl_core_test_suite.c).
 

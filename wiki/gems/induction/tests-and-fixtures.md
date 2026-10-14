@@ -17,7 +17,7 @@ CI routes belong in verification workflows, not here.
 
 Evidence labels used below distinguish direct replay source from configured
 execution. `configure` discovers these test sources in both HDF5 modes;
-`.github/run_tests.sh` and workflows list executions. A **compiled-unrun**
+[.github/run_tests.sh](../../../.github/run_tests.sh) and workflows list executions. A **compiled-unrun**
 status requires a reviewer-observed binary; tracked source alone cannot prove
 it.
 
@@ -82,15 +82,16 @@ These private helper files are not standalone tests:
 - HLL flux coverage compares `Ax_rhs`, `Ay_rhs`, and `Az_rhs` for both local
   `B` and `Btilde` variants. Contract detail belongs in
   [HLL flux contract](hll-flux-contract.md).
-- HLL fixture generation chooses `cmin/cmax` independently from `[-10,10]`
+- The current local HLL generator chooses `cmin/cmax` independently from `[-10,10]`
   and rejects only exact zero sums. It does not validate production
-  non-negative speed convention or Flux_Source coupling. Serialized boundary
-  planes are initialized to zero before perturbation.
+  non-negative speed convention or Flux_Source coupling. Its input arrays are zero-initialized before filling
+  `1 <= i,j,k < dirlength`; unfilled index-zero planes stay zero, while upper
+  boundary planes are populated.
 - ET Legacy HLL flux coverage replays legacy vector-potential HLL output for
   the `B` helper path.
 - Interpolation coverage covers `ccc_ADM`, `ccc_BSSN`, and `vvv_ADM` fixture
-  groups. Its generated Gaussian potentials use floating-point coordinates and
-  enforce finite spatial variation. Contract detail belongs in
+  groups. The current generator uses floating-point coordinates for Gaussian
+  potentials and checks finite spatial variation. Contract detail belongs in
   [interpolation and staggering contract](interpolation-and-staggering-contract.md).
 - The `vvv_ADM` fixture replay uses the backward/current metric packing for
   `ghl_interpolate_with_vertex_centered_ADM`. Its direct asymmetric affine
@@ -104,9 +105,12 @@ These private helper files are not standalone tests:
   smaller than their stencil loops require: 5 for HLL, 3 for interpolation,
   and 7 for ET Legacy gauge RHS.
 
-Local HLL and interpolation reference outputs are produced through the same
-public routines/helpers replayed by their tests. They detect regression against
-stored results but are not independent implementations. ET Legacy output
+The current local HLL and interpolation generators produce reference outputs
+through the same public routines/helpers replayed by their tests. Regenerated
+references detect regression against stored results but are not independent
+implementations. Current generator
+source does not establish the historical contents or producer of downloaded
+fixtures. ET Legacy output
 fixtures are external comparisons; local ET data generators write input-side
 files only.
 

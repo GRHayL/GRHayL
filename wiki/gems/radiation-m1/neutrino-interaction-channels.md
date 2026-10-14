@@ -90,7 +90,9 @@ scalar `kappa_tr` in the validated electron bundle is not overwritten with
 that partner-dependent quantity. These rules are specified in
 [`Radiation_pair_source_model.md`](../../../docs/raw/Radiation_pair_source_model.md#provider-coefficients)
 and have separate ownership. The pair kernel enforces the shared
-number-emissivity equality while performing the coupled pair update. The
+number-emissivity equality while performing the coupled pair update. It calls
+the public `ghl_m1_validate_neutrino_rates` for each species and accepts valid
+electron-flavor pair fields. The
 provider/rate-validation boundary owns the validity of the supplied rate
 bundle, and the host owns preparation of the partner-dependent transport
 opacity and preservation of the validated bundle. The pair kernel does not
@@ -123,9 +125,23 @@ J_eq     = n_eq * mean_energy.
 ```
 
 Representational underflow is recorded diagnostically when the correctly
-rounded product is zero; it is not permission to invent a nonzero rate. The
-validator also rejects pair fields in a one-species electron source call and
-rejects nonzero pair fields for `nu_x`. See
+rounded product is zero; it is not permission to invent a nonzero rate.
+
+The validator boundaries are:
+
+- the public `ghl_m1_validate_neutrino_rates` in
+  [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h) checks a complete bundle,
+  rejects nonzero pair fields for `nu_x`, and permits finite, nonnegative
+  nonzero electron-flavor pair fields only when their equilibrium number and
+  energy targets are positive and the rest of the bundle passes validation;
+- the private `ghl_m1_neutrino_validate_single_species_rates`, declared in
+  [`ghl_m1_neutrino_implicit.h`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_implicit.h),
+  wraps the public validator and additionally rejects electron-flavor data
+  that require a partner species — nonzero pair fields, or number rates whose
+  total and charged-current parts differ — because a one-species source call
+  has no partner to evaluate the inverse reaction.
+
+See
 [`ghl_m1_neutrino_rates.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rates.c).
 
 ## Evidence

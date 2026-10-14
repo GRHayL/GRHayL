@@ -2,13 +2,12 @@
 
 `m1_thcm1_instantaneous_sources.bin` is the retained, offline fixture for the
 instantaneous frozen-rate interaction-source operation. It contains all 56
-retained baseline/perturbed pairs for all three species: 168 records total.
-The retained package manifest marks these records historical and not admitted
-for current verification. Older source notes say the campaign receipt,
-sidecar, source snapshot, producer command, and raw rows are held outside the
-GRHayL checkout; those records were not available in the reviewed workspace,
-so the producer-to-payload binding remains unverified. Normal tests do not run
-THC_M1 or require `THCM1_ROOT`.
+retained baseline/perturbed pairs for all three species: 168 records total, of
+which 48 have identical baseline and perturbed inputs. The records come from the
+fresh instantaneous-source THC_M1 campaign; its receipt, sidecar, source
+snapshot, producer command, and raw rows are held in the producer evidence
+outside the GRHayL checkout. Normal tests do not run THC_M1 or require
+`THCM1_ROOT`.
 
 ## Operation contract
 
@@ -39,31 +38,50 @@ only, not production arithmetic or comparison tolerances.
 
 ## Retained result
 
-The seeded invariant test preserves all 168 records:
+The seeded invariant test preserves all 168 records and carries two kinds of
+named fallback-policy classification, both as local checks rather than
+cross-code agreement claims:
 
-- 162 records pass current-GRHayL/retained-source agreement checks.
-- Six records are explicit local policy checks, not agreement claims. They are
-  the three species for each of:
+- 159 records retain strict paired agreement comparisons.
+- Six records are explicit exact-zero-flux local policy checks: the three
+  species for each of
   `rngpkt-v2-rd-radiation-anchor-energy-floor-a01` and
-  `rngpkt-v2-rd-metric-anchor-offdiagonal-spd-a01`.
-- Those six checks cover the known zero-Eulerian-flux, moving-fluid cases where
-  current closure admissibility fallback and THC invalid trace-pressure
-  handling select different `Gamma_N` behavior. Any new or changed
-  classification fails.
+  `rngpkt-v2-rd-metric-anchor-offdiagonal-spd-a01`. They cover the known
+  zero-Eulerian-flux, moving-fluid cases where current closure admissibility
+  fallback and THC invalid trace-pressure handling select different
+  `Gamma_N` behavior.
+- Three records are explicit covariance-anchor fallback-policy checks: the
+  three species of the
+  `rngpkt-v2-rd-radiation-anchor-realizability-cone-a01:baseline:<species>`
+  pairs derived from the retained pointwise anchor record. The retained source
+  datum carries the closure input and the frozen rates but no serialized
+  reference pressure; the named realization difference is owned by the
+  pointwise fallback-policy classification. At both paired endpoints these records
+  require the current identity-metric, x-aligned-flux flagged fallback with
+  zero root diagnostics, the analytic Eulerian Minerbo fallback pressure and
+  closure factor with valid trace, tensor symmetry, and diagonal covariance
+  positivity, finite actual sources, and the established exact
+  radiation/matter exchange check. They compare the named operation under its
+  published closure fallback rather than the nonrealizable retained closure.
 
-Any future exporter used for admission must fail closed for an incomplete
+Any new or changed classification fails. These nine records are checked locally
+rather than compared numerically: their stored THC outputs are not part of any
+replay comparison, so a small change to them need not fail the test.
+
+Any replacement exporter must fail closed for an incomplete
 receipt, missing or empty selected source list, duplicate or unsafe selected
 paths, missing artifacts, sidecar/result/command binding mismatch, incomplete
 role/species coverage, duplicate IDs, packet/state/volume mismatch,
 unpublished or unsuccessful producer outputs, invalid `Gamma_N`, and any
 record-count or input-schema mismatch. It must export every retained
-role/species record rather than selecting only passing rows. A future admitted
-TestData package should contain the portable payload and compact admission
-metadata; no such admitted package is currently pinned.
+role/species record rather than selecting only passing rows. A replacement
+TestData package should contain the portable payload and compact package
+metadata, and takes effect only when `.github/radiation-testdata-ref` is
+re-pinned to the revision that publishes it.
 
 ## Remaining issue
 
-The six local classifications remain intentional compatibility checks. They do
-not establish THC/current closure equivalence for those cases. No production
+The named local classifications remain intentional compatibility checks. They
+do not establish THC/current closure equivalence for those cases. No production
 change, tolerance relaxation, or replacement of retained values is part of this
 fixture.

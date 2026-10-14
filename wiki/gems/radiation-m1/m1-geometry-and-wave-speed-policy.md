@@ -9,10 +9,13 @@ must not be mixed accidentally.
 ## Coherent face geometry
 
 Every face operation must use one coherent
-[`ghl_metric_quantities`](../../../GRHayL/include/ghl_m1.h) record. The
-current kernels validate that the spatial metric is symmetric positive
-definite and expect `gammaDD` and `gammaUU` to be mutually consistent. A
-pointwise face flux also requires a finite positive `sqrt_detgamma`.
+[`ghl_metric_quantities`](../../../GRHayL/include/ghl_m1.h) record. A
+symmetric positive-definite `gammaDD` whose inverse matches the supplied
+`gammaUU` is a host precondition documented in
+[`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h). Local kernel checks do not
+establish the complete metric's coherence. The pointwise
+four-point face flux additionally requires a finite positive `sqrt_detgamma`,
+which it uses for its one output densitization.
 
 The face record supplies:
 
@@ -26,6 +29,9 @@ The face record supplies:
 Do not average `gammaDD`, `gammaUU`, and `sqrt_detgamma` independently if that
 breaks inverse consistency. The face metric is also the metric used by the
 physical flux, speed, and optional diffusion calculations at that face.
+Checks depend on the operation: the pointwise four-point API checks the
+`sqrt_detgamma` it consumes, the volume-weighted four-point API inspects no
+metric, and the raw-speed helper checks the scalars entering its products.
 
 ## Raw light-cone speeds
 
@@ -37,6 +43,11 @@ returns the signed coordinate speeds
 s_minus_raw = -beta^d - alpha * sqrt(gamma^dd)
 s_plus_raw  = -beta^d + alpha * sqrt(gamma^dd).
 ```
+
+Because the helper trusts metric coherence, its checks target the scalars
+consumed by its products: it validates `lapse * sqrt(gammaUU[d][d])` (finite
+and positive) and the two resulting endpoint values, without re-establishing
+full positive definiteness or `gammaDD`/`gammaUU` inverse consistency.
 
 The public `ghl_m1_compute_wavespeeds` wrapper additionally clips these
 endpoints to the HLL envelope with `min(0, s_minus_raw)` and
@@ -117,11 +128,11 @@ The current canonical sequence is:
 4. call four-point blended Rusanov; and
 5. apply the returned flux in the host divergence.
 
-An optical-depth speed cap is not inserted between steps 3 and 4. A separate
-diffusion correction is not automatically composed with the four-point
-operation; requesting that policy through the four-point API is rejected. The
-optional diffusion helper has its own proper-length, face-velocity, and
-thick-limit contract, documented in the
+An optical-depth speed cap is not inserted between steps 3 and 4. The
+four-point signature carries no diffusion selector and applies no separate
+diffusion correction. The optional
+diffusion helper has its own proper-length, face-velocity, and thick-limit
+contract, documented in the
 [thick-limit leaf](m1-thick-limit-and-optional-diffusion.md).
 
 Photon-era capped speeds and HLL-oriented choices do not apply where they

@@ -7,10 +7,10 @@ Atmosphere routines reset primitive variables to prescribed low-density floor st
 ## Read First
 
 - [Atmosphere prescription contract](atmosphere/prescription-contract.md)
-- `docs/raw/Atmosphere.dox`
-- `GRHayL/include/ghl_atmosphere.h`
-- `GRHayL/include/ghl.h`
-- `wiki/physics/variables-and-conventions.md`
+- [`docs/raw/Atmosphere.dox`](../../docs/raw/Atmosphere.dox)
+- [`GRHayL/include/ghl_atmosphere.h`](../../GRHayL/include/ghl_atmosphere.h)
+- [`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h)
+- [`wiki/physics/variables-and-conventions.md`](../physics/variables-and-conventions.md)
 
 ## Public Headers
 
@@ -24,29 +24,29 @@ Built public surface:
 Declared/source-present but unbuilt surface:
 - `ghl_set_prims_to_radial_falloff_atm` is declared in
   `GRHayL/include/ghl_atmosphere.h` and has a source file, but
-  `GRHayL/Atmosphere/make.code.defn` does not compile it and
-  `docs/raw/Atmosphere.dox` says only one prescription is provided. No repo
+  [`GRHayL/Atmosphere/make.code.defn`](../../GRHayL/Atmosphere/make.code.defn) does not compile it and
+  `docs/raw/Atmosphere.dox` documents only the constant prescription. No repo
   call or test references it. This establishes current manifest absence, not
   intended removal, internal status, or future support. Route radial questions to
   [prescription contract](atmosphere/prescription-contract.md).
 
-`GRHayL/include/make.code.defn` lists `ghl_atmosphere.h` for installation.
+[`GRHayL/include/make.code.defn`](../../GRHayL/include/make.code.defn) lists `ghl_atmosphere.h` for installation.
 Installed declaration, built definition, documentation, calls, and tests are
 separate evidence; only the constant routine currently closes those surfaces.
 
 ## Implementation Paths
 
-- Active build path: `GRHayL/Atmosphere/set_prims_to_constant_atm.c`
+- Active build path: [`GRHayL/Atmosphere/set_prims_to_constant_atm.c`](../../GRHayL/Atmosphere/set_prims_to_constant_atm.c)
 - Unbuilt/incomplete source path:
-  `GRHayL/Atmosphere/set_prims_to_radial_falloff_atm.c`
+  [`GRHayL/Atmosphere/set_prims_to_radial_falloff_atm.c`](../../GRHayL/Atmosphere/set_prims_to_radial_falloff_atm.c)
 - `GRHayL/Atmosphere/make.code.defn`
 
 ## Test Paths
 
-- Direct constant-atmosphere coverage: `Unit_Tests/unit_test_grhayl_core_test_suite.c`
-- Legacy branch coverage: `Unit_Tests/unit_test_ET_Legacy_primitives.c`
-- Indirect coverage through the Con2Prim tabulated primitive guess: `Unit_Tests/unit_test_c2p_nn_guess.c`
-- Nearby downstream coverage: `Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`, `Unit_Tests/unit_test_apply_conservative_limits.c`
+- Direct constant-atmosphere coverage: [`Unit_Tests/unit_test_grhayl_core_test_suite.c`](../../Unit_Tests/unit_test_grhayl_core_test_suite.c)
+- Conditional legacy reset call: [`Unit_Tests/unit_test_ET_Legacy_primitives.c`](../../Unit_Tests/unit_test_ET_Legacy_primitives.c)
+- Indirect coverage through the Con2Prim tabulated primitive guess: [`Unit_Tests/unit_test_c2p_nn_guess.c`](../../Unit_Tests/unit_test_c2p_nn_guess.c)
+- Nearby downstream coverage: [`Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`](../../Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c), [`Unit_Tests/unit_test_apply_conservative_limits.c`](../../Unit_Tests/unit_test_apply_conservative_limits.c)
 
 ## Key Contracts
 

@@ -47,8 +47,7 @@ owners are:
 | `unit_test_m1_diffusion_flux` | Standalone thick-limit `Jthick` fixture | The `Jthick` operation at the six stored baseline/perturbed pairs. |
 
 Each stored record retains a baseline/perturbed input pair and THC_M1 outputs.
-For the fresh candidate, the
-[production record](Radiation_fresh_fixture_production.md)
+The [production record](Radiation_fresh_fixture_production.md)
 identifies the producer records and exporters; the removed historical package
 had unverified producer attribution. Rusanov adapters evaluate current GRHayL
 at both paired inputs. They preserve the baseline comparison using the retained
@@ -64,19 +63,20 @@ therefore proves only the named library operation and its serialized input
 convention; it does not validate upstream preparation that the fixture stores
 as caller input.
 
-The fresh candidate maps all 14 payloads to new THC_M1 producer runs. Replay
+The published fixture set maps all 14 payloads to new THC_M1 producer runs. Replay
 reads the requested package and never invokes THC_M1,
 `THCM1_ROOT`, or offline producer campaigns to generate expected values. Current
 GRHayL output is never used to regenerate an expected value during a test.
 
-## Fixture provenance and admission
+## Fixture provenance
 
 The [fixture overview](m1_thcm1/README.md) and family documents describe the
 formats and claim boundaries. The
 [production record](Radiation_fresh_fixture_production.md) records the
-accepted payloads, their replay route, and the maintained
-[TestData provenance](https://github.com/GRHayL/TestData/blob/main/radiation/PROVENANCE.md)
-that describes the published fixture families and binary layout. The old
+accepted payloads, their replay route, and the `radiation/PROVENANCE.md` of
+`GRHayL/TestData` at the revision pinned in `.github/radiation-testdata-ref`,
+which describes the published fixture families, producer, regeneration route,
+and binary layout. The old
 payload archive, manifest, and auditor have been removed from the library
 source. The published package in
 `GRHayL/TestData` holds only the fourteen `radiation/*.bin.gz` members and
@@ -103,13 +103,12 @@ scaling would overflow or erase a nonzero value.
 The existing M1 test executables exercise shared Radiation kernels and grey
 three-species neutrino operations. Their randomized, analytic, invariant, and
 transactional checks remain part of normal execution. Stored THC_M1 comparisons
-are incorporated into the relevant existing executables; the historical package
-provenance and operation-specific coverage are documented in `docs/raw/m1_thcm1/`.
+are incorporated into the relevant existing executables; the fixture provenance
+and operation-specific coverage are documented in `docs/raw/m1_thcm1/`.
 The standalone Jthick payload is the direct paired replay for the thick-limit
 scalar. The existing comparisons match its six baseline/perturbed retained
-values and paired responses. The producer-to-payload binding remains
-unverified, so this is not an admitted THC_M1 comparison; the optional Fick
-flux remains local-only.
+values and paired responses, which come from the fresh Jthick helper campaign;
+the optional Fick flux remains local-only.
 
 Local regressions in `unit_test_m1_neutrino_seeded_invariants` cover nonzero
 fluxes whose squared norms underflow or whose `E/F^2` intermediates overflow,
@@ -261,11 +260,10 @@ rate bundle.
 
 ## Stored reference boundary
 
-Explicit replay needs the payloads, not live THC_M1 execution. The fresh
-candidate now includes producer records for every family. Publication in
+Explicit replay needs the payloads, not live THC_M1 execution. The published
+set has producer records for every family. Publication in
 `GRHayL/TestData` supplies the matched set at the full commit selected by
-`.github/radiation-testdata-ref`; the
-[TestData provenance](https://github.com/GRHayL/TestData/blob/main/radiation/PROVENANCE.md)
+`.github/radiation-testdata-ref`; the `radiation/PROVENANCE.md` at that commit
 records the published package details. The ordinary runner downloads the
 pinned `radiation/*.bin.gz` members by default, and the CI action forwards
 its optional `fixture-dir` input to the runner as `M1_FIXTURE_DIR`; a nonempty
@@ -273,7 +271,7 @@ its optional `fixture-dir` input to the runner as `M1_FIXTURE_DIR`; a nonempty
 downloads.
 Current GRHayL outputs never become expected values. The staged receipt,
 command, sidecar, consumed-input, and raw-result records are the evidence for
-the new candidate; mutable offline campaign results are not a substitute for
+the published payloads; mutable offline campaign results are not a substitute for
 those exact captured operands.
 
 The exact variable-volume transport family is loaded by the existing
@@ -300,7 +298,7 @@ With explicit fixture arguments, these executables replay stored
 baseline/perturbed outputs attributed to THC_M1:
 `unit_test_m1_neutrino_seeded_invariants`,
 `unit_test_m1_neutrino_rusanov_flux`, `unit_test_m1_thcm1_blended_rusanov`, and
-`unit_test_rusanov_flux` use the historical package, while
+`unit_test_rusanov_flux` use the published package, while
 `unit_test_m1_diffusion_flux` uses the standalone six-pair `Jthick` fixture.
 The established corpora have these distinctions:
 
@@ -316,9 +314,15 @@ The established corpora have these distinctions:
 | Stress-energy tensor | 1,024 | 1,024 | 0 |
 | Thick-limit `Jthick` | 6 | 6 | 0 |
 
-Pointwise and instantaneous-source families include respectively two and six
-named exact-zero-flux moving-fluid policy differences. Those records exercise
-local policy checks; they are not THC agreement claims. Identical-input records
+The instantaneous-source family includes six named exact-zero-flux
+moving-fluid policy differences plus the three derived species records of the
+named covariance anchor (the retained datum includes the closure input and
+rates, so the current corrected closure fallback changes the comoving moments
+feeding the source evaluation), and the pointwise family adds two named
+exact-zero-flux moving-fluid policy differences plus one named covariance
+fallback-policy difference. Those records exercise local policy checks; they
+are not THC agreement claims, and their stored THC outputs are not compared
+numerically. Identical-input records
 are controls, and changed inputs need not change every output. Rusanov replay
 evaluates current GRHayL at both inputs, preserves the retained baseline/response
 envelope check, and checks both endpoints and the propagated paired response.
@@ -333,8 +337,23 @@ preparation.
 
 For the pointwise owner, ordinary records evaluate current GRHayL at both
 baseline and perturbed inputs, and compare the current response with the paired
-THC_M1 response. The two named zero-flux policy records remain explicit local
-two-state admissibility checks.
+THC_M1 response. Three named records are explicit fallback-policy
+classifications instead. Two are the exact-zero-flux moving-fluid records with
+the reference pressure-trace discrepancy; they keep their established checks
+of fallback status, finite outputs, reference pressure trace, and isotropic
+closure factor. The third,
+`rngpkt-v2-rd-radiation-anchor-realizability-cone-a01`, is the known record
+whose baseline and perturbed endpoints share the identity spatial metric and
+an x-aligned flux but whose reference pressure is nonrealizable: the Eulerian
+covariance of that reference is negative along the radiation flux direction.
+Its classification uses a negative-Cxx/E witness computed from the retained
+reference independently of the production covariance validator, and the test
+separately validates current fallback status and metadata, a finite symmetric
+current fallback pressure with a valid trace, diagonal covariance positivity,
+and the analytic Eulerian Minerbo fallback pressure and closure factor.
+None is a cross-code replay verdict, and no trusted expected value is
+refreshed from current GRHayL output. Records outside the named
+fallback-policy classifications keep strict paired cross-code comparison.
 
 The seeded-invariants owner also replays `stress_energy.bin`. Its complete
 21-value state/ADM/velocity input is evaluated through the public neutrino
@@ -457,7 +476,7 @@ No stored finite-step or implicit-endpoint THC_M1 corpus is shipped. The local
 source-update, finite-difference/Jacobian, repair, and failure-path tests do not
 acquire a stored-reference claim by proximity to a stored fixture. Surfaces not
 named in the current stored-owner table remain local or separate until an
-admitted fixture and an executable owner exist.
+published fixture and an executable owner exist.
 
 ## Replay comparison policies
 

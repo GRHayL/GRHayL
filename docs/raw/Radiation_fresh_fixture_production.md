@@ -4,9 +4,9 @@ This page records the scoped fresh-THC_M1 production campaign behind the
 Radiation M1 retained fixtures and its evidence limits. The removed
 historical package had no verifiable producer-to-payload binding.
 The accepted replacement was produced from fresh THC_M1 executions for all
-five operation groups: pointwise, instantaneous source, covariant stress-energy,
-Rusanov, four-point transport, and the standalone Jthick scalar. The candidate
-is published in `GRHayL/TestData` as individual gzip-compressed `radiation/*.bin.gz`
+six operation groups: pointwise, instantaneous source, covariant stress-energy,
+Rusanov, four-point transport, and the standalone Jthick scalar. The accepted
+set is published in `GRHayL/TestData` as individual gzip-compressed `radiation/*.bin.gz`
 members. The runner downloads those members at the full commit selected by
 `.github/radiation-testdata-ref` and prepares them by default; the `run_m1`
 action forwards its optional `fixture-dir` input to the runner as
@@ -17,8 +17,9 @@ gzip directory and skips downloads entirely.
 The external producer-evidence archive's `fixture/README.md` maps every payload
 to the captured producer records and exporter. Its manifest covers 14 payloads
 and includes Jthick.
-The published fixture families and binary layout are described by the maintained
-[TestData provenance](https://github.com/GRHayL/TestData/blob/main/radiation/PROVENANCE.md).
+The published fixture families, producer, regeneration route, and binary layout
+are described by `radiation/PROVENANCE.md` in `GRHayL/TestData` at the revision
+pinned in `.github/radiation-testdata-ref`.
 
 ## Scoped execution
 
@@ -33,7 +34,10 @@ Transport used the frozen `run_transport.py` captured in the evidence archive
 because the current script adds a profile and changes the historical input
 inventory. The fresh transport receipt records 63,504 constant-volume
 agreements, 21,384 varying-volume agreements, and 42,120 varying-volume
-differences; the exporter retained the documented agreeing operations.
+differences. Those counts are the campaign audit's own outcomes: the exporter
+retained every unique input pair, removing only exact duplicates (6,120 constant,
+1,512 varying), so the stored varying-volume corpus includes pairs the audit
+counted as differences.
 
 The standalone producer evidence archive contains each campaign's completed
 receipt, executable command, consumed input stream, raw THC_M1 output, source
@@ -42,6 +46,15 @@ current API runs; the Jthick command receipt captures a rerun of the THC_M1
 helper. The package auditor reads each payload in full and verifies its
 grammar, operation, policy, record count, and payload-only digest. Source files
 are identified by their captured snapshots, not by stored source hashes.
+
+## Regeneration
+
+A regeneration package rebuilds the standalone producers from the frozen source
+snapshots, re-executes the recorded inputs, and compares every newly exported
+payload byte for byte with the published decompressed payloads; all 14 were
+identical in the verification run. Exact agreement is platform-specific
+evidence, and the package has not yet been uploaded to a public release. The
+published `radiation/PROVENANCE.md` states the same boundary.
 
 ## Replay and limits
 

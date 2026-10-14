@@ -40,7 +40,9 @@ Within the above hierarchy, the implementation can provide:
   bremsstrahlung, and plasmon channel contributions;
 - weak-equilibrium-target relaxation when the provider supplies valid
   `n_eq`/`J_eq` and consistent rate identities;
-- charged-current electron-lepton and matter `Y_e` bookkeeping; and
+- charged-current electron-lepton and default matter `Y_e` bookkeeping, with
+  [opt-in signed-total-number bookkeeping](m1-exchange-equations.md) in the
+  single-species source dispatcher; and
 - coupled electron-flavor pair number conservation and equal/opposite local
   energy-momentum exchange.
 

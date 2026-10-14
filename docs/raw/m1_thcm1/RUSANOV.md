@@ -1,10 +1,10 @@
 # Paired Rusanov fixtures
 
-The retained sibling package contains a complete 1024-face baseline/perturbed
-corpus. Historical family notes attribute it to the
-`rusanov_efn_flux_low_matched` producer route; the receipt, source snapshot,
-command, and raw outputs needed to verify that attribution were unavailable in
-the reviewed workspace. The package remains historical and unadmitted.
+The published TestData package contains three complete 1024-face
+baseline/perturbed corpora. They come from the fresh Rusanov campaign, which
+builds THC_M1's wave-speed and number-flux fragments into an offline producer
+and runs both the legacy and current-operand modes; its receipts, raw captures,
+and source snapshots are in the producer evidence outside this checkout.
 
 - `rusanov_neutrino.bin`: `neutrino_rusanov_flux`, 54 consumed inputs and five
   `{N,E,Fx,Fy,Fz}` outputs.
@@ -40,12 +40,12 @@ against the stored baseline and perturbation response; it is not independent
 validation of closure or physical-flux preparation. The generic fixture
 likewise stores its caller-supplied physical E/F operands.
 
-These payloads are retained historical data, not a current admitted cross-code
-result. The producer receipts, raw captures, and source/build context needed
-for admission were not available in the reviewed workspace. Any future
-admitted TestData package should contain only portable fixture data and compact
-admission references. The unit tests read explicitly supplied fixtures and
-never invoke the external campaign or require its checkout.
+These payloads are stored THC_M1 outputs for the discrete Rusanov operation,
+not independent validation of closure or physical-flux preparation. Any
+replacement TestData package should contain only portable fixture data and
+compact package metadata, and takes effect when `.github/radiation-testdata-ref`
+is re-pinned. The unit tests read supplied or downloaded fixtures and never
+invoke the external campaign or require its checkout.
 
 `Unit_Tests/m1_helpers/m1_thcm1_rusanov_fixture.h` exposes the test-local consumers:
 

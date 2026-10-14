@@ -1,7 +1,7 @@
 # Neutrinos Implementation Flow
 
 This page maps the built NRPyLeakage implementation files listed by
-`GRHayL/Neutrinos/NRPyLeakage/make.code.defn`. Source remains authority; the
+[GRHayL/Neutrinos/NRPyLeakage/make.code.defn](../../../GRHayL/Neutrinos/NRPyLeakage/make.code.defn). Source remains authority; the
 large generated formula blocks are described by role instead of copied.
 
 Use [Generator Provenance](generator-provenance.md) to trace notebook source
@@ -11,28 +11,26 @@ GRHayL tabulated EOS or interpreting leakage outputs.
 
 ## Build List
 
-`GRHayL/Neutrinos/make.code.defn` routes Neutrinos to the `NRPyLeakage`
+[GRHayL/Neutrinos/make.code.defn](../../../GRHayL/Neutrinos/make.code.defn) routes Neutrinos to the `NRPyLeakage`
 subdirectory. `GRHayL/Neutrinos/NRPyLeakage/make.code.defn` builds exactly
 these source files:
 
-- `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c`
-- `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`
-- `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities.c`
-- `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_Fermi_Dirac_integrals.c`
-- `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_optical_depths_PathOfLeastResistance.c`
+- [GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c)
+- [GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c)
+- [GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities.c](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities.c)
+- [GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_Fermi_Dirac_integrals.c](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_Fermi_Dirac_integrals.c)
+- [GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_optical_depths_PathOfLeastResistance.c](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_optical_depths_PathOfLeastResistance.c)
 
 Every listed name has a matching public declaration in `ghl_nrpyleakage.h`; no
 extra Neutrinos `.c` file sits outside the manifest.
 
-The EOS-dependent C files additionally include
-`ghl_nrpyleakage_nucleon_blocking.h` and `ghl_nrpyleakage_rate_helpers.h` from
-`GRHayL/include/`. The include manifest `GRHayL/include/make.code.defn` lists
-both in `#! install_headers`, so they are installed with the other public
-headers; the leakage source manifest builds only C implementations and does
-not register them (its only directive is `SRCS`). Both headers hold `static
-inline` helpers, so they compile into each caller and add no separately
-linked symbols to the public API. Both headers serve every EOS-dependent
-routine.
+The NRPyLeakage manifest above lists only `SRCS`. The EOS-dependent sources
+also include the installed `static inline` implementation headers
+[GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h](../../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h)
+and
+[GRHayL/include/ghl_nrpyleakage_rate_helpers.h](../../../GRHayL/include/ghl_nrpyleakage_rate_helpers.h)
+by ordinary `#include`; they are not tracked through a manifest `#! INCS`
+entry (this directory's manifest has none) and do not add separately linked library symbols.
 
 ## Smallest File Sets And Data Dependencies
 
@@ -42,10 +40,10 @@ source has these narrower boundaries:
 | Requested operation | Required implementation files | Additional current-GRHayL dependencies | Not required by that entry point |
 | --- | --- | --- | --- |
 | Fermi-Dirac approximation | `NRPyLeakage_Fermi_Dirac_integrals.c` | Radiation/leakage headers, GRHayL error enum, math functions | EOS, HDF5, opacity, depth, source, luminosity files |
-| Opacities only | `NRPyLeakage_compute_neutrino_opacities.c`, `GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h`, `GRHayL/include/ghl_nrpyleakage_rate_helpers.h`, and `NRPyLeakage_Fermi_Dirac_integrals.c` | Radiation structs, leakage constants/macros, tabulated-EOS callback, GRHayL errors/HDF5 guard, math functions | Combined source/opacity, optical-depth, and luminosity files |
-| GRMHD sources plus opacities | `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`, `GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h`, `GRHayL/include/ghl_nrpyleakage_rate_helpers.h`, and `NRPyLeakage_Fermi_Dirac_integrals.c` | Same EOS, type, constant, error/HDF5, and math adapter | Standalone-opacity, optical-depth, and luminosity files |
+| Opacities only | `NRPyLeakage_compute_neutrino_opacities.c`, `ghl_nrpyleakage_nucleon_blocking.h`, `ghl_nrpyleakage_rate_helpers.h`, and `NRPyLeakage_Fermi_Dirac_integrals.c` | Radiation structs, leakage constants/macros, tabulated-EOS callback, GRHayL errors/HDF5 guard, math functions | Combined source/opacity, optical-depth, and luminosity files |
+| GRMHD sources plus opacities | `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`, `ghl_nrpyleakage_nucleon_blocking.h`, `ghl_nrpyleakage_rate_helpers.h`, and `NRPyLeakage_Fermi_Dirac_integrals.c` | Same EOS, type, constant, error/HDF5, and math adapter | Standalone-opacity, optical-depth, and luminosity files |
 | One path-of-least-resistance depth update | `NRPyLeakage_optical_depths_PathOfLeastResistance.c` | Opacity/depth struct definitions and math functions | EOS, HDF5, Fermi helper, source, standalone-opacity, and luminosity files |
-| Pointwise luminosities | `NRPyLeakage_compute_neutrino_luminosities.c`, `GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h`, `GRHayL/include/ghl_nrpyleakage_rate_helpers.h`, and `NRPyLeakage_Fermi_Dirac_integrals.c` | Radiation structs, leakage constants/macros, tabulated-EOS callback, GRHayL errors/HDF5 guard, metric inputs, math functions | Source, standalone-opacity, and optical-depth implementation files |
+| Pointwise luminosities | `NRPyLeakage_compute_neutrino_luminosities.c`, `ghl_nrpyleakage_nucleon_blocking.h`, `ghl_nrpyleakage_rate_helpers.h`, and `NRPyLeakage_Fermi_Dirac_integrals.c` | Radiation structs, leakage constants/macros, tabulated-EOS callback, GRHayL errors/HDF5 guard, metric inputs, math functions | Source, standalone-opacity, and optical-depth implementation files |
 
 These are link and call boundaries, not a complete simulation workflow. The
 optical-depth routine needs opacity and neighbor-depth *data*, but does not
@@ -54,9 +52,11 @@ consume optical-depth data, but do not call the optical-depth implementation.
 The combined routine owns a separate generated opacity write path; it does not
 delegate to `NRPyLeakage_compute_neutrino_opacities`.
 
-For a host with its own EOS and hydrodynamics, retain the installed
-blocking and rate helper headers and the Fermi helper for each EOS-dependent
-entry point. Port the
+For a host with its own EOS and hydrodynamics, retain the installed blocking
+and rate-helper headers
+([GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h](../../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h),
+[GRHayL/include/ghl_nrpyleakage_rate_helpers.h](../../../GRHayL/include/ghl_nrpyleakage_rate_helpers.h))
+and the Fermi helper for each EOS-dependent entry point. Port the
 optical-depth file independently if its six-neighbor update is wanted. The
 exact ABI, callback, error, HDF5, and unit substitutions are mapped in
 [API And Data](api-and-data.md).
@@ -82,7 +82,9 @@ tabulated EOS error unchanged. The blocking helper then validates finite,
 positive cgs density and temperature; finite free fractions in `[0,1]`, apart
 from endpoint excursions within the interpolation forward-error bound; and
 finite, bounded inversion and overlap results. Failure returns
-`ghl_error_nrpyleakage_blocking`. Generated Fermi calls return an invalid-key
+`ghl_error_nrpyleakage_blocking`. The shifted beta-moment evaluators also
+return that status for invalid or nonfinite inputs/results, before public
+writeback. Generated Fermi calls return an invalid-key
 error through `NRPYLEAKAGE_FD_OR_RETURN`. Output writes occur only after these
 calls, so all these error exits leave caller outputs unchanged. The routines
 do not check null pointers, EOS initialization, or table bounds independently
@@ -94,38 +96,39 @@ scattering and non-beta channels remain active while charged-current products
 take their analytic zero limit. The code does not form the divergent endpoint
 degeneracy difference or reaction-energy shift.
 
+Final output sanitization is a separate failure boundary: it writes fallback
+values and returns `ghl_error_nrpyleakage_nonfinite_output`. Internal
+`EnsureFinite` replacements can occur without that status, and finite sibling
+outputs remain unchanged. Success alone is not a physical-validity guarantee.
+
 ## Shared Nucleon-Blocking Evaluator
 
-`GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h` reconstructs kinetic
-degeneracies from cgs density, temperature, and EOS free-neutron/free-proton
-fractions. This removes
+[GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h](../../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h)
+reconstructs kinetic degeneracies from cgs
+density, temperature, and EOS free-neutron/free-proton fractions. This removes
 dependence on the arbitrary common energy zero of `mu_n` and `mu_p`, avoids
 counting bound nucleons as free targets, and removes the old equal-population
-quotient pole. A shared inline helper keeps opacity, source, and
-luminosity paths on the same blocking model instead of maintaining separate
-copies.
+quotient pole. The shared private evaluator keeps opacity, source, and luminosity paths
+on the same blocking model instead of maintaining separate copies.
 
 The evaluator uses piecewise rational fits for inverse $F_{1/2}$ and
 $F_{-1/2}$, an `expm1` overlap identity, and an analytic equal-population
 limit. It adds no quadrature, iterative root solve, or EOS/table lookup. This
 choice keeps blocking cost compatible with a leakage approximation while
-retaining finite and population-bound checks. Fraction bounds are not
-evaluator-specific: it delegates to the installed
-`ghl_nrpyleakage_normalize_nucleon_fractions` inline helper in
-[`ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h), which the M1
-leakage kernel and rate backend also call, keeping the roundoff-envelope check
-for the interpolation boundary. The source header records ILEAS,
+retaining finite and population-bound checks. The source header records ILEAS,
 FDINT/Fukushima, Sterbenz, and BSD-3 provenance; the exact equations and model
 limits are in [Physics And EOS Contract](physics-and-eos-contract.md).
 
 The callers retain `muhat` in the grey equilibrium-neutrino degeneracy and use
 the helper's kinetic degeneracy difference to form the reaction shift
-`q = muhat - T*(eta_n-eta_p)`. The header's internal algebraic moment
-evaluators apply that same shift and its particle-energy threshold to the
-paired charged-current emission and absorption kernels. This enforces their spectral Kirchhoff
+`q = muhat - T*(eta_n-eta_p)`. Private algebraic moment evaluators apply that
+same shift and its particle-energy threshold to the paired charged-current
+emission and absorption kernels. This enforces their spectral Kirchhoff
 relation without quadrature. It remains a grey leakage approximation: emitted
-neutrino vacancy is sampled at the mean energy, and the independent physical
-qualification bounds the resulting model error.
+neutrino vacancy is sampled at the mean energy. Independent physical
+qualification characterizes discrepancies at the sampled states; it does not
+establish a general model-error bound. See the
+[dense-matter limitation](nucleon-blocking-and-eos-conventions.md#effective-mass-limitation).
 
 All leakage finite-value guards use `robust_isfinite` or `robust_isnan`. On
 IEEE binary64 platforms the public inline helpers copy the representation with
@@ -172,20 +175,18 @@ Flow:
 7. Write `lum->nue`, `lum->anue`, and `lum->nux`.
 
 Finite handling: local `EnsureFinite` wraps selected generated subexpressions
-with `robust_isfinite` fallback to a small positive value; the floor helpers
-and `nrpyl_sanitize_luminosities` live in
-`GRHayL/include/ghl_nrpyleakage_rate_helpers.h`. After writeback, that
-sanitizer maps any non-finite luminosity output to the neutral
-zero-emission value. A replacement returns
+with `robust_isfinite` fallback to a small positive value. After writeback,
+`nrpyl_sanitize_luminosities` maps any non-finite luminosity output to the
+neutral zero-emission value. A replacement returns
 `ghl_error_nrpyleakage_nonfinite_output` with the finite fallback retained.
 
-Nearest tests: `Unit_Tests/unit_test_nrpyleakage_luminosities.c` directly
+Nearest tests: [Unit_Tests/unit_test_nrpyleakage_luminosities.c](../../../Unit_Tests/unit_test_nrpyleakage_luminosities.c) directly
 checks selected Fermi-Dirac branches, generates luminosity fixtures, recomputes
 `NRPyLeakage_compute_neutrino_luminosities`, and reads `nue`, `anue`, and `nux`
 fixtures. It consumes all three local `luminosity_pert_test_fail` return values
 and aborts with the row index on the first mismatch. Its generator draws each
 base state once and evaluates it unperturbed and perturbed before drawing the
-next row, so the paired files are matched row by row.
+next row, so the two files are matched row by row.
 
 ## `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`
 
@@ -215,7 +216,7 @@ Flow:
    `kappa->anue[0..1]`, and `kappa->nux[0..1]`.
 
 Finite handling: this file's `EnsureFinite` uses `robust_isfinite` from
-`GRHayL/include/ghl_nrpyleakage.h` and replaces selected non-finite intermediate
+[GRHayL/include/ghl_nrpyleakage.h](../../../GRHayL/include/ghl_nrpyleakage.h) and replaces selected non-finite intermediate
 terms with a small positive value. After writeback, `nrpyl_sanitize_sources`
 maps either non-finite signed source to neutral zero, while
 `nrpyl_sanitize_opacities` maps non-finite opacities to the established small
@@ -223,7 +224,7 @@ positive cgs inverse-length floor converted to the public geometrized unit.
 Any replacement returns `ghl_error_nrpyleakage_nonfinite_output` after both
 output groups have been sanitized.
 
-Nearest tests: `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c` calls
+Nearest tests: [Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c](../../../Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c) calls
 this routine in its RHS, divides `R_source` and `Q_source` by `rho`, advances
 `Y_e` and `eps` with RK4, and reads fixture replay. Its comparison helper also
 consumes every `ghl_pert_test_fail` result and aborts with the evolution time
@@ -265,7 +266,7 @@ subexpressions, then `nrpyl_sanitize_opacities` handles non-finite output
 entries with the same converted cgs floor used by generated opacity terms. A
 replacement returns `ghl_error_nrpyleakage_nonfinite_output`.
 
-Nearest tests: `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`
+Nearest tests: [Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c](../../../Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c)
 directly calls this routine for interior and exterior states, stores the six
 opacity fields on the grid, and reads opacity/depth fixtures. Its comparison
 return values are consumed, and the serial validation loop aborts with the grid
@@ -292,9 +293,9 @@ expressions for the selected key; do not duplicate those expressions into KB
 pages.
 
 Nearest tests: `Unit_Tests/unit_test_nrpyleakage_luminosities.c` checks selected
-valid keys. `Unit_Tests/unit_test_nrpyleakage_physics.c` checks every valid key
+valid keys. [Unit_Tests/unit_test_nrpyleakage_physics.c](../../../Unit_Tests/unit_test_nrpyleakage_physics.c) checks every valid key
 from `0` through `5` in both approximation branches.
-`Unit_Tests/unit_test_code_error.c`
+[Unit_Tests/unit_test_code_error.c](../../../Unit_Tests/unit_test_code_error.c)
 directly checks invalid-key behavior for both `z < 1e-3` and `z > 1e-3`, and
 maps those cases to `ghl_error_invalid_fermi_dirac_integral_key`.
 
@@ -329,7 +330,9 @@ Flow:
 The routine returns `void` and has no failure channel. It does not validate
 pointer lengths, metric sign, grid spacing, opacity sign, or finiteness.
 Negative face-averaged diagonal metric values enter `sqrt`; any resulting
-non-finite propagation is not scrubbed before output.
+non-finite propagation is not scrubbed before output. Nested `fmin` may ignore
+a NaN candidate when another candidate is numeric, so an invalid stencil need
+not yield an observable nonfinite result.
 
 Input shape note: the six-neighbor shape is explicit in the signature:
 `im1`, `ip1`, `jm1`, `jp1`, `km1`, and `kp1` opacity/depth pointers surround
@@ -339,9 +342,13 @@ Nearest tests: `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`
 directly computes opacities, iterates optical-depth updates with flat metric
 stencils, calls `NRPyLeakage_optical_depths_PathOfLeastResistance`, writes all
 six output depth fields back to grid storage, and reads fixture replay. That
-caller passes each neighbor pair in the public minus-then-plus order. Its flat
-metric makes the minimum invariant under a paired swap, so this test still does
-not verify directional argument mapping for unequal plus/minus face metrics.
+caller passes each neighbor pair in the public minus-then-plus order. The flat
+fixture metric makes that replay invariant under a paired neighbor swap.
+Separately, `check_sphere_caller_neighbor_order` exercises the actual
+`update_optical_depth_cell` gather/call path with unequal minus/plus x-face
+metrics and distinct neighbors. The all-direction asymmetric stencil in
+[unit_test_nrpyleakage_physics.c](../../../Unit_Tests/unit_test_nrpyleakage_physics.c)
+checks the public routine independently of that grid gather helper.
 
 ## Ground Truth References
 

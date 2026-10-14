@@ -41,7 +41,8 @@ and carried forward by the [post-phase-1 roadmap](radiation-m1/post-phase1-roadm
 - [M1 unit-test guide](../../docs/raw/Radiation_unit_tests.md) for scoped build commands,
   frozen THC_M1 comparisons, provenance, and coverage limits
 - [`docs/raw/Radiation_fresh_fixture_production.md`](../../docs/raw/Radiation_fresh_fixture_production.md)
-  for the fresh THC_M1 production record and its publication-deferral decision
+  for the fresh THC_M1 production record behind the published pinned
+  `GRHayL/TestData` `radiation/*.bin.gz` members
 - [`GRHayL/include/ghl_m1.h`](../../GRHayL/include/ghl_m1.h)
 - [`GRHayL/include/ghl_neutrino_rate_provider.h`](../../GRHayL/include/ghl_neutrino_rate_provider.h)
 - [Neutrinos hub](neutrinos.md) for the NRPyLeakage raw-rate bridge and
@@ -115,10 +116,19 @@ surface):
   `ghl_m1_compute_neutrino_diffusion_flux`,
   `ghl_m1_validate_neutrino_rates`, and
   `ghl_m1_repair_neutrino_state`
+- Neutrino closure-reuse wrappers (precomputed-closure
+  variants): `ghl_m1_compute_neutrino_number_flux_from_closure`,
+  `ghl_m1_compute_neutrino_physical_number_flux_from_closure`, and
+  `ghl_m1_compute_neutrino_interaction_sources_from_closure`
+- Neutrino number-floor helper: `ghl_m1_apply_neutrino_number_floor`
+  (separate from `ghl_m1_realizability_repair` and from the bundled
+  `ghl_m1_repair_neutrino_state`; see
+  [realizability repair](radiation-m1/m1-realizability-repair.md))
 - Neutrino source/update: `ghl_m1_compute_neutrino_interaction_sources`,
   `ghl_m1_compute_neutrino_explicit_rhs_sources`,
   `ghl_m1_update_neutrino_number_backward_euler`,
   `ghl_m1_try_neutrino_explicit_thin_update`,
+  `ghl_m1_try_neutrino_explicit_thin_update_with_diagnostics`,
   `ghl_m1_solve_neutrino_source_update`,
   `ghl_m1_solve_neutrino_implicit_homogeneous_update`,
   `ghl_m1_solve_neutrino_pair_source_update`,
@@ -175,12 +185,14 @@ Neutrino species keep the existing leakage naming `nue`, `anue`, `nux`
 - The canonical neutrino transport operation has no separate diffusion
   correction or optical-depth wavespeed cap. Optional public `Jthick` and
   diffusion helpers remain available and are tested separately.
-- The rate provider computes one frozen rate bundle per grey
-  neutrino species. Both built-in backends accept only
-  `nu_x_multiplicity == 4` and return an already-summed heavy-lepton bundle.
-  The raw-rate bridge exposes one single-species `nux` channel; the provider
-  applies the multiplicity once when building the already-summed bundle.
-  Hosts must not multiply the returned heavy-lepton state or exchange again.
+- The production NRPyLeakage backend computes one frozen rate bundle per grey
+  neutrino species. Both public initializers — `ghl_neutrino_rate_provider_initialize_default`
+  and `ghl_neutrino_rate_provider_initialize_nrpyleakage` — select the same
+  production provider, accept only `nu_x_multiplicity == 4`, and return an
+  already-summed heavy-lepton bundle. The raw-rate bridge exposes one
+  single-species `nux` channel; the provider applies the multiplicity once
+  when building the already-summed bundle. Hosts must not multiply the
+  returned heavy-lepton state or exchange again.
 - Electron-flavor pair, plasmon, and bremsstrahlung emissivities remain
   separate from charged-current coefficients and require the paired `nue` /
   `anue` source update. The provider returns lumped `nu_x` pair channels in
@@ -211,8 +223,12 @@ Neutrino species keep the existing leakage naming `nue`, `anue`, `nux`
   `ghl_neutrino_rate_provider.h`, `ghl_nrpyleakage.h`, and the provider tests.
 - Change an M1 test, fixture schema, or CI selection: update
   [M1 tests and fixtures](radiation-m1/tests-and-fixtures.md),
-  `docs/raw/Radiation_unit_tests.md`, `.github/run_tests.sh`, and the matching
-  fixture metadata or CI action.
+  `docs/raw/Radiation_unit_tests.md`, `.github/run_tests.sh`,
+  `.github/actions/run_m1/action.yml`,
+  `.github/actions/m1-code-coverage/action.yml`,
+  `.github/radiation-testdata-ref`, and
+  `.github/prepare_m1_fixtures.sh`, together with the matching fixture
+  metadata or CI action.
 
 ## Drift Risks
 

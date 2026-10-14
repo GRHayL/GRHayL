@@ -24,7 +24,8 @@ field-by-field binary specification.
 ## Harness Roles
 
 - Trusted data: expected output read from downloaded TestData fixtures or from
-  generated local output files. Tests compare computed values against this data.
+  generated local output files. Tests compare computed values against this data. “Trusted” identifies the
+  comparison reference, not an independently established physics oracle.
 - Computed data: values produced by the test run from GRHayL routines and test
   helper calls.
 - Perturbed data: comparison bar data, usually `*_output_pert.bin` or
@@ -33,13 +34,16 @@ field-by-field binary specification.
 
 Most replay tests use `ghl_pert_test_fail` or wrapper helpers around it. The
 exact relative-error cutoff, absolute cutoff, custom cutoffs, and per-quantity
-exceptions route to `GRHayL/include/ghl_unit_tests.h` plus the Unit_Tests helper
+exceptions route to [GRHayL/include/ghl_unit_tests.h](../../GRHayL/include/ghl_unit_tests.h) plus the Unit_Tests helper
 source above. Wiki pages should describe roles, not duplicate tolerance logic.
 
 The scalar comparison rejects nonfinite trusted, computed, and perturbed
 values. A nonfinite reference is missing numerical evidence, not a passing
-comparison. Vector wrappers use small absolute roundoff allowances based on
-the trusted vector scale; hybrid density recovery also accounts for Lorentz
+comparison. The conservative momentum wrapper and primitive velocity
+comparisons in `ghl_pert_test_fail_primitives_with_cutoffs` use small absolute
+roundoff allowances based on the trusted vector scale. The basic
+`ghl_pert_test_fail_primitives` uses the scalar comparator componentwise
+without those vector-scale allowances. Hybrid density recovery also accounts for Lorentz
 factor conditioning using input mass and trusted density. These allowances
 do not replace the scalar relative floor or derive expectations from the
 result under test. The stress-energy absolute cutoff applies to the
@@ -47,14 +51,12 @@ difference, not to the computed value alone.
 
 `ghl_unit_tests.h` is a source-tree test-only header and is excluded from the
 installed public header set. Its non-inline helper definitions live under
-`Unit_Tests/`.
+[Unit_Tests/](../../Unit_Tests).
 
 ## Helper-Only Files
 
-These files are helper-only evidence. Generic helpers serve tests or data
-generators. M1 replay helpers live under `Unit_Tests/m1_helpers/` and are linked
-only to their actual M1 consumers through `configure`; they are not standalone
-tests or generic data-generator dependencies:
+These files are helper-only evidence. They are compiled into tests or data
+generators but are not standalone unit tests:
 
 | Helper-only file | Role | Route |
 | --- | --- | --- |
@@ -63,20 +65,13 @@ tests or generic data-generator dependencies:
 | `pert_test_fail_stress_energy.c` | Stress-energy tensor comparison wrapper. | [Core tests and fixtures](../core/tests-and-fixtures.md) |
 | `randomize_metric.c` | Random metric setup used by generators/tests. | [Core tests and fixtures](../core/tests-and-fixtures.md) |
 | `randomize_primitives.c` | Random primitive setup used by generators/tests. | [Con2Prim tests and fixtures](../gems/con2prim/tests-and-fixtures.md) |
-| `test_compute_h_and_cs2.c` | EOS enthalpy/sound-speed check helper. | [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md) |
+| `test_compute_h_and_cs2.c` | Synthetic enthalpy/sound-speed callback shared by tabulated flux replay and its generator; not an EOS-table oracle. | [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md) |
 | `tabulated_eos_unit_test_helpers.c` | Analytic table quantity helper for tabulated EOS checks. | [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md) |
 | `compute_A_flux_with_B.c` | Induction vector-potential HLL helper using `B`. | [Induction tests and fixtures](../gems/induction/tests-and-fixtures.md) |
 | `compute_A_flux_with_Btilde.c` | Induction vector-potential HLL helper using `Btilde`. | [Induction tests and fixtures](../gems/induction/tests-and-fixtures.md) |
 | `compute_ccc_ADM.c` | Cell-centered ADM interpolation helper. | [Induction tests and fixtures](../gems/induction/tests-and-fixtures.md) |
 | `compute_ccc_BSSN.c` | Cell-centered BSSN interpolation helper. | [Induction tests and fixtures](../gems/induction/tests-and-fixtures.md) |
 | `compute_vvv_ADM.c` | Vertex-centered ADM interpolation helper. | [Induction tests and fixtures](../gems/induction/tests-and-fixtures.md) |
-| `m1_helpers/m1_thcm1_fixture_utils.c` | Shared stored-record loader, record validation, and paired/envelope comparison helpers for the Radiation M1 THC_M1 fixtures. | [M1 tests and fixtures](../gems/radiation-m1/tests-and-fixtures.md) |
-| `m1_helpers/m1_thcm1_rusanov_fixture.c` | Replay consumers for the neutrino, number-current, and generic Rusanov fixture families. | [M1 tests and fixtures](../gems/radiation-m1/tests-and-fixtures.md) |
-| `m1_helpers/m1_thcm1_source_fixture.c` | Replay consumer for the instantaneous frozen-rate source fixture family. | [M1 tests and fixtures](../gems/radiation-m1/tests-and-fixtures.md) |
-| `m1_helpers/m1_thcm1_stress_energy_fixture.c` | Replay consumer for the covariant stress-energy fixture family. | [M1 tests and fixtures](../gems/radiation-m1/tests-and-fixtures.md) |
-| `m1_helpers/m1_thcm1_transport_fixture.c` | Prepared-face operand preparation and paired comparison helpers for the four-point transport fixture families. | [M1 tests and fixtures](../gems/radiation-m1/tests-and-fixtures.md) |
-| `m1_pair_range_tests.h` | Header-included paired pair-source range-rejection cases compiled into `unit_test_m1_fd_jacobian.c`; no private-helper substitution. | [M1 tests and fixtures](../gems/radiation-m1/tests-and-fixtures.md) |
-| `m1_neutrino_rate_provider_reference.h`, `m1_neutrino_rate_provider_reference.inc` | Test-local synthetic reference provider context, cache, and compute kernels included by `unit_test_m1_rate_provider.c` for its synthetic-model checks. | [M1 tests and fixtures](../gems/radiation-m1/tests-and-fixtures.md) |
 
 `nrpyleakage_main.h` is also helper-only: it owns shared NRPyLeakage main/key
 handling and routes through [Neutrinos tests and fixtures](../gems/neutrinos/tests-and-fixtures.md).
@@ -89,12 +84,16 @@ handling and routes through [Neutrinos tests and fixtures](../gems/neutrinos/tes
 | Generation modes in tests | Some test binaries generate their own `*_unperturbed.bin` and `*_perturbed.bin` families when invoked with a generation key, then replay when invoked with test key. | [NRPyLeakage harness](../../Unit_Tests/nrpyleakage_main.h), [tabulated Con2Prim test](../../Unit_Tests/unit_test_con2prim_tabulated.c) |
 | Downloaded TestData fixtures | Normal CI/script runs download binary fixtures from `GRHayL/TestData` into the repo root before running tests. | [run_tests.sh](../../.github/run_tests.sh), workflows |
 | Downloaded EOS tables | Scripted runs download large HDF5 tables from `stellarcollapse.org/EOS`; these are test inputs, not generated binary bars. | [run_tests.sh](../../.github/run_tests.sh) |
-| Checked-in sample tables | Reduced/analytic sample table assets live under `Unit_Tests/sample_table/`; they are input assets, not replay output bars. | [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md) |
-| External retained M1 fixtures | Radiation M1 consumers replay pinned published members downloaded by the runner, or a supplied external package pointed to by `M1_FIXTURE_DIR` at run time. No retained M1 payload file or archive is present in the working tree, and current GRHayL never generates expected values. | [Radiation M1 fixture package](../../docs/raw/m1_thcm1/README.md), [M1 tests and fixtures](../gems/radiation-m1/tests-and-fixtures.md) |
+| Checked-in sample tables | Reduced/analytic sample table assets live under [Unit_Tests/sample_table/](../../Unit_Tests/sample_table); they are input assets, not replay output bars. | [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md) |
 
 Downloaded `TestData` fixtures and locally generated fixtures may share names.
-Normal runner behavior uses downloads; generator presence does not mean CI
-regenerates trusted data.
+The runner downloads missing files and reuses existing regular files; see
+[reference selection and reuse](runner-and-generated-artifacts.md#fixture-reference-selection).
+Generator presence does not mean CI regenerates trusted data. Current PLM,
+WENOZ, Flux_Source, and local Induction generators call the same routines or
+helpers as replay, so their outputs provide implementation regression evidence.
+Perturbation bars sample input sensitivity; they do not establish convergence
+or independent physical accuracy.
 
 Likewise, `make datagen` compiles generator executables but does not run them.
 Fixture provenance requires an executed producer command plus the produced
@@ -112,7 +111,6 @@ file, not aggregate target success.
 | Induction | `induction_interpolation_*`, `HLL_flux_*` | HLL here is vector-potential induction evidence, not Flux_Source HLLE evidence. |
 | Neutrinos | `nrpyleakage_optically_thin_gas_*`, `nrpyleakage_constant_density_sphere_*`, `nrpyleakage_luminosities_*` | Families use `*_unperturbed.bin`/`*_perturbed.bin` and SLy4 table input. |
 | Reconstruction | `PLM_reconstruction_*`, `WENOZ_reconstruction_*`, `ET_Legacy_reconstruction_*` | ET Legacy reconstruction exercises PPM legacy comparison paths. |
-| Radiation M1 | Opt-in external retained pointwise, instantaneous-source, stress-energy, Rusanov, transport, and standalone-Jthick families supplied as `M1_FIXTURE_DIR` members. | Consumed by the existing M1 tests through the `m1_thcm1_*` helpers when an external fixture directory is supplied. No retained M1 payload file or archive is present in the working tree. See [M1 tests and fixtures](../gems/radiation-m1/tests-and-fixtures.md). |
 | ET Legacy | `ET_Legacy_conservs_*`, `ET_Legacy_primitives_*`, `ET_Legacy_flux_source_*`, `ET_Legacy_HLL_flux_*`, `ET_Legacy_induction_gauge_rhs_*`, `ET_Legacy_reconstruction_*` | See [ET legacy comparison contract](et-legacy-comparison-contract.md). |
 
 Binary byte layout belongs in paired test/generator source. Wiki may mention

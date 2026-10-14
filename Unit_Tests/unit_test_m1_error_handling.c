@@ -2543,6 +2543,61 @@ static void check_private_scalar_helpers_and_diagnostic_clamp(void) {
         ghl_error_m1_invalid_state, "materially unrealizable flux was accepted");
 }
 
+static void check_closure_covariance_boundaries(void) {
+  /* Public entry points reject these malformed inputs before covariance
+   * validation. Exercise the private validator directly, including finite
+   * inputs whose normalized moments exceed the binary64 range. */
+  for(int test_case = 0; test_case < 9; ++test_case) {
+    ghl_metric_quantities metric;
+    m1_setup_flat_metric(&metric);
+    ghl_m1_rad_state rad = { .E = 1.0, .F = { 0.0, 0.0, 0.0 } };
+    ghl_m1_closure closure
+          = { .P = { { 1.0, 0.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 0.0, 1.0 } } };
+    switch(test_case) {
+      case 0:
+        break;
+      case 1:
+        rad.E = NAN;
+        break;
+      case 2:
+        rad.E = 0.0;
+        break;
+      case 3:
+        metric.gammaDD[0][0] = NAN;
+        break;
+      case 4:
+        memset(metric.gammaDD, 0, sizeof(metric.gammaDD));
+        break;
+      case 5:
+        rad.F[0] = NAN;
+        break;
+      case 6:
+        rad.E = DBL_MIN;
+        rad.F[0] = DBL_MAX;
+        break;
+      case 7:
+        closure.P[0][0] = NAN;
+        break;
+      case 8:
+        rad.E = DBL_MIN;
+        closure.P[0][0] = DBL_MAX;
+        break;
+    }
+    const ghl_metric_quantities metric_before = metric;
+    const ghl_m1_rad_state rad_before = rad;
+    const ghl_m1_closure closure_before = closure;
+    require_error_code(
+          ghl_m1_validate_closure_covariance_psd(&metric, &rad, &closure),
+          test_case == 0 ? ghl_success : ghl_error_m1_invalid_state,
+          "covariance validator violated its range contract");
+    if(memcmp(&metric, &metric_before, sizeof(metric)) != 0
+       || memcmp(&rad, &rad_before, sizeof(rad)) != 0
+       || memcmp(&closure, &closure_before, sizeof(closure)) != 0) {
+      fail_test("covariance validation modified its inputs");
+    }
+  }
+}
+
 /* Exercise the private implicit-solve diagnostics initializer: its NULL
  * early return must leave nothing to write, and a non-NULL call must reset a
  * dirty payload to its published defaults. */
@@ -2799,6 +2854,7 @@ static void check_upward_rounding_overflows(void) {
 }
 
 int main(void) {
+  check_closure_covariance_boundaries();
   check_jacobi_iteration_contract();
   check_upward_rounding_overflows();
 #if defined(__linux__)

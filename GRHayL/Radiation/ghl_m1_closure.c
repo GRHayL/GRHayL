@@ -647,20 +647,36 @@ static ghl_error_codes_t publish_eulerian_minerbo_fallback(
     return error;
   }
 
+  return ghl_m1_closure_private_publish_fallback(
+        m1_params, ws->metric, ws->prims, ws->rad_state, &candidate, closure);
+}
+
+ghl_error_codes_t ghl_m1_closure_private_publish_fallback(
+      const ghl_m1_parameters *restrict m1_params,
+      const ghl_metric_quantities *restrict metric,
+      const ghl_primitive_quantities *restrict prims,
+      const ghl_m1_rad_state *restrict rad_state,
+      ghl_m1_closure *restrict candidate,
+      ghl_m1_closure *restrict closure) {
+  ghl_error_codes_t error
+        = ghl_m1_validate_closure_covariance_psd(metric, rad_state, candidate);
+  if(error != ghl_success) {
+    return error;
+  }
+
   /* The fallback has no scalar four-dimensional root. The endpoint status and
    * compatibility bit make that fact observable to source/update callers. */
-  candidate.root_residual = 0.0;
-  candidate.root_iterations = 0;
-  candidate.solve_status = ghl_m1_closure_solve_endpoint_fallback;
-  candidate.four_point_compatibility = false;
+  candidate->root_residual = 0.0;
+  candidate->root_iterations = 0;
+  candidate->solve_status = ghl_m1_closure_solve_endpoint_fallback;
+  candidate->four_point_compatibility = false;
 
   ghl_m1_comoving comoving;
   double V_con[3], V_cov[3], W;
   error = ghl_m1_compute_comoving_moments_validated(
-        m1_params, ws->metric, ws->prims, ws->rad_state, &candidate, &comoving, V_con,
-        V_cov, &W);
+        m1_params, metric, prims, rad_state, candidate, &comoving, V_con, V_cov, &W);
   /* The comoving-moment call already validated this unchanged tensor. */
-  return ghl_m1_closure_private_finalize_fallback(error, &comoving, &candidate, closure);
+  return ghl_m1_closure_private_finalize_fallback(error, &comoving, candidate, closure);
 }
 
 ghl_error_codes_t ghl_m1_closure_private_check_residual_gate(
@@ -701,6 +717,10 @@ static ghl_error_codes_t publish_minerbo(
   if(error != ghl_success) {
     return publish_eulerian_minerbo_fallback(m1_params, ws, closure);
   }
+  error = ghl_m1_validate_closure_covariance_psd(ws->metric, ws->rad_state, &candidate);
+  if(error != ghl_success) {
+    return publish_eulerian_minerbo_fallback(m1_params, ws, closure);
+  }
   error = ghl_m1_validate_closure_tensor(ws->metric, ws->rad_state, &candidate);
   if(error != ghl_success) {
     /* With an exactly zero Eulerian flux, the covariant thin dyad is exactly
@@ -737,7 +757,7 @@ ghl_error_codes_t ghl_m1_closure_private_solve_root(
   }
 
   ghl_m1_closure_root_result candidate = { 0 };
-  /* Endpoint roots are judged on the J^2-normalized residual. */
+  /* Endpoint roots are judged on the residual normalized by max(J^2, |H2|). */
   const double endpoint_roundoff = 1024.0 * DBL_EPSILON;
   if(evaluation0.normalized_residual <= endpoint_roundoff
      || evaluation1.normalized_residual <= endpoint_roundoff) {

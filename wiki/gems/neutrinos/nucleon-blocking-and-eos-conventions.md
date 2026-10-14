@@ -19,9 +19,10 @@ for producer-specific EOS meanings.
 
 ## Installed Blocking Model
 
-The [shared blocking helper](../../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h)
-is shared by standalone opacities, opacities with GRMHD sources, and
-luminosities. It uses the EOS callback's free-neutron and free-proton fractions
+The installed blocking implementation header
+[GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h](../../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h)
+provides the shared evaluation used by standalone opacities, opacities with
+GRMHD sources, and luminosities. It uses the EOS callback's free-neutron and free-proton fractions
 `Xn` and `Xp`. For each free population it inverts the nonrelativistic ideal-gas
 density relation with a common bare nucleon mass to obtain a kinetic degeneracy
 `eta_n` or `eta_p`.
@@ -52,12 +53,7 @@ The inverse half-order Fermi integral uses scalar minimax fits from FDINT and
 Fukushima. No numerical quadrature, root iteration, or additional EOS lookup
 runs in the leakage hot path. The source carries the FDINT license and cites
 the original fits. GRHayL's density normalization, overlap identity, endpoint
-handling, and reaction pairing are local adaptations. Fraction bounding itself
-lives outside this header: the evaluator calls the installed
-`ghl_nrpyleakage_normalize_nucleon_fractions` inline helper in
-[`ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h), which the M1
-leakage kernel and rate backend reuse so the shared roundoff-envelope check serves
-both consumers.
+handling, and reaction pairing are local adaptations.
 
 ## Equilibrium And Reaction-Energy Pairing
 
@@ -201,7 +197,7 @@ deciding the effect on a full leakage evolution.
 ## Model Boundary And Evidence
 
 - The evaluator's algebra, endpoint behavior, and spectral detailed balance have
-  table-free references in `Unit_Tests/unit_test_nrpyleakage_physics.c`; the
+  table-free references in [Unit_Tests/unit_test_nrpyleakage_physics.c](../../../Unit_Tests/unit_test_nrpyleakage_physics.c); the
   reported numerical comparisons are external qualification evidence.
 - Whole-BNS overhead is unmeasured. The earlier `3.43%` whole-process timing
   includes loading an approximately 879 MB EOS table and cannot be treated as

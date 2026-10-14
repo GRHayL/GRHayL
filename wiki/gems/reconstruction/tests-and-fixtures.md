@@ -33,6 +33,14 @@ Read with the [Reconstruction gem hub](../reconstruction.md).
   fixture. Replay and CI do not consume the generated perturbed-input file.
   Trusted and perturbed outputs come from downloaded fixture data.
 
+The current PLM and WENOZ producers compute trusted and perturbed outputs with
+the same public wrappers that replay exercises. These are implementation-derived
+regression fixtures, not independent analytic or convergence oracles. Current
+producer source does not establish how historical downloaded files were made.
+Replay agreement also does not establish positivity, local bounds, or coupled
+primitive-state admissibility; see the [WENOZ limits](wenoz-contract.md) and
+[caller contract](face-and-stencil-contract.md#caller-impact).
+
 ## Method Coverage
 
 - PLM direct coverage lives in `unit_test_PLM_reconstruction.c`; the generator
@@ -45,27 +53,26 @@ Read with the [Reconstruction gem hub](../reconstruction.md).
   left/right face values across three flux directions using
   `ET_Legacy_reconstruction` fixtures.
 - ET Legacy exercises PPM paths; no dedicated `unit_test_PPM_reconstruction.c` or PPM data generator is visible.
-- [Unit_Tests/unit_test_coverage_flux_reconstruction.c](../../../Unit_Tests/unit_test_coverage_flux_reconstruction.c)
-  directly checks maxmod endpoints, PPM shock flattening, constant and sharp
-  contacts, rejected contact inputs, and exceptional normalization scales. It
-  needs no replay fixtures and is executed by the aggregate local runner.
 
 These replay tests use `ghl_pert_test_fail` in an `if` condition and call
 `ghl_error` on mismatch. Numerical comparisons can therefore fail these test
 binaries. Coverage is still bounded:
 
 - PLM generation and replay evaluate the valid interval
-  `2 <= index < arraylength-1`; serialized boundary slots are deterministic
-  zero placeholders and are ignored by replay.
+  `2 <= index < arraylength-1`; the current generator initializes serialized
+  boundary slots to zero, and replay ignores those slots.
 - WENOZ generation and replay evaluate the valid interval
-  `3 <= index < arraylength-2`; serialized boundary slots are deterministic
-  zero placeholders and are ignored by replay.
+  `3 <= index < arraylength-2`; the current generator initializes serialized
+  boundary slots to zero, and replay ignores those slots.
 - Replay rejects missing headers and dimensions too small to evaluate a
   stencil: PLM requires at least 4 points, WENOZ at least 6 points, and ET
   Legacy direction length at least 8. ET Legacy also validates cubic size
   arithmetic before allocation.
 - PPM helper routines have only transitive ET Legacy coverage; no dedicated
   PPM or helper test exists.
+- ET Legacy uses default PPM parameters and equal polytropic and thermal Gamma
+  of `2`; it does not independently explore every trigger, parameter choice,
+  or varying effective Gamma. See [PPM flow](ppm-flow.md).
 
 ## Configure Versus Runtime Data
 
@@ -80,7 +87,7 @@ working directory, and run the compiled test executables.
 
 ## CI Routes
 
-`.github/run_tests.sh` runs ET Legacy reconstruction and PLM; workflow reconstruction jobs run PLM and WENOZ; ET-Legacy workflow matrix includes reconstruction.
+[.github/run_tests.sh](../../../.github/run_tests.sh) runs ET Legacy reconstruction and PLM; workflow reconstruction jobs run PLM and WENOZ; ET-Legacy workflow matrix includes reconstruction.
 
 - [.github/run_tests.sh](../../../.github/run_tests.sh) downloads
   `ET_Legacy_reconstruction_{input,output,output_pert}.bin`, runs
@@ -96,6 +103,11 @@ working directory, and run the compiled test executables.
   define a `reconstruction` job matrix for `PLM_reconstruction` and
   `WENOZ_reconstruction`, and an `ET-Legacy` matrix that includes
   `reconstruction`.
+
+The local runner selects both ET Legacy and PLM fixtures through
+[.github/et-legacy-testdata-ref](../../../.github/et-legacy-testdata-ref).
+Workflow ET-Legacy jobs use the same reference file; standalone PLM and WENOZ
+workflow jobs download from TestData `main`.
 
 Thus WENOZ is workflow-only relative to the aggregate local runner, while PPM
 is reached through ET Legacy in both routes. `run_tests.sh` removes only the

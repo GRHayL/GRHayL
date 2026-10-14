@@ -7,10 +7,10 @@ authority.
 ## Shared Harness
 
 The EOS-table NRPyLeakage tests
-(`Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`,
-`Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`, and
-`Unit_Tests/unit_test_nrpyleakage_luminosities.c`) include
-`Unit_Tests/nrpyleakage_main.h`. `unit_test_nrpyleakage_physics.c` and
+([Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c](../../../Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c),
+[Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c](../../../Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c), and
+[Unit_Tests/unit_test_nrpyleakage_luminosities.c](../../../Unit_Tests/unit_test_nrpyleakage_luminosities.c)) include
+[Unit_Tests/nrpyleakage_main.h](../../../Unit_Tests/nrpyleakage_main.h). `unit_test_nrpyleakage_physics.c` and
 `unit_test_nrpyleakage_classifier_fallback.c` define their own `main(void)`,
 take no arguments, and do not include it. For the EOS-table tests, that
 helper owns the common CLI:
@@ -28,24 +28,20 @@ The accepted keys are:
 Any other key is rejected by the shared harness. The harness zero-initializes
 the EOS and lets `ghl_initialize_tabulated_eos_functions_and_params(...)`
 select the tabulated StellarCollapse implementation with sound-speed cleaning
-disabled (`GRHayL/GRHayL_Core/initialize_eos.c`). It passes atmosphere values
+disabled ([GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c)). It passes atmosphere values
 for `rho_b`, `Y_e`, and `T`, and frees table memory with
 `ghl_tabulated_free_memory(&eos)` after either mode completes.
 
 Ground truth:
 
 - `Unit_Tests/nrpyleakage_main.h`
-- `GRHayL/include/ghl_nrpyleakage.h`
-- `GRHayL/include/ghl_radiation.h`
-
-`Unit_Tests/unit_test_coverage_leakage.c` adds fixture-independent boundary
-checks for rejected beta moments, logarithmic populations, and blocking
-outputs. It runs through the aggregate runner with or without HDF5.
+- [GRHayL/include/ghl_nrpyleakage.h](../../../GRHayL/include/ghl_nrpyleakage.h)
+- [GRHayL/include/ghl_radiation.h](../../../GRHayL/include/ghl_radiation.h)
 
 ## Fixture Pairs
 
 Fixture names are hard-coded by each test and are downloaded by
-`.github/run_tests.sh` for normal CI replay:
+[.github/run_tests.sh](../../../.github/run_tests.sh) for normal CI replay:
 
 - `nrpyleakage_optically_thin_gas_unperturbed.bin`
 - `nrpyleakage_optically_thin_gas_perturbed.bin`
@@ -59,14 +55,18 @@ key `0`; CI and standard unit-test replay use key `1`. These producers live in
 the test translation units themselves; there are no matching
 `Unit_Tests/data_gen/unit_test_data_nrpyleakage_*.c` targets.
 
-The published `GRHayL/TestData` copies contain regenerated outputs for the
-current diffusion-time, bremsstrahlung-density, heavy-species, and
-nucleon-blocking corrections. CI downloads those replacement goldens. Replay
-scenarios remain optically thin gas, constant-density sphere, and
-luminosities, but sphere and luminosity comparisons
-now use `1024*DBL_EPSILON` with zero absolute tolerance, and the sphere exterior
-temperature respects the EOS-table lower bound. These implementation-generated
-baselines detect drift; they do not independently validate corrected physics.
+Current key-`0` producers evaluate the installed diffusion-time,
+bremsstrahlung-density, heavy-species, and nucleon-blocking formulas. Their
+source and the download commands do not establish the historical producer of
+published `GRHayL/TestData` binaries. The aggregate runner selects Neutrinos
+fixtures through [.github/et-legacy-testdata-ref](../../../.github/et-legacy-testdata-ref);
+compiler workflows fetch the Neutrinos directory from TestData `main`.
+
+Replay scenarios are optically thin gas, constant-density sphere, and
+luminosities. Sphere and luminosity comparisons use `1024*DBL_EPSILON` with
+zero absolute tolerance, and the sphere generator keeps its exterior
+temperature above the EOS-table lower bound. Locally regenerated baselines
+detect drift; they do not independently validate the corrected physics.
 
 ## Blocking-Correction Qualification
 
@@ -79,7 +79,7 @@ The shifted charged-current parent kernels are paired to the EOS equilibrium
 chemical potential. Those mathematical properties do not establish
 interacting-EOS accuracy for the algebraic grey reduction.
 
-`Unit_Tests/unit_test_nrpyleakage_physics.c` supplies persistent, table-free
+[Unit_Tests/unit_test_nrpyleakage_physics.c](../../../Unit_Tests/unit_test_nrpyleakage_physics.c) supplies persistent, table-free
 physics checks. It compares blocking with independent high-precision
 references and ordinary beta moments with high-precision evaluations of the
 same fitted formulas, checks population bounds and the transition
@@ -185,16 +185,18 @@ or workflow result. The script's named TestData paths are the reproducible
 publication route for the current fixtures described above.
 
 No-HDF5 builds set `GHL_DISABLE_HDF5` and apply `configure`'s exact
-implementation-source filter. That filter removes many tabulated EOS/Flux_Source
-sources but retains selected Con2Prim Tabulated/NN helpers and all NRPyLeakage
-implementation files. It also excludes the EOS-table NRPyLeakage tests:
+implementation-source filter. That filter removes table-backed EOS sources
+but retains selected Con2Prim Tabulated/NN helpers, direct tabulated and
+tabulated-entropy HLLE definitions, and all guarded NRPyLeakage implementation
+files. It also excludes the EOS-table NRPyLeakage tests:
 
 - `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`
 - `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`
 - `Unit_Tests/unit_test_nrpyleakage_luminosities.c`
 
-The table-free `Unit_Tests/unit_test_nrpyleakage_physics.c` remains compiled
-and runnable without HDF5.
+The table-free [Unit_Tests/unit_test_nrpyleakage_physics.c](../../../Unit_Tests/unit_test_nrpyleakage_physics.c) and
+[Unit_Tests/unit_test_nrpyleakage_classifier_fallback.c](../../../Unit_Tests/unit_test_nrpyleakage_classifier_fallback.c)
+remain compiled and runnable without HDF5.
 
 NRPyLeakage implementation sources remain compiled so their early
 `ghl_error_used_disabled_hdf5` paths exist. The table-free physics test calls
@@ -202,7 +204,7 @@ every EOS-dependent public leakage routine in its no-HDF5 build and checks those
 codes directly. `unit_test_code_error` keys `2` and `3` separately cover the
 invalid Fermi keys.
 
-For wider build context, see `wiki/build-and-ci.md` and `wiki/test-map.md`.
+For wider build context, see [wiki/build-and-ci.md](../../build-and-ci.md) and [wiki/test-map.md](../../test-map.md).
 
 ## Test Behavior Map
 
@@ -236,7 +238,10 @@ against
 optical-depth behavior. It computes interior/exterior opacities with
 `NRPyLeakage_compute_neutrino_opacities`, fills grid arrays, then iterates
 optical-depth updates through `NRPyLeakage_optical_depths_PathOfLeastResistance`
-until convergence or iteration limit. Key `1` reads and calls comparison
+until convergence or iteration limit. Before replay,
+`check_sphere_caller_neighbor_order` checks the actual gather/call helper with
+unequal x-face metrics and distinct neighbors. This complements the
+all-direction asymmetric stencil in the table-free physics test. Key `1` reads and calls comparison
 helpers on
 `nrpyleakage_constant_density_sphere_{unperturbed,perturbed}.bin`.
 
@@ -249,7 +254,7 @@ comparison helpers for `nue`, `anue`, and `nux` values against
 Generation retains each base value, applies a bounded perturbation, and asserts
 the pair distance and EOS/input bounds before evaluating the perturbed row.
 
-`Unit_Tests/unit_test_code_error.c` covers direct invalid Fermi-Dirac keys by
+[Unit_Tests/unit_test_code_error.c](../../../Unit_Tests/unit_test_code_error.c) covers direct invalid Fermi-Dirac keys by
 calling `NRPyLeakage_Fermi_Dirac_integrals(-1, ...)` for both `z < 1e-3` and
 `z > 1e-3`. Keys `86` and `87` also verify the terminating error-message paths
 for NRPyLeakage blocking and nonfinite-output statuses.
@@ -304,14 +309,15 @@ verifies each disabled-HDF5 return.
 
 `.github/run_tests.sh` is the compact end-to-end route for Neutrinos fixture
 downloads and test commands. The concrete workflow example is
-`.github/workflows/github-actions-Ubuntu-gcc.yml`: its `neutrinos` job matrix
+[.github/workflows/github-actions-Ubuntu-gcc.yml](../../../.github/workflows/github-actions-Ubuntu-gcc.yml): its `neutrinos` job matrix
 lists `nrpyleakage_optically_thin_gas`,
 `nrpyleakage_constant_density_sphere`, and `nrpyleakage_luminosities`, then
 downloads matching `_unperturbed.bin` and `_perturbed.bin` files plus the SLy4
 table before running each test with key `1`.
 
-Matching Neutrinos jobs exist in other workflow files. Before expanding line
-citations beyond the Ubuntu GCC example, verify exact locations with:
+Matching Neutrinos jobs exist in other workflow files. Before extending the
+workflow mapping beyond the Ubuntu GCC example, inspect the owning files and
+job names with:
 
 ```sh
 rg -n "neutrinos|nrpyleakage" .github/workflows
@@ -324,9 +330,10 @@ commented out for Intel and macOS Clang. Workflow selection makes these
 numerical comparisons run; it does not by itself qualify the downloaded
 fixtures.
 
-The aggregate runner's `EXIT` trap removes only the files and temporary
-directories that run created. Pre-existing files with the same names are not
-downloaded again and are not removed. Individual workflow jobs rely on fresh
+The aggregate runner's `EXIT` trap removes tracked download/decompression
+paths and its private expected-error directory. Existing regular fixture files
+bypass downloads, but reuse does not establish provenance or unchanged contents;
+see [runner ownership and selection](../../tests/runner-and-generated-artifacts.md). Individual workflow jobs rely on fresh
 workspaces and do not include an explicit Neutrinos cleanup step.
 
 ## Repo-Local References
@@ -336,11 +343,11 @@ workspaces and do not include an explicit Neutrinos cleanup step.
 - `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`
 - `Unit_Tests/unit_test_nrpyleakage_luminosities.c`
 - `Unit_Tests/unit_test_code_error.c`
-- `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`
-- `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities.c`
-- `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c`
-- `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_Fermi_Dirac_integrals.c`
-- `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_optical_depths_PathOfLeastResistance.c`
+- [GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c)
+- [GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities.c](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities.c)
+- [GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c)
+- [GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_Fermi_Dirac_integrals.c](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_Fermi_Dirac_integrals.c)
+- [GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_optical_depths_PathOfLeastResistance.c](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_optical_depths_PathOfLeastResistance.c)
 - `GRHayL/include/ghl_nrpyleakage.h`
 - `GRHayL/include/ghl_radiation.h`
 - `configure`

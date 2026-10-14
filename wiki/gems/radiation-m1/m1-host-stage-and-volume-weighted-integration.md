@@ -99,6 +99,13 @@ When electron-flavor pair processes are active, call the paired
 packets private until both species succeed. The heavy-flavor species uses the
 single-species path.
 
+For electron-flavor transport faces, the host must add the partner-dependent
+inverse pair energy opacity on top of scalar `kappa_tr` before constructing
+the face opacity, per
+[`Radiation_pair_source_model.md#opacity-supplied-to-transport`](../../../docs/raw/Radiation_pair_source_model.md#opacity-supplied-to-transport);
+scalar `kappa_tr` excludes the separated pair channels by the
+[rate-provider contract](rate-provider-contract.md#channels).
+
 After local success, aggregate the three radiation increments and all matter
 and lepton packets. Intersect the radiation realizability/positivity interval
 with matter energy-momentum, electron-fraction, EOS, and `Con2Prim` intervals.

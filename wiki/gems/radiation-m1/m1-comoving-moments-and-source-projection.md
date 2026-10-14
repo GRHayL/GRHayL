@@ -29,8 +29,12 @@ H^\mu=-h^\mu{}_{\alpha}R^{\alpha\beta}u_\beta,
 $$
 
 `J` is the fluid-frame radiation energy density. `HU[i]` and `HD[i]` in the
-current `ghl_m1_comoving` record are the contravariant and covariant spatial
-components of \(H^\mu\); `Hn` is its projection onto the Eulerian normal.
+current `ghl_m1_comoving` record are the contravariant and covariant components
+of the Eulerian spatial projection of \(H^\mu\); `Hn` is its contraction with
+the Eulerian normal. The stored `HU` values are not the spatial coordinate
+components of the complete four-vector on a slice with nonzero shift. Below,
+\(H^i\) and \(H_i\) denote these projected spatial components in the
+E/F/P contractions and conservative source projections.
 
 ## E/F/P to J/H contractions
 
@@ -107,12 +111,17 @@ and [ghl_m1_matter_coupling_sources.c](../../../GRHayL/Radiation/ghl_m1_matter_c
 
 ## Validation and numerical meaning
 
-Before these contractions, the current kernels validate the metric, the E/F
-realizability state, and the closure tensor. A nonfinite or negative `J` is
-rejected. The outputs are assembled in a local candidate and published only
-after all components are finite. This makes the moments suitable for the
-transactional source and current paths, but does not make an inadmissible
-input state valid; repair belongs at the documented repair boundary.
+Before these contractions, the current kernels check E/F realizability,
+finite pressure entries, pressure trace and symmetry, and the fluid velocity.
+The caller supplies coherent metric data; these local checks do not establish
+metric symmetry or inverse/determinant consistency. The supplied pressure
+tensor is not rechecked for pressure or Eulerian covariance positivity; see
+the [closure-reuse boundary](m1-public-api-quick-reference.md#prerequisites-and-outputfailure-boundaries).
+A nonfinite or negative `J` is rejected. The outputs are assembled in a local
+candidate and published only after all components are finite. This makes the
+moments suitable for the transactional source and current paths, but does not
+make an inadmissible input state valid; repair belongs at the documented
+repair boundary.
 
 The contraction is algebraic and pointwise. It does not perform EOS lookup,
 rate evaluation, a grid loop, or time integration. Fluid primitives are frozen

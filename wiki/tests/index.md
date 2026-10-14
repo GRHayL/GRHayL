@@ -1,6 +1,6 @@
 # Unit_Tests Hub
 
-This page routes cross-cutting `Unit_Tests/` questions below
+This page routes cross-cutting [Unit_Tests/](../../Unit_Tests) questions below
 [Test Map](../test-map.md). Use it for runner behavior, generated artifacts,
 fixture lifecycle, HDF5 sample tables, ET Legacy replay, expected-failure keys,
 and coverage/gap routing. It is a router, not source authority.
@@ -45,24 +45,6 @@ Flux_Source fixture coverage routes through
 [Test Map](../test-map.md), and [Flux Source](../gems/flux-source.md).
 That page also owns the explicit exclusion for Induction vector-potential HLL
 tests that should not be counted as Flux_Source HLLE coverage.
-
-## Tool Suites Under Unit_Tests
-
-`Unit_Tests/compose/` is the Python `unittest` suite for the `tools/compose`
-converter: `test_compose_to_grhayl.py` covers schema and analytic conversion
-behavior plus the `_write_fixture` synthetic-table writer, and
-`test_compose_failure_coverage.py` supplies failure and branch coverage inputs.
-The Ubuntu GCC workflow `compose-regularized-eos` job discovers it with
-`python3 -m unittest discover -s Unit_Tests/compose`, measures Python
-line/branch coverage, then converts a synthetic regularized table and replays
-it through `unit_test_tabulated_eos_compose`. These Python tests are
-workflow-selected converter-unit evidence, not binaries discovered by
-`configure` and not invoked by the ordinary `.github/run_tests.sh`. Route
-coverage-classification detail through the
-[unit-test coverage and gap matrix](unit-test-coverage-and-gap-matrix.md),
-the C-side integration test through [Test Map](../test-map.md), and adapter
-physics through the
-[CompOSE EOS adapter how-to](../gems/neutrinos/compose-eos-adapter-how-to.md).
 
 ## Policy
 

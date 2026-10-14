@@ -7,6 +7,14 @@ is [ghl_m1_neutrino_sources.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutri
 and the public declarations are in
 [ghl_m1.h](../../../GRHayL/include/ghl_m1.h).
 
+The closure-reuse entry point
+`ghl_m1_compute_neutrino_interaction_sources_from_closure` consumes a closure
+for the supplied metric, primitives, and state without solving closure again.
+It publishes E/F and number sources together, leaving them unchanged on error.
+Its declaration is in [ghl_m1.h](../../../GRHayL/include/ghl_m1.h), and its
+[implementation](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_sources.c)
+shares the frozen-rate current/source construction below.
+
 ## Frozen rate fields
 
 For one species, the single-species source path consumes the one-body fields
@@ -181,9 +189,10 @@ The established default source policy is the local implicit route:
 
 The opt-in branched compatibility policy can select an explicit thin E/F step
 when `dt_alpha*kappa_a_E < 1` and `dt_alpha*kappa_s < 1`. Its number update is
-still the endpoint-Gamma backward-Euler formula. The thick and
-scattering-dominated compatibility predictors use a comoving backward-Euler
-relaxation,
+still the endpoint-Gamma backward-Euler formula, unless the separate
+[thermalized-number policy](m1-source-update-branches-and-rollback.md#number-projection-is-separate)
+selects projection. At exact Eulerian rest, the thick and scattering-dominated
+compatibility branches use a comoving backward-Euler relaxation,
 
 $$
 J^*=\frac{J+\Delta\tau\eta_E}{1+\Delta\tau\kappa_{a,E}},
@@ -195,8 +204,19 @@ $$
 
 then use the \(\chi=1/3\) isotropic boost predictor before the same endpoint
 number/current/exchange checks. These are internal source branches, not
-alternative transport or closure methods. The dispatch and transaction rules
-are in [ghl_m1_neutrino_source_update.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c).
+alternative transport or closure methods. The comoving damping solves the
+Eulerian source equations only at exact Eulerian rest; on a moving cell the
+boosted state is a predictor, not a finite source update, and in particular
+pure scattering must preserve \(E-V^iF_i\). For a selected thick or
+scattering branch with nonzero Eulerian fluid velocity, the dispatcher
+therefore routes the frozen transport predictor through the implicit
+residual/Newton solve above before publishing. On success it retains the
+Newton diagnostics and the selected stiff branch label; only the
+exact-rest case publishes the stiff predictor without an implicit solve.
+The dispatch and transaction rules
+are in [ghl_m1_neutrino_source_update.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c),
+whose `use_implicit` check follows its `ghl_m1_compute_eulerian_velocity`
+validation.
 
 ## Photon and obsolete-method boundary
 

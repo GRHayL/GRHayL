@@ -167,7 +167,7 @@ int m1_thcm1_rusanov_check_generic_fixture(
 /* Negative assertions use a stack-owned record copy: a generic perturbed
  * reference defect, reversed generic reference endpoints, or a corrupted
  * perturbed number-current operand. No payload bytes are rewritten. */
-#define M1_THCM1_RUSANOV_REGRESSION_PERTURBED_OUTPUT 1
+#define M1_THCM1_RUSANOV_REGRESSION_PERTURBED_OUTPUT  1
 #define M1_THCM1_RUSANOV_REGRESSION_SWAPPED_ENDPOINTS 2
 #define M1_THCM1_RUSANOV_REGRESSION_CORRUPTED_CURRENT 3
 

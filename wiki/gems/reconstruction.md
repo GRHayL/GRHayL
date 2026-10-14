@@ -14,14 +14,14 @@ Doxygen evidence.
 - [PPM flow](reconstruction/ppm-flow.md)
 - [WENOZ contract](reconstruction/wenoz-contract.md)
 - [Tests and fixtures](reconstruction/tests-and-fixtures.md)
-- `docs/raw/Reconstruction.dox` is read-only evidence for this KB work.
-- `GRHayL/include/ghl_reconstruction.h`
-- `GRHayL/Reconstruction/`
+- [docs/raw/Reconstruction.dox](../../docs/raw/Reconstruction.dox) is read-only evidence for this KB work.
+- [GRHayL/include/ghl_reconstruction.h](../../GRHayL/include/ghl_reconstruction.h)
+- [GRHayL/Reconstruction/](../../GRHayL/Reconstruction)
 
 ## Public Headers
 
 - `GRHayL/include/ghl_reconstruction.h`
-- `GRHayL/include/ghl.h`
+- [GRHayL/include/ghl.h](../../GRHayL/include/ghl.h)
 
 Key public surface:
 - `ghl_minmod_reconstruction`
@@ -34,19 +34,19 @@ Key public surface:
 
 ## Implementation Paths
 
-- PLM: `GRHayL/Reconstruction/PLM/`; route through [PLM limiters](reconstruction/plm-limiters.md).
-- PPM: `GRHayL/Reconstruction/PPM/`; route through [PPM flow](reconstruction/ppm-flow.md).
-- WENO-z: `GRHayL/Reconstruction/WENOZ/`; route through [WENOZ contract](reconstruction/wenoz-contract.md).
-- Build lists: `GRHayL/Reconstruction/make.code.defn` and method-local `make.code.defn` files
+- PLM: [GRHayL/Reconstruction/PLM/](../../GRHayL/Reconstruction/PLM); route through [PLM limiters](reconstruction/plm-limiters.md).
+- PPM: [GRHayL/Reconstruction/PPM/](../../GRHayL/Reconstruction/PPM); route through [PPM flow](reconstruction/ppm-flow.md).
+- WENO-z: [GRHayL/Reconstruction/WENOZ/](../../GRHayL/Reconstruction/WENOZ); route through [WENOZ contract](reconstruction/wenoz-contract.md).
+- Build lists: [GRHayL/Reconstruction/make.code.defn](../../GRHayL/Reconstruction/make.code.defn) and method-local `make.code.defn` files
 
 ## Test Paths
 
-- `Unit_Tests/unit_test_PLM_reconstruction.c`
-- `Unit_Tests/unit_test_WENOZ_reconstruction.c`
-- `Unit_Tests/unit_test_ET_Legacy_reconstruction.c`
-- `Unit_Tests/data_gen/unit_test_data_PLM_reconstruction.c`
-- `Unit_Tests/data_gen/unit_test_data_WENOZ_reconstruction.c`
-- `Unit_Tests/data_gen/unit_test_data_ET_Legacy_reconstruction.c`
+- [Unit_Tests/unit_test_PLM_reconstruction.c](../../Unit_Tests/unit_test_PLM_reconstruction.c)
+- [Unit_Tests/unit_test_WENOZ_reconstruction.c](../../Unit_Tests/unit_test_WENOZ_reconstruction.c)
+- [Unit_Tests/unit_test_ET_Legacy_reconstruction.c](../../Unit_Tests/unit_test_ET_Legacy_reconstruction.c)
+- [Unit_Tests/data_gen/unit_test_data_PLM_reconstruction.c](../../Unit_Tests/data_gen/unit_test_data_PLM_reconstruction.c)
+- [Unit_Tests/data_gen/unit_test_data_WENOZ_reconstruction.c](../../Unit_Tests/data_gen/unit_test_data_WENOZ_reconstruction.c)
+- [Unit_Tests/data_gen/unit_test_data_ET_Legacy_reconstruction.c](../../Unit_Tests/data_gen/unit_test_data_ET_Legacy_reconstruction.c)
 - Route fixture and CI details through [Tests and fixtures](reconstruction/tests-and-fixtures.md).
 
 ## Key Contracts
@@ -58,8 +58,8 @@ Key public surface:
 - PLM, PPM, and WENO-z have different stencil widths; route by method page before changing callers.
 - PPM steepening depends on pressure, effective Gamma, and PPM parameters in `ghl_parameters`; see [PPM flow](reconstruction/ppm-flow.md).
 - Reconstruction calls appear in unit tests and data generators, but there is
-  no production call from `GRHayL/Flux_Source/`, `GRHayL/Induction/`, or
-  `implementations/GRHayLib/`. Doxygen describes those
+  no production call from [GRHayL/Flux_Source/](../../GRHayL/Flux_Source), [GRHayL/Induction/](../../GRHayL/Induction), or
+  [implementations/GRHayLib/](../../implementations/GRHayLib). Doxygen describes those
   gems as intended consumers; do not turn that architecture statement into an
   in-tree caller claim.
 
@@ -75,11 +75,12 @@ header, source, direct test, and every compiler workflow matrix contain WENOZ.
 
 ## Drift Risks
 
-- Reconstruction output orientation can break flux tests without obvious local failures.
+- Reconstruction output orientation affects downstream flux and Induction
+  integration; the in-tree flux tests do not call Reconstruction.
 - PPM parameter changes in `ghl_parameters` affect initialization and downstream GRHayLib parameters.
 - New source subdirectories require GRHayLib build-list coordination.
 - Reconstruction replay tests branch on `ghl_pert_test_fail`, so numerical
-  mismatches can fail them. Their generators serialize deterministic zero
+  mismatches can fail them. The current PLM and WENOZ generators serialize deterministic zero
   placeholders outside valid stencil intervals; see
   [Tests and fixtures](reconstruction/tests-and-fixtures.md).
 

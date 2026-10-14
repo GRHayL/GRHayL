@@ -53,6 +53,16 @@ ghl_error_codes_t ghl_m1_closure_private_finalize_fallback(
       const ghl_m1_closure *candidate,
       ghl_m1_closure *closure);
 
+/* Validate a constructed fallback candidate before publishing any output.
+ * Kept separate from pressure construction so rejection is directly testable. */
+ghl_error_codes_t ghl_m1_closure_private_publish_fallback(
+      const ghl_m1_parameters *params,
+      const ghl_metric_quantities *metric,
+      const ghl_primitive_quantities *prims,
+      const ghl_m1_rad_state *rad_state,
+      ghl_m1_closure *candidate,
+      ghl_m1_closure *closure);
+
 ghl_error_codes_t ghl_m1_closure_private_construct_eulerian_pressure(
       double energy,
       const double gammaUU[3][3],

@@ -55,7 +55,14 @@ Current built users are the Palenzuela shared solvers:
 and
 [`GRHayL/Con2Prim/Tabulated/Palenzuela1D/tabulated_Palenzuela1D.c`](../../../GRHayL/Con2Prim/Tabulated/Palenzuela1D/tabulated_Palenzuela1D.c).
 Both fill `roots_params`, call `ghl_brent`, and copy `rparams.n_iters` into
-`diagnostics->n_iter` on success.
+`diagnostics->n_iter` on success. However, `ghl_brent` initializes `n_iters`
+only when entering its loop. Endpoint-root and already-small-interval success
+return before that assignment, while these callers do not initialize the
+counter beforehand. Such success does not establish a valid iteration count;
+a tabulated retry can also retain the preceding attempt's value. Do not infer
+zero iterations from the initial diagnostics value or trust `n_iter` solely
+because recovery succeeded. The public-header mismatch is routed through
+[current contradictions](../../contradictions.md).
 
 ## Shared Magnetic And Momentum Contractions
 
@@ -162,7 +169,18 @@ The energy and entropy wrappers mirror the hybrid success-only diagnostic
 assignment, while
 `tabulated_Palenzuela1D.c` adds table bounds, tabulated EOS calls, an optional
 second Brent attempt from `T_min`, and the same `n_iter` and `speed_limited`
-diagnostics ownership.
+diagnostics ownership, with the Brent early-return limitation above.
+
+The [energy callback](../../../GRHayL/Con2Prim/Tabulated/Palenzuela1D/tabulated_Palenzuela1D_energy.c)
+and [entropy callback](../../../GRHayL/Con2Prim/Tabulated/Palenzuela1D/tabulated_Palenzuela1D_entropy.c)
+consume incoming `prims->Y_e`; they do not derive composition from conservative
+`Y_e`. Callers using direct routines/selectors or disabling ordinary guessing
+must provide the intended composition. With `params->evolve_temp` true, the
+callbacks invert energy or entropy for temperature. With it false, both use
+incoming temperature subject to table bounds, and the entropy callback does
+not consume conservative entropy. The shared failed-Brent retry can replace
+temperature with `T_min`, so this is not a promise of temperature preservation.
+Newman and Noble do not share this flag-controlled thermodynamic branch.
 
 ## Font And Newman Routes
 
@@ -201,7 +219,8 @@ For this internal page, only source-proven writes are routed:
   Palenzuela, and Newman paths. Multi-method backup selection is routed in
   [recovery flow](recovery-flow.md).
 - `n_iter`: set from `harm_aux.n_iter` in built Noble paths, from
-  `rparams.n_iters` in built Palenzuela paths, and from local `step` in Newman
+  `rparams.n_iters` in built Palenzuela paths, subject to the Brent early-return
+  limitation above, and from local `step` in Newman
   paths. Newman retry writes replace the prior attempt's value. Font1D reports
   accumulated outer `W`/fluid-momentum iterations, not its inner density loop.
 - `speed_limited`: current-call output from direct solvers; multi-method drivers

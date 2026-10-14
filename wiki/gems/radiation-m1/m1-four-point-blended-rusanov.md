@@ -119,13 +119,18 @@ face speed.
 
 ## Densitization and policy guards
 
-The pointwise API validates a coherent positive face metric, computes the
+Coherent positive face geometry is a host precondition here, as in the rest
+of the face-transport boundary. The pointwise API validates only the face
+`sqrt_detgamma` it consumes (finite and strictly positive), computes the
 undensitized blend, and multiplies every component by
 `metric_face->sqrt_detgamma` exactly once. Its output is therefore a
-densitized face flux. The volume-weighted companion performs the same
-componentwise blend on host-prepared operands but performs no metric
+densitized face flux. It does not inspect `gammaDD` or
+`gammaUU`; a host relying on inverse consistency or the full SPD property
+establishes it before the call. The volume-weighted companion performs the
+same componentwise blend on host-prepared operands but performs no metric
 inspection or additional densitization. See the
-[finite-volume boundary](m1-finite-volume-and-face-flux.md).
+[finite-volume boundary](m1-finite-volume-and-face-flux.md) and the
+[speed-policy leaf](m1-geometry-and-wave-speed-policy.md).
 
 The canonical operation carries no diffusion-correction flag. It
 also does not apply an optical-depth wave-speed cap. Metric light-cone speed

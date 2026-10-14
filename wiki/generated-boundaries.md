@@ -1,8 +1,8 @@
 # Generated Boundaries
 
 Repo ground truth: `Doxyfile`, `configure`, `generate_makefile.sh`,
-`.github/run_tests.sh`, `GRHayL/Flux_Source/`, `Unit_Tests/`, and
-`Unit_Tests/sample_table/`.
+[.github/run_tests.sh](../.github/run_tests.sh), [GRHayL/Flux_Source/](../GRHayL/Flux_Source), [Unit_Tests/](../Unit_Tests), and
+[Unit_Tests/sample_table/](../Unit_Tests/sample_table).
 
 ## Doxygen
 
@@ -20,7 +20,7 @@ Repo ground truth: `Doxyfile`, `configure`, `generate_makefile.sh`,
 
 Generated documentation output goes under `docs` because
 `OUTPUT_DIRECTORY = docs`, with HTML enabled and LaTeX disabled. Treat
-`docs/raw/` as source documentation and Doxygen HTML/output artifacts under
+[docs/raw/](../docs/raw) as source documentation and Doxygen HTML/output artifacts under
 `docs` as generated output. Because the output directory contains the source
 docs subtree, review Doxygen changes carefully before deleting or regenerating
 anything under `docs`.
@@ -43,7 +43,7 @@ inputs:
   doxygen_status=0
   {
     cat Doxyfile
-    printf '\nOUTPUT_DIRECTORY = %s/output\n' "$audit_tmp"
+    printf '\nOUTPUT_DIRECTORY = "%s/output"\n' "$audit_tmp"
   } | doxygen - >"$audit_tmp/stdout" 2>"$audit_tmp/stderr" || doxygen_status=$?
 
   cat "$audit_tmp/stdout"
@@ -85,22 +85,22 @@ supported generator path represented by current build evidence. Legacy
 Configured cleanup boundaries differ:
 
 - `make clean` removes library objects, normal test executables/helper objects,
-  and built shared libraries, but does not remove data-generator executables or
-  their objects;
+  and built shared libraries, but leaves individual unit-test objects
+  (`TEXEOBJS`), data-generator executables, and data-generator objects;
 - `make realclean` then removes the build directory, all of `test/`, and the
   generated top-level `Makefile`; and
 - neither target removes root-level downloaded/generated fixture files.
 
 ## GRHayLib Thorn Build List
 
-`implementations/GRHayLib/src/make.code.defn` is an implementation-specific
+[implementations/GRHayLib/src/make.code.defn](../implementations/GRHayLib/src/make.code.defn) is an implementation-specific
 thorn source registry/direct-compile boundary, not a generated output. It
 lists `SRCS` and `SUBDIRS` for the Cactus thorn build path; route detailed
 interpretation through
 [GRHayLib Cactus build boundary](implementations/grhaylib/cactus-build-boundary.md).
 
 The listed GRHayLib `SUBDIRS` and `src/include` resolve through tracked symlinks
-to upstream `GRHayL/` source and headers. They are repository inputs, not
+to upstream [GRHayL/](../GRHayL) source and headers. They are repository inputs, not
 generated copies. Their presence establishes static path parity only; use the
 GRHayLib boundary page for the separate Cactus build/runtime evidence limit.
 
@@ -118,18 +118,38 @@ running tests. Downloaded file classes include:
 - `LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2`;
 - `SLy4_3335_rho391_temp163_ye66.h5.bz2`.
 
-The script decompresses downloaded `*.bz2` EOS tables and records every path it
-creates. An `EXIT` trap removes only those paths on success or failure and
-preserves preexisting root-level files.
+The Radiation M1 replay route is a separate acquisition class: with
+`M1_FIXTURE_DIR` unset, the runner (both suites) downloads the published
+`radiation/*.bin.gz` members recorded by the
+[`.github/radiation-testdata-ref`](../.github/radiation-testdata-ref)
+selector into a private temporary directory, and
+[`.github/prepare_m1_fixtures.sh`](../.github/prepare_m1_fixtures.sh)
+restores the raw `.bin` layout before replay; caller-supplied fixture
+directories bypass downloads entirely. Expected M1 values are never
+generated from current GRHayL output during a test run; the member
+inventory, binary layout, and producer provenance route through
+[runner ownership](tests/runner-and-generated-artifacts.md) and
+[M1 tests and fixtures](gems/radiation-m1/tests-and-fixtures.md), with the
+production record in
+[`docs/raw/Radiation_fresh_fixture_production.md`](../docs/raw/Radiation_fresh_fixture_production.md).
+The provider test's `--generated-fixture` table is local generated test
+input, not a retained reference fixture.
+
+The script tracks download/decompression paths and its private expected-error
+directory for `EXIT` cleanup. Existing regular fixtures bypass downloads, but
+this does not ensure unchanged contents or provenance: it still calls
+`pyghl append` on the SLy4 table, and test-owned artifacts have their own
+lifecycle. Use the [runner contract](tests/runner-and-generated-artifacts.md)
+for reference selection, reuse, and the disposable-checkout requirement.
 
 `unit_test_c2p_nn_guess` separately creates a unique private temporary directory
-in HDF5 mode. It writes only its fixed model basenames there and removes those
-files and the directory on normal or handled failure exit; no-HDF5 runs skip
+in HDF5 mode. It writes model files there, then enumerates and unlinks the
+directory contents before removing it on normal or handled failure exit; no-HDF5 runs skip
 that setup.
 
-`Unit_Tests/sample_table/generate_simple_table.py` creates `simple_table.h5`
+[Unit_Tests/sample_table/generate_simple_table.py](../Unit_Tests/sample_table/generate_simple_table.py) creates `simple_table.h5`
 from analytic arrays. The checked-in
-`Unit_Tests/sample_table/Hempel_SFHoEOS_rho222_temp180_ye60_version_1.1_20120817_simple.h5`
+[Unit_Tests/sample_table/Hempel_SFHoEOS_rho222_temp180_ye60_version_1.1_20120817_simple.h5](../Unit_Tests/sample_table/Hempel_SFHoEOS_rho222_temp180_ye60_version_1.1_20120817_simple.h5)
 is a sample table file, not a build artifact from `configure`.
 
 ## Neutrino Leakage Python And Generated C
@@ -153,26 +173,24 @@ Route Flux_Source-specific generator/script questions through
 This page keeps repository-wide generated-output boundaries; the child page
 owns Flux_Source generation, the pinned NRPy 2 checkout, and checked-in kernel routing.
 
-`GRHayL/Flux_Source/generate_flux_source.py` is the symbolic source for the
-generated Flux_Source C kernels. `generate_flux_source.sh` clones its
-pinned NRPy 2 commit and runs that driver. `Doxyfile` excludes `*.py` from
-generated docs.
+[GRHayL/Flux_Source/generate_flux_source.py](../GRHayL/Flux_Source/generate_flux_source.py) is the symbolic source for the
+Flux_Source C kernels. `generate_flux_source.sh` clones its pinned NRPy 2
+commit and runs that driver. `Doxyfile` excludes `*.py` from generated docs.
 
 Local evidence:
 
-- `GRHayL/Flux_Source/generate_flux_source.sh` fetches the NRPy 2 revision and
+- [GRHayL/Flux_Source/generate_flux_source.sh](../GRHayL/Flux_Source/generate_flux_source.sh) fetches the NRPy 2 revision and
   invokes the Python driver in a temporary checkout.
 - `GRHayL/Flux_Source/generate_flux_source.py` requires an explicit new or
-  empty staging directory outside `GRHayL/Flux_Source`, generates its complete
-  output set, and checks it against generator-owned entries in the build
-  manifests.
+  empty staging directory outside [GRHayL/Flux_Source](../GRHayL/Flux_Source), generates the complete
+  output set, and checks it against the build manifests.
 
 Generated or derived C files with local generator paths:
 
 | C output | Local generator evidence | Notes |
 | --- | --- | --- |
-| `GRHayL/Flux_Source/ghl_calculate_source_terms.c` | `generate_source()` in `generate_flux_source.py`. | Generated into the requested staging root. |
-| `GRHayL/Flux_Source/ghl_calculate_characteristic_speed_dirn0.c` through `dirn2.c` | `generate_speeds()` in the same driver. | Generated into the requested staging root. |
+| [GRHayL/Flux_Source/ghl_calculate_source_terms.c](../GRHayL/Flux_Source/ghl_calculate_source_terms.c) | `generate_source()` in `generate_flux_source.py`. | Generated into the requested staging root. |
+| [GRHayL/Flux_Source/ghl_calculate_characteristic_speed_dirn0.c](../GRHayL/Flux_Source/ghl_calculate_characteristic_speed_dirn0.c) through `dirn2.c` | `generate_speeds()` in the same driver. | Generated into the requested staging root. |
 | `GRHayL/Flux_Source/hybrid/ghl_calculate_HLLE_fluxes_dirn*_hybrid.c` | `generate_fluxes()` in the same driver. | Generated under the matching staging subdirectory. |
 | `GRHayL/Flux_Source/hybrid_entropy/ghl_calculate_HLLE_fluxes_dirn*_hybrid_entropy.c` | Same generation path. | Generated under the matching staging subdirectory. |
 | `GRHayL/Flux_Source/tabulated/ghl_calculate_HLLE_fluxes_dirn*_tabulated.c` | Same generation path. | Generated under the matching staging subdirectory. |
@@ -183,5 +201,5 @@ From the repository root, use
 NRPy 2's Python dependencies installed. The shell script fetches its pinned
 NRPy 2 revision; the Python driver rejects destinations inside
 `GRHayL/Flux_Source` and nonempty destinations and checks its output set against
-generator-owned entries in the root and variant `make.code.defn` manifests.
+the root and variant `make.code.defn` manifests.
 Review and verify staged output before replacing checked-in C.

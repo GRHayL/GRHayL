@@ -444,6 +444,10 @@ static void evaluate_pointwise_fixture(
   *admissibility_fallback
         = closure.solve_status == ghl_m1_closure_solve_endpoint_fallback
           && !closure.four_point_compatibility;
+  if(*admissibility_fallback
+     && (closure.root_iterations != 0 || closure.root_residual != 0.0)) {
+    ghl_error("pointwise fixture fallback has inconsistent root diagnostics\n");
+  }
   error = ghl_m1_compute_comoving_moments(
         &params, &metric, &prims, &rad, &closure, &moments);
   if(error != ghl_success) {
@@ -521,6 +525,59 @@ static void check_zero_flux_admissibility(
   }
 }
 
+static void check_covariance_admissibility(
+      const double *input,
+      const double *reference,
+      const double *actual,
+      const bool fallback,
+      const char *case_id) {
+  /* This named anchor has an identity spatial metric and x-aligned flux.
+   * Pin those assumptions before using its independent directional witness. */
+  for(int i = 0; i < 3; ++i) {
+    for(int j = 0; j < 3; ++j) {
+      if(input[8 + 3 * i + j] != (i == j ? 1.0 : 0.0)) {
+        ghl_error("fixture %s changed its covariance-policy metric\n", case_id);
+      }
+    }
+  }
+  const double E = input[0];
+  if(!(E > 0.0) || input[1] == 0.0 || input[2] != 0.0 || input[3] != 0.0) {
+    ghl_error("fixture %s changed its covariance-policy state\n", case_id);
+  }
+  const double f = fabs(input[1] / E);
+  const double tolerance = 1024.0 * DBL_EPSILON;
+  /* A negative Cxx/E proves nonrealizability without the production Jacobi
+   * validator. Both retained endpoints must retain this classification. */
+  const long double reference_covariance
+        = (long double)reference[0] / E - (long double)f * f;
+  if(!(f > 0.0 && f <= 1.0) || !(reference_covariance < -tolerance)) {
+    ghl_error("fixture %s lost its nonrealizable-reference classification\n", case_id);
+  }
+  const double chi = 1.0 / 3.0 + f * f * (6.0 - 2.0 * f + 6.0 * f * f) / 15.0;
+  const double transverse = 0.5 * (1.0 - chi);
+  if(!fallback || !m1_thcm1_fixture_finite_vector(actual, pointwise_output_count)
+     || fabs(actual[9] - chi) > tolerance || !(actual[10] >= 0.0 && actual[10] <= 1.0)) {
+    ghl_error("fixture %s lost its covariance fallback contract\n", case_id);
+  }
+  for(int i = 0; i < 3; ++i) {
+    for(int j = 0; j < 3; ++j) {
+      const double expected = i == j ? (i == 0 ? chi : transverse) : 0.0;
+      if(actual[3 * i + j] != actual[3 * j + i]
+         || fabs(actual[3 * i + j] / E - expected) > tolerance
+         || (i != j && actual[3 * i + j] != 0.0)) {
+        ghl_error("fixture %s changed its Eulerian Minerbo pressure\n", case_id);
+      }
+    }
+  }
+  /* The published covariance is diagonal here, so these are its eigenvalues.
+   * Check the actual tensor, including trace, rather than only the formula. */
+  if(fabs((actual[0] + actual[4] + actual[8]) / E - 1.0) > 128.0 * DBL_EPSILON
+     || actual[0] / E - f * f < -tolerance || actual[4] / E < -tolerance
+     || actual[8] / E < -tolerance) {
+    ghl_error("fixture %s published nonrealizable fallback moments\n", case_id);
+  }
+}
+
 static char *m1_thcm1_seeded_fixture_path(
       const char *restrict fixture_dir,
       const char *restrict filename) {
@@ -591,7 +648,7 @@ static void check_pointwise_fixtures(const char *fixture_dir) {
   if(fixtures.record_count != 56) {
     ghl_error("pointwise fixture corpus is incomplete\n");
   }
-  size_t sensitive = 0, controls = 0, admissibility_cases = 0;
+  size_t sensitive = 0, controls = 0, admissibility_cases = 0, covariance_cases = 0;
   for(size_t i = 0; i < fixtures.record_count; ++i) {
     const m1_thcm1_fixture_record *record = &fixtures.records[i];
     /* Packet ordering and seed/amplitude axes are those of the retained
@@ -671,6 +728,19 @@ static void check_pointwise_fixtures(const char *fixture_dir) {
       continue;
     }
     evaluate_pointwise_fixture(record->perturbed_input, perturbed, &perturbed_fallback);
+    if(strcmp(record->case_id, "rngpkt-v2-rd-radiation-anchor-realizability-cone-a01")
+       == 0) {
+      /* This exact named pair is a local fallback-policy check, not agreement
+       * with nonrealizable THC moments. Other records keep strict replay. */
+      check_covariance_admissibility(
+            record->baseline_input, record->baseline_output, baseline, baseline_fallback,
+            record->case_id);
+      check_covariance_admissibility(
+            record->perturbed_input, record->perturbed_output, perturbed,
+            perturbed_fallback, record->case_id);
+      ++covariance_cases;
+      continue;
+    }
     m1_thcm1_fixture_comparison_report report;
     if(!m1_thcm1_fixture_compare_paired(
              record, normalization, baseline, perturbed, &report, error,
@@ -685,15 +755,18 @@ static void check_pointwise_fixtures(const char *fixture_dir) {
     }
   }
   /* Exact inventory of the retained directed corpus, not sampling quotas. */
-  if(sensitive != 29 || controls != 25 || admissibility_cases != 2) {
+  if(sensitive != 28 || controls != 25 || admissibility_cases != 2
+     || covariance_cases != 1) {
     ghl_error(
           "pointwise fixture corpus changed its sensitivity/control/policy inventory\n");
   }
   ghl_info(
         "THC_M1 pointwise fixtures: %zu agreement pairs (%zu sensitivity, %zu "
         "input-invariant controls); %zu distinct zero-flux policy pairs passed local "
-        "admissibility checks\n",
-        sensitive + controls, sensitive, controls, admissibility_cases);
+        "admissibility checks; %zu covariance policy pairs passed analytic fallback "
+        "checks\n",
+        sensitive + controls, sensitive, controls, admissibility_cases,
+        covariance_cases);
   m1_thcm1_fixture_free(&fixtures);
 }
 

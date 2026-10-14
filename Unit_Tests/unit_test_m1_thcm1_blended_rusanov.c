@@ -1070,7 +1070,7 @@ static void check_transport_fixtures(const char *restrict fixture_dir) {
     total_records += collections[shard].record_count;
   }
   if(total_records != expected_record_count) {
-    fail_test("transport fixture exact admitted-corpus count mismatch");
+    fail_test("transport fixture exact record count mismatch");
     for(size_t cleanup = 0; cleanup < shard_count; ++cleanup) {
       m1_thcm1_fixture_free(&collections[cleanup]);
     }

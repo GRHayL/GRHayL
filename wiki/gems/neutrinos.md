@@ -26,7 +26,7 @@ Doxygen source.
    adapting CompOSE state, composition, and chemical-potential outputs to the
    NRPyLeakage EOS callback and validating that boundary.
 6. [Implementation Flow](neutrinos/implementation-flow.md) for the
-   `GRHayL/Neutrinos/NRPyLeakage/` source set, its writeback paths, and
+   [GRHayL/Neutrinos/NRPyLeakage/](../../GRHayL/Neutrinos/NRPyLeakage) source set, its writeback paths, and
    the minimal direct-compilation boundary.
 7. [Tests And Fixtures](neutrinos/tests-and-fixtures.md) for unit tests,
    fixture pairs, EOS table setup, and CI downloads.
@@ -34,22 +34,22 @@ Doxygen source.
 ## Ground Truth
 
 - Source: `GRHayL/Neutrinos/NRPyLeakage/`
-- Installed blocking and rate helpers:
-  `GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h` and
-  `GRHayL/include/ghl_nrpyleakage_rate_helpers.h`, selected by
-  `GRHayL/include/make.code.defn`
+- Installed shared blocking implementation header:
+  [GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h](../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h),
+  with shared rate algebra in
+  [GRHayL/include/ghl_nrpyleakage_rate_helpers.h](../../GRHayL/include/ghl_nrpyleakage_rate_helpers.h)
 - Installed blocking model and qualification:
   [Nucleon Blocking And EOS Conventions](neutrinos/nucleon-blocking-and-eos-conventions.md)
-- Public radiation structs: `GRHayL/include/ghl_radiation.h`
-- Public leakage declarations and constants: `GRHayL/include/ghl_nrpyleakage.h`
-- Error codes and EOS parameter types: `GRHayL/include/ghl.h`
-- Direct tabulated EOS dependencies: `GRHayL/include/ghl_nrpyeos_tabulated.h`
-  and `GRHayL/include/ghl_eos_functions.h`
-- Tests: `Unit_Tests/nrpyleakage_main.h` and
+- Public radiation structs: [GRHayL/include/ghl_radiation.h](../../GRHayL/include/ghl_radiation.h)
+- Public leakage declarations and constants: [GRHayL/include/ghl_nrpyleakage.h](../../GRHayL/include/ghl_nrpyleakage.h)
+- Error codes and EOS parameter types: [GRHayL/include/ghl.h](../../GRHayL/include/ghl.h)
+- Direct tabulated EOS dependencies: [GRHayL/include/ghl_nrpyeos_tabulated.h](../../GRHayL/include/ghl_nrpyeos_tabulated.h)
+  and [GRHayL/include/ghl_eos_functions.h](../../GRHayL/include/ghl_eos_functions.h)
+- Tests: [Unit_Tests/nrpyleakage_main.h](../../Unit_Tests/nrpyleakage_main.h) and
   `Unit_Tests/unit_test_nrpyleakage_*.c`
-- Fermi-Dirac error coverage: `Unit_Tests/unit_test_code_error.c`
-- Build and CI gates: `configure`, `.github/run_tests.sh`, and
-  `.github/workflows/`
+- Fermi-Dirac error coverage: [Unit_Tests/unit_test_code_error.c](../../Unit_Tests/unit_test_code_error.c)
+- Build and CI gates: `configure`, [.github/run_tests.sh](../../.github/run_tests.sh), and
+  [.github/workflows/](../../.github/workflows)
 - Ancestral derivation and generator evidence: the
   [Tabulated_EOS_IllinoisGRMHD repository](https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD),
   with durable roles and conventions summarized in
@@ -74,18 +74,30 @@ truth and update the KB.
 The `NRPyLeakage_*` spelling is the exported family; no `ghl_*` wrapper family
 exists for these calls. Radiation container types retain the `ghl_` prefix.
 
+The frozen M1 grey neutrino provider consumes the same NRPyLeakage rate algebra
+through the installed `ghl_neutrino_rate_provider.h` boundary and
+[ghl_m1_nrpyleakage_kernel.c](../../GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.c);
+route its ownership and caching questions to the
+[radiation-m1 rate-provider contract](radiation-m1/rate-provider-contract.md).
+
 ## Contract Summary
 
 - Radiation struct order is `nue`, `anue`, `nux`; opacity/depth has two slots
   per species. Slot meanings are used differently by number and energy source
   formulas but remain unnamed in the public header, so keep `[0]`/`[1]`
   wording in caller contracts.
-- EOS-dependent routines expect initialized HDF5-backed tabulated EOS state,
-  geometric density, EOS-compatible positive temperature, and valid output
-  pointers. They return before writeback on HDF5, EOS, or generated Fermi
+- Endpoint-roundoff normalization of EOS free-nucleon fractions goes through
+  the installed `ghl_nrpyleakage_normalize_nucleon_fractions` in
+  [GRHayL/include/ghl_nrpyleakage.h](../../GRHayL/include/ghl_nrpyleakage.h),
+  shared by the EOS-dependent leakage callers and the M1 provider kernel.
+- EOS-dependent routines require an HDF5-enabled build and an initialized,
+  compatible chemistry callback with its required state; the built-in
+  StellarCollapse backend requires a loaded table. Inputs include geometric
+  density, EOS-compatible positive temperature, and valid output pointers. They return before writeback on HDF5, EOS, or generated Fermi
   errors. They also return `ghl_error_nrpyleakage_blocking` before writeback
   when density-derived nucleon blocking receives invalid state or cannot
-  produce finite, bounded factors.
+  produce finite, bounded factors, or when shifted beta-moment evaluation
+  rejects invalid or nonfinite inputs/results.
   If final output sanitization replaces a nonfinite value, it retains finite
   fallback outputs and returns `ghl_error_nrpyleakage_nonfinite_output`.
 - All EOS-dependent routines obtain blocking from `rho`, `T`, `Xn`, and
@@ -107,23 +119,20 @@ exists for these calls. Radiation container types retain the `ghl_` prefix.
 
 ## Scope Notes
 
-- Neutrinos KB pages live under `wiki/` only; Doxygen source under `docs/**`
+- Neutrinos KB pages live under [wiki/](..) only; Doxygen source under `docs/**`
   is a separate authority (currently no dedicated Neutrinos page exists there).
 - Keep generated formula blocks in `GRHayL/Neutrinos/NRPyLeakage/*.c`.
-- Keep the shared nucleon-blocking evaluator and rate helpers in their
-  installed inline headers under `GRHayL/include/`. Their algebraic density
-  inversion and corrected rate identities are shared by the EOS-dependent
-  routines and the M1 kernel to avoid duplicated corrections and the runtime
-  cost of per-call quadrature or root solves. `GRHayL/include/make.code.defn`
-  installs both headers through `#! install_headers`; the leakage source
-  manifest builds only the C implementations.
-- Keep the fraction-bound normalizer
-  `ghl_nrpyleakage_normalize_nucleon_fractions`, together with the leakage
-  constants and public declarations, in the installed
-  `GRHayL/include/ghl_nrpyleakage.h`. The installed nucleon-blocking evaluator
-  calls it, and the M1 leakage kernel and rate-backend consumers reuse the
-  same installed helper so one bound and clamp convention serves leakage and
-  M1 without a second copy.
+- The shared nucleon-blocking algebra lives in the installed
+  `static inline` implementation headers
+  [GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h](../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h)
+  and
+  [GRHayL/include/ghl_nrpyleakage_rate_helpers.h](../../GRHayL/include/ghl_nrpyleakage_rate_helpers.h).
+  One algebraic density inversion serves every EOS-dependent routine, avoiding
+  duplicated corrections and the runtime cost of per-call quadrature or root
+  solves. These headers are caller-compiled by `#include`, not tracked through the
+  NRPyLeakage `make.code.defn` (which lists only `SRCS`), and they do not add
+  separately linked library symbols beyond the installed `NRPyLeakage_*` family.
+
 - The external notebooks are provenance, not the authority for current GRHayL
   signatures or behavior. Preserve the durable derivation and interface facts
   in child pages so routine KB use does not depend on that repository remaining

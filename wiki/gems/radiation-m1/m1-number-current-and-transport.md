@@ -22,6 +22,14 @@ and comoving calculations provide \(J\), \(H^i\), \(H_i\), \(H_n\), and the
 fluid Lorentz factor \(W\). The latter is the matter Lorentz factor; it is not
 the number-current normalization below.
 
+The installed [M1 header](../../../GRHayL/include/ghl_m1.h) provides
+`ghl_m1_compute_neutrino_number_flux_from_closure` and
+`ghl_m1_compute_neutrino_physical_number_flux_from_closure` for closure reuse.
+They consume a closure computed from the same metric, primitives, and E/F
+state, never invoke the closure solver, and preserve outputs on error.
+Their [implementation](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_number_flux.c)
+shares the current construction with the fresh-closure forms.
+
 ## Current normalization and comoving number density
 
 The current construction defines

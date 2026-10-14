@@ -95,9 +95,9 @@ global lifecycle.
   [Induction hub](../gems/induction.md).
 - Neutrinos and NRPyLeakage behavior:
   [Neutrinos hub](../gems/neutrinos.md).
-- Radiation M1 behavior (installed header aggregate and thorn source
-  registry exposure only, not Cactus build proof):
-  [Radiation M1 hub](../gems/radiation-m1.md).
+- Radiation M1 source and public-header boundary:
+  [Radiation M1 hub](../gems/radiation-m1.md) and
+  [host integration boundary](../gems/radiation-m1/host-integration-and-downstream.md).
 - Reconstruction behavior and PPM parameters:
   [Reconstruction hub](../gems/reconstruction.md) and
   [PPM flow](../gems/reconstruction/ppm-flow.md).
@@ -112,7 +112,7 @@ global lifecycle.
 - Cactus parameter keywords and parser cases do not prove a Con2Prim method is
   fully supported. Compare against the Con2Prim solver matrix, selector
   dispatch, build lists, and tests.
-- Static CCL/header/source-registry parity is a requirement verified by the
+- Static CCL/header/source-registry parity is a requirement checkable with the
   manual checks in [verification and drift](grhaylib/verification-and-drift.md).
   Tracked `src/include` and module symlinks expose the corresponding upstream
   paths; no CI job inspects them, and Cactus compile/runtime remain unverified.

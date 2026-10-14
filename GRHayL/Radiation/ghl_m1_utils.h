@@ -345,15 +345,14 @@ static inline ghl_error_codes_t ghl_m1_validate_realizability_state(
   return ghl_success;
 }
 
-/* Check the spatial pressure tensor in a metric-independent basis. The
- * Jacobi eigensolver is deliberately local and small: unlike a determinant
- * test, it remains reliable for rank-deficient realizable tensors. */
-static inline ghl_error_codes_t ghl_m1_validate_closure_tensor_psd(
+/* A metric congruence tests a covariant tensor in an orthonormal basis.
+ * minimum_eigen_scale accounts for cancellation in a normalized covariance;
+ * pressure uses zero to retain its tensor-relative tolerance and zero gate. */
+static inline ghl_error_codes_t ghl_m1_validate_lowered_tensor_psd(
       const ghl_metric_quantities *restrict metric,
-      const ghl_m1_closure *restrict closure) {
+      const double A[3][3],
+      const double minimum_eigen_scale) {
 
-  double A[3][3] = { { 0.0 } };
-  ghl_m1_lower_spatial_tensor(metric, closure->P, A);
   double scale = 0.0;
   for(int i = 0; i < 3; ++i) {
     for(int j = 0; j < 3; ++j) {
@@ -364,7 +363,7 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor_psd(
     }
   }
   if(scale <= 0.0) {
-    return ghl_error_m1_invalid_state;
+    return minimum_eigen_scale > 0.0 ? ghl_success : ghl_error_m1_invalid_state;
   }
 
   /* A congruence preserves positive semidefiniteness and the metric Cholesky
@@ -419,7 +418,7 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor_psd(
     }
   }
 
-  double eigen_scale = 0.0;
+  double eigen_scale = minimum_eigen_scale;
   for(int i = 0; i < 3; ++i) {
     for(int j = i + 1; j < 3; ++j) {
       const double symmetric = 0.5 * (B[i][j] + B[j][i]);
@@ -446,9 +445,9 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor_psd(
     }
   }
 
-  /* Eigenvalue tolerances are relative to the tensor, not to an absolute
-   * unit-energy scale. This keeps low-energy tensors subject to the same PSD
-   * admissibility decision as their normalized counterparts. */
+  /* Pressure uses its tensor norm. Covariance also uses its normalized
+   * energy scale so subtraction roundoff near the streaming limit does not
+   * become order-one after normalization by a nearly zero covariance. */
   const double eigenvalue_tolerance = 1024.0 * DBL_EPSILON;
   ghl_m1_jacobi_eigenvalues(B);
   for(int i = 0; i < 3; ++i) {
@@ -458,6 +457,88 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor_psd(
     }
   }
   return ghl_success;
+}
+
+/* Check pressure alone, retaining the existing nonzero-tensor contract. */
+static inline ghl_error_codes_t ghl_m1_validate_closure_tensor_psd(
+      const ghl_metric_quantities *restrict metric,
+      const ghl_m1_closure *restrict closure) {
+
+  double A[3][3] = { { 0.0 } };
+  ghl_m1_lower_spatial_tensor(metric, closure->P, A);
+  return ghl_m1_validate_lowered_tensor_psd(metric, A, 0.0);
+}
+
+/* Eulerian moments require C^{ij} = P^{ij} - F^i F^j/E to be PSD.
+ * F is stored covariantly. Form C_ij/(E*gamma_scale) using normalized
+ * metric and moments before the dyad or metric products. The shared
+ * congruence then yields C in an orthonormal basis divided by E.
+ * Binary scaling avoids materializing E*gamma_scale or F_i*F_j. */
+static inline ghl_error_codes_t ghl_m1_validate_closure_covariance_psd(
+      const ghl_metric_quantities *restrict metric,
+      const ghl_m1_rad_state *restrict rad_state,
+      const ghl_m1_closure *restrict closure) {
+
+  if(!isfinite(rad_state->E) || rad_state->E <= 0.0) {
+    return ghl_error_m1_invalid_state;
+  }
+  double gamma_scale = 0.0;
+  for(int i = 0; i < 3; ++i) {
+    for(int j = 0; j < 3; ++j) {
+      if(!isfinite(metric->gammaDD[i][j])) {
+        return ghl_error_m1_invalid_state;
+      }
+      gamma_scale = fmax(gamma_scale, fabs(metric->gammaDD[i][j]));
+    }
+  }
+  if(gamma_scale <= 0.0) {
+    return ghl_error_m1_invalid_state;
+  }
+  int energy_exponent, metric_exponent, root_exponent;
+  const double energy_mantissa = frexp(rad_state->E, &energy_exponent);
+  const double metric_mantissa = frexp(gamma_scale, &metric_exponent);
+  const double root_mantissa = frexp(sqrt(gamma_scale), &root_exponent);
+  double g[3][3], pressure[3][3], flux[3];
+  for(int i = 0; i < 3; ++i) {
+    if(!isfinite(rad_state->F[i])) {
+      return ghl_error_m1_invalid_state;
+    }
+    int flux_exponent;
+    const double flux_mantissa = frexp(rad_state->F[i], &flux_exponent);
+    flux[i] = scalbn(
+          flux_mantissa / (energy_mantissa * root_mantissa),
+          flux_exponent - energy_exponent - root_exponent);
+    if(!isfinite(flux[i])) {
+      return ghl_error_m1_invalid_state;
+    }
+    for(int j = 0; j < 3; ++j) {
+      if(!isfinite(closure->P[i][j])) {
+        return ghl_error_m1_invalid_state;
+      }
+      int pressure_exponent;
+      const double pressure_mantissa = frexp(closure->P[i][j], &pressure_exponent);
+      pressure[i][j] = scalbn(
+            pressure_mantissa * metric_mantissa / energy_mantissa,
+            pressure_exponent + metric_exponent - energy_exponent);
+      if(!isfinite(pressure[i][j])) {
+        return ghl_error_m1_invalid_state;
+      }
+      g[i][j] = metric->gammaDD[i][j] / gamma_scale;
+    }
+  }
+  double covariance[3][3] = { { 0.0 } };
+  for(int i = 0; i < 3; ++i) {
+    for(int j = i; j < 3; ++j) {
+      double lowered_pressure = 0.0;
+      for(int k = 0; k < 3; ++k) {
+        for(int l = 0; l < 3; ++l) {
+          lowered_pressure += g[i][k] * g[j][l] * pressure[k][l];
+        }
+      }
+      covariance[i][j] = covariance[j][i] = lowered_pressure - flux[i] * flux[j];
+    }
+  }
+  return ghl_m1_validate_lowered_tensor_psd(metric, covariance, 1.0);
 }
 
 static inline ghl_error_codes_t ghl_m1_validate_closure_tensor(

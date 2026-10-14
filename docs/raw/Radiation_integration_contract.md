@@ -40,9 +40,12 @@ partner-dependent absorption in the prepared opacity; scalar provider
 The neutrino M1 implementation has one primary numerical path. Realizability
 repair uses the linear `E^2(1-epsilon)/F^2` rescale. Closure is fully
 four-dimensional. Every published pressure tensor satisfies
-`gamma_ij P^ij = E`, symmetry, and positive semidefiniteness within the existing
-floating-point validation tolerances. Finite candidates that fail the physical
-PSD check, or exact-zero-flux candidates that fail tensor validation, use the
+`gamma_ij P^ij = E`, symmetry, pressure positive semidefiniteness, and
+Eulerian covariance positive semidefiniteness within scaled floating-point
+tolerances. The covariance is `C^ij = P^ij - F^i F^j/E`, with `F^i` obtained
+by raising the stored covariant flux. Finite candidates that fail pressure or
+covariance positivity, or exact-zero-flux candidates that fail tensor
+validation, use the
 built-in Eulerian Minerbo admissibility fallback; that result is marked
 `four_point_compatibility=false` and `solve_status=endpoint_fallback`. The
 fallback is not user-selectable, and nonfinite, invalid-root, and failed
@@ -54,22 +57,18 @@ the published tensor, and `root_residual` is zero because no scalar
 four-dimensional root was solved. Those three fields are therefore not related
 by the Minerbo `chi(xi)` relation that holds for the primary construction.
 
-Two distinct states reach the fallback, and the per-call
-`four_point_compatibility=false` indication covers both. The zero-flux case is
-an expected consequence of the covariant thin dyad vanishing identically at
-exact zero Eulerian flux and carries no admissibility concern. The PSD case
-reflects the \f$O(v)\f$-accurate relativistic thick tensor losing positive
-semidefiniteness: its smallest eigenvalue can reach a sizable negative
-fraction of the tensor norm, so the check is a genuine rejection rather than a
-tolerance artifact. Repository measurement places that regime at an Eulerian
-flux transverse to the fluid velocity with fluid Eulerian speed above roughly
-0.5c; flux parallel or antiparallel to the velocity does not reach it at any
-speed tested up to 0.9c, and no state in the repository validation campaign
-reaches it. The library maintains no separate counters for the two causes, and
-`solve_status` reports the solve outcome (`endpoint_fallback` on this path),
-not which cause was taken. A host running fast transverse flows should monitor
-`four_point_compatibility` rather than assume the primary construction is
-always published.
+Pressure or covariance positivity rejection and exact-zero-flux tensor
+validation can reach the fallback. The per-call
+`four_point_compatibility=false` indication covers these causes. The zero-flux
+case follows from the covariant thin dyad vanishing identically at exact zero
+Eulerian flux. A finite-flux primary tensor can instead fail the necessary
+angular-moment covariance condition, even while its pressure is positive
+semidefinite. Moving-fluid transverse radiation can reach this rejection;
+there is no universal fluid-speed cutoff. The library maintains no separate
+cause counters, and `solve_status` reports the solve outcome
+(`endpoint_fallback` on this path). Hosts should monitor
+`four_point_compatibility` when they require the primary construction.
+
 The local implicit source update uses the existing finite-difference Jacobian
 and Newton solver, including its line search and fallback substepping.
 At an exact-zero-flux start, an admissible source predictor may seed Newton

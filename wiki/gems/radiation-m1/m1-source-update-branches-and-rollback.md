@@ -7,6 +7,13 @@ public options, path values, and diagnostics are declared in
 [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h), and the dispatcher is
 [`ghl_m1_neutrino_source_update.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c).
 
+`ghl_m1_try_neutrino_explicit_thin_update_with_diagnostics` is the public
+repair-diagnostics companion to the thin-update wrapper. Its optional
+accumulator is updated with the candidate repair; passing null retains the
+ordinary wrapper's reporting behavior. Endpoint mean-energy rejection is the
+same in both forms. See [ghl_m1.h](../../../GRHayL/include/ghl_m1.h) and
+[thin/implicit implementation](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_implicit_solve.c).
+
 ## Default and opt-in policies
 
 The zero-valued default is
@@ -25,9 +32,21 @@ internal choices:
 | path | selection and operation |
 | --- | --- |
 | thin explicit | selected when `dt_alpha*kappa_a_E < 1` and `dt_alpha*kappa_s < 1`; E/F receives an explicit interaction update, then N uses the shared endpoint-number policy |
-| thick equilibrium | enabled only by a positive host threshold and selected when `dt_alpha*sqrt(kappa_a_E*kappa_tr)` exceeds it; a stiff comoving predictor is used before the shared endpoint-number policy |
-| scattering dominated | enabled only by a positive host threshold and selected when `dt_alpha*kappa_s` exceeds it; it uses the same stiff predictor machinery and endpoint-number policy |
+| thick equilibrium | enabled only by a positive host threshold and selected when `dt_alpha*sqrt(kappa_a_E*kappa_tr)` exceeds it; E/F uses the stiff predictor at exact Eulerian rest and the implicit solve for moving fluid, then the shared endpoint-number policy |
+| scattering dominated | enabled only by a positive host threshold and selected when `dt_alpha*kappa_s` exceeds it; E/F uses the same rest/moving-fluid distinction and endpoint-number policy |
 | general implicit | the fallback branch when no compatibility shortcut is selected; it uses the policy-aware implicit E/F solve and the same endpoint-number policy |
+
+The thick and scattering shortcuts publish their stiff comoving predictor
+directly only at exact Eulerian rest, where that predictor solves the
+Eulerian source equations. On a moving cell the boost is a predictor, not a
+finite source update: pure scattering must preserve `E - V^i F_i`, so the
+dispatcher instead runs the policy-aware implicit E/F solve on the frozen
+transport predictor. On success, the selected thick or scattering branch label
+is preserved, the implicit Newton diagnostics are retained, and the endpoint
+still follows the shared number policy. This check runs after the
+`ghl_m1_compute_eulerian_velocity` validation in
+[`ghl_m1_neutrino_source_update.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c),
+so a branch label is not a guarantee that Newton iteration was skipped.
 
 All branches use `dt_alpha = alpha*dt`, frozen matter/rates, endpoint repair,
 endpoint mean-energy checks when enabled, and the same exchange assembly. A
@@ -49,6 +68,26 @@ nonrepresentable published endpoints continue to fail closed.
 The branched policy is fail-closed on a closure fallback unless
 `allow_closure_fallback` is explicitly enabled. That choice affects whether a
 candidate is accepted; it does not change the closure algorithm.
+
+## `Y_e` policy and double application
+
+`ye_policy` selects the composition bookkeeping applied after a successful
+endpoint: the zero-valued default `ghl_m1_neutrino_ye_from_charged_current`
+preserves the charged-current-only contract, while the opt-in
+`ghl_m1_neutrino_ye_from_signed_total_number` instead derives `dYe_matter`
+from the signed total-number increment. The meanings and exchange fields are
+documented in [M1 contract](neutrino-m1-contract.md#state-and-ordering),
+[exchange equations](m1-exchange-equations.md#charged-current-lepton-exchange),
+and [lepton and matter exchange](neutrino-lepton-and-matter-exchange.md); the
+enum and application are declared in
+[`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h) and applied in
+[`ghl_m1_neutrino_source_update.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c).
+
+Setting `interaction_sources_already_applied` is rejected with
+`ghl_error_m1_source_double_application` as a hard failure, so an already
+applied explicit interaction source is not silently routed through the local
+implicit stage again; see the
+[failure-policy explanation](m1-implicit-newton-and-failure-policy.md#transactional-failures).
 
 ## Number projection is separate
 

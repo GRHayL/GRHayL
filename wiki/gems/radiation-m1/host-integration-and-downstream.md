@@ -62,9 +62,14 @@ The host must:
 6. recover matter primitives on a temporary candidate; and
 7. publish the coupled result only after all checks succeed.
 
-`dN_rad_total` is distinct from `dL_rad_cc`. The canonical `Y_e` increment uses
-the charged-current exchange; total radiation-number exchange remains a
-separate diagnostic and is not folded into `Y_e`.
+`dN_rad_total` is distinct from `dL_rad_cc`. The default `Y_e` increment uses
+charged-current exchange. The single-species source dispatcher can select
+`ghl_m1_neutrino_ye_from_signed_total_number` to derive `dYe_matter` from the
+species-weighted total-number increment instead; `dL_rad_cc` remains separate.
+The paired operator uses charged-current exchange and gives pair reactions no
+`Y_e` increment. Use the [exchange equations](m1-exchange-equations.md) and
+[dispatcher](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c)
+for the selected composition policy.
 
 The local implicit source update retains the existing finite-difference
 Jacobian and Newton solver, including its line search and fallback substepping.

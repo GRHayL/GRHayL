@@ -70,6 +70,15 @@ parabolic face values more strongly toward the cell-centered value. The
 flattening controls live in `ghl_parameters` as `ppm_flattening_epsilon`,
 `ppm_flattening_omega1`, and `ppm_flattening_omega2`.
 
+The centered PPM helpers apply caller-supplied `ftilde` literally, without
+clamping. Supply finite values in `[0,1]`: zero leaves the provisional profile
+unflattened, while one collapses it to the cell-center value before
+monotonicity limiting, assuming finite intermediate arithmetic. Shock detection
+needs positive finite pressures, finite velocities and parameters, and usable
+differences and ratios. Its roundoff suppression compares `fabs(dP)/average`
+with `1e-15`; this is a relative pressure criterion. The detector's clamp is
+not input validation, and these routines provide no error status.
+
 ## Steepening
 
 `ghl_ppm_reconstruction_with_steepening` and
@@ -87,7 +96,15 @@ The steepening checks couple density-like input, pressure, `Gamma_eff`, and PPM
 fields in `ghl_parameters`: `ppm_shock_k0`, `ppm_shock_eta1`,
 `ppm_shock_eta2`, and `ppm_shock_epsilon`.
 
-`Gamma_eff` is a caller-provided steepening input. In
+For density steepening, callers supply positive finite density and pressure,
+finite `Gamma_eff` and parameters, and usable intermediate arithmetic. The
+contact check uses normalized density and pressure jumps when the minima are
+positive and the needed inputs, ratios, and scaled density ratio are finite.
+Otherwise it falls back to the product-form inequality. That fallback does
+not reject invalid inputs or guarantee finite reconstructed states.
+
+`Gamma_eff` is a caller-provided steepening input. The wrapper passes the same
+scalar to both adjacent helper calls and performs no EOS lookup. In
 [unit_test_ET_Legacy_reconstruction.c](../../../Unit_Tests/unit_test_ET_Legacy_reconstruction.c),
 the test computes it from hybrid EOS data before calling the steepened density
 path.
@@ -132,7 +149,7 @@ The broader test routing is in [test-map.md](../../test-map.md).
 
 Execution status is split:
 
-- `.github/run_tests.sh` executes ET Legacy reconstruction, which directly
+- [.github/run_tests.sh](../../../.github/run_tests.sh) executes ET Legacy reconstruction, which directly
   exercises both PPM wrappers and `ghl_compute_ftilde`.
 - Every compiler/OS workflow includes `reconstruction` in its
   ET-Legacy matrix. Standalone Reconstruction matrices contain only PLM and
@@ -143,6 +160,9 @@ Execution status is split:
 - No direct test isolates flattening, slope limiting, steepening, or either
   5-point helper. Current evidence is transitive through ET Legacy fixture
   replay.
+- ET Legacy uses default PPM parameters and sets both polytropic and thermal
+  Gamma to `2`, so it does not explore varying `Gamma_eff`. Wrapper replay does
+  not independently qualify every flattening/steepening trigger or parameter.
 
 ## Repo-Local References
 

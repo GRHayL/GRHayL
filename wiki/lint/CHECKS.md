@@ -14,11 +14,7 @@ from pathlib import Path
 import re
 
 root = Path.cwd().resolve()
-pages = [
-    Path("AGENTS.md"),
-    *sorted(Path("wiki").rglob("*.md")),
-    *sorted(Path("docs/raw").rglob("*.md")),
-]
+pages = [Path("AGENTS.md"), *sorted(Path("wiki").rglob("*.md"))]
 link = re.compile(r"\[[^]]+\]\(([^)]+)\)")
 for page in pages:
     in_fence = False
@@ -30,8 +26,10 @@ for page in pages:
             continue
         for raw in link.findall(line):
             target = raw.split("#", 1)[0]
-            if (not target or target.startswith("@ref ")
-                    or re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", target)):
+            if not target or re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", target):
+                continue
+            if Path(target).is_absolute():
+                print(f"{page}:{line_number}: absolute target: {raw}")
                 continue
             candidate = (page.parent / target).resolve()
             try:
@@ -47,6 +45,9 @@ PY
 This is a conservative Markdown regex, not a full GitHub-Flavored Markdown
 parser. Manually review links containing escaped/nested parentheses, reference
 definitions, HTML, or titles; do not turn uncertain syntax into a hard failure.
+Fragments are stripped before resolution, so heading anchors need a separate
+check against the target page. This example reports problems; it does not
+set a failing process status.
 
 If KB pages are being authored concurrently, do not fail solely because
 links to in-progress pages are temporarily missing. Report them.
@@ -140,7 +141,8 @@ For each page, verify:
 - repo-relative source/doc/test paths support substantive claims
 - `Ground Truth References` appears only if web facts were used
 - external references, if any, are official full URLs
-- no absolute workspace paths
+- no absolute workspace source/navigation paths; the operational delivery-path
+  exception in [AGENTS.md](../../AGENTS.md#agent-execution-contract) still applies
 - no Doxygen table copied wholesale when a route would suffice
 
 Search for absolute workspace paths:
@@ -170,7 +172,7 @@ KB pages should route to Doxygen source, not duplicate long Doxygen passages.
 Review large pages and repeated Doxygen headings:
 
 ```bash
-wc -l wiki/*.md wiki/lint/*.md 2>/dev/null
+rg --files wiki -g '*.md' | sort
 rg -n 'defgroup|@ingroup|@brief|@details|\\f\\[' wiki || true
 ```
 
@@ -201,33 +203,13 @@ either no-flags spelling supported without reopening source.
 Check shell syntax without execution:
 
 ```bash
-sh -n configure scripts/parser
-bash -n generate_makefile.sh .github/run_tests.sh .github/prepare_m1_fixtures.sh
+for script in configure scripts/parser; do
+  sh -n "$script" || exit
+done
+for script in generate_makefile.sh .github/run_tests.sh; do
+  bash -n "$script" || exit
+done
 ```
-
-[`.github/run_tests.sh`](../../.github/run_tests.sh) is the single test runner;
-its `m1` mode (`.github/run_tests.sh m1 [configure arguments...]`) builds with
-`make tests` and runs only the Radiation M1 tests. Its owning boundary is the
-[run_m1 action](../../.github/actions/run_m1/action.yml), which each compiler
-workflow's `radiation-m1` job matrix in
-[`.github/workflows/`](../../.github/workflows/) calls (for example
-[github-actions-Ubuntu-gcc.yml](../../.github/workflows/github-actions-Ubuntu-gcc.yml)).
-The action selects the compiler and HDF5 mode, builds the configure arguments
-(`--noomp`, `--disable-hdf5` for the disabled-HDF5 leg, the Homebrew compilers
-on macOS, and gcc coverage flags on Linux gcc), and ends with
-`.github/run_tests.sh m1`. Only the Ubuntu GCC job adds a coverage step, which
-calls the
-[code-coverage action](../../.github/actions/code-coverage/action.yml) for the
-gcovr report filter and gates; the other `radiation-m1` jobs are plain test
-runs. Check the runner, the `run_m1` action, the jobs, and the coverage action
-together: a change to any side of the boundary (runner arguments, the
-configure-argument contract, gate values, or report paths versus the jobs'
-matrix, env, and upload steps) invalidates the other sides' evidence.
-`.github/prepare_m1_fixtures.sh` is invoked by `.github/run_tests.sh` to prepare
-the default pinned M1 downloads or a supplied gzip `M1_FIXTURE_DIR`; a complete
-raw override is used directly. Check it against the runner. Do not record run
-outcomes or environment snapshots from these
-checks.
 
 Parse workflow YAML when PyYAML is available. `BaseLoader` preserves the key
 `on` as text instead of applying YAML 1.1 boolean conversion:
@@ -239,18 +221,29 @@ import yaml
 
 for path in sorted(Path(".github/workflows").glob("*.yml")):
     data = yaml.load(path.read_text(), Loader=yaml.BaseLoader)
-    print(path, "events=", sorted(data["on"]), "jobs=", len(data["jobs"]))
+    print(path, "events=", sorted(data["on"]), "jobs=", sorted(data["jobs"]))
 PY
 ```
 
 Workflow/job presence is selection evidence, not execution evidence. Compare
 job commands with `.github/actions/*/action.yml`, `.github/run_tests.sh`, and
 actual generated Makefile targets before claiming compile, run, or coverage.
+YAML parsing does not validate embedded shell commands; inspect those separately.
+
+For M1 changes, review the
+[run_m1 action](../../.github/actions/run_m1/action.yml) and each
+workflow's `radiation-m1` job together; only the Ubuntu GCC job in
+[github-actions-Ubuntu-gcc.yml](../../.github/workflows/github-actions-Ubuntu-gcc.yml)
+adds a coverage step, and that step calls the dedicated
+[m1-code-coverage action](../../.github/actions/m1-code-coverage/action.yml),
+not the generic `code-coverage` action used by other jobs.
 
 Run Doxygen only with the unique temporary-output procedure in
 [Generated Boundaries](../generated-boundaries.md). Record `doxygen --version`
-and compare warnings only with the same version/configuration. Confirm no
-generated workspace outputs remain:
+in the task report, not the KB, and compare warnings only with the same
+version/configuration. Compare generated output paths with the task baseline;
+remove only task-owned artifacts and preserve preexisting or concurrent work.
+This listing identifies paths for inspection, not permission to delete them:
 
 ```bash
 find . -maxdepth 2 \( -name Makefile -o -name build -o -name test \
@@ -272,28 +265,11 @@ git status --short
 git diff --name-only
 ```
 
-Map changed paths to KB review targets:
-
-```bash
-git diff --name-only | while read -r path; do
-  case "$path" in
-    GRHayL/include/*) echo "$path -> wiki/public-api-map.md wiki/catalog.md" ;;
-    GRHayL/Atmosphere/*) echo "$path -> wiki/gems/index.md wiki/catalog.md" ;;
-    GRHayL/Con2Prim/*) echo "$path -> wiki/gems/index.md wiki/catalog.md" ;;
-    GRHayL/EOS/*) echo "$path -> wiki/gems/index.md wiki/catalog.md wiki/build-and-ci.md" ;;
-    GRHayL/Flux_Source/*) echo "$path -> wiki/physics/evolution-equation-map.md wiki/catalog.md" ;;
-    GRHayL/Induction/*) echo "$path -> wiki/physics/evolution-equation-map.md wiki/catalog.md" ;;
-    GRHayL/Neutrinos/*) echo "$path -> wiki/gems/index.md wiki/catalog.md" ;;
-    GRHayL/Radiation/*) echo "$path -> wiki/gems/radiation-m1.md wiki/catalog.md wiki/source-map.md" ;;
-    GRHayL/Reconstruction/*) echo "$path -> wiki/gems/index.md wiki/catalog.md" ;;
-    Unit_Tests/*) echo "$path -> wiki/test-map.md wiki/catalog.md" ;;
-    docs/raw/*) echo "$path -> wiki/index.md wiki/catalog.md affected topic page" ;;
-    .github/run_tests.sh|.github/prepare_m1_fixtures.sh) echo "$path -> wiki/build-and-ci.md wiki/test-map.md wiki/generated-boundaries.md wiki/lint/CHECKS.md" ;;
-    .github/workflows/*|.github/actions/run_m1/*) echo "$path -> wiki/build-and-ci.md wiki/test-map.md wiki/lint/CHECKS.md" ;;
-    .github/*|configure|generate_makefile.sh) echo "$path -> wiki/build-and-ci.md wiki/generated-boundaries.md" ;;
-  esac
-done
-```
+Map each changed path through [Change Impact](../change-impact.md),
+[Source Map](../source-map.md), and [Catalog](../catalog.md) to its owner leaf
+and affected companions. Include Core, public headers, build/Doxygen inputs,
+GRHayLib, and CompOSE tooling when those paths change; do not maintain a
+competing partial route table in this check page.
 
 Before editing any KB page, re-open the named source, header, Doxygen source,
 test, or CI file and make the smallest source-backed update.

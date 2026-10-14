@@ -91,9 +91,12 @@ f_tilde = a * f_input_tilde + (1 - a) * f_asym_tilde.
 
 Thus the input numerical flux dominates at small optical depth and the
 thick-limit asymptotic flux dominates as `tau_face` grows. The helper validates
-the spatial metric, finite gradients, positive length, and face velocity
-normalization before publishing a corrected value; active-path arithmetic is
-also completed and checked before either output is published.
+the direction, finite scalar inputs, nonnegative opacity and diffusion
+coefficient, and positive length. On the active path it checks finite
+gradients, face-velocity timelike consistency with the supplied metric, and
+arithmetic finiteness before publishing either output. Metric symmetry,
+positive definiteness, inverse consistency, and determinant consistency remain
+caller prerequisites; these local checks do not establish full metric coherence.
 
 ## Scope of the correction
 
@@ -102,10 +105,10 @@ component four-point transport operation, does not update number flux, and
 does not provide a coupled E/F/N diffusion scheme. It also does not alter
 source terms or the local implicit update.
 
-The current four-point implementation explicitly rejects a request to combine
-this correction with its own face blend. A host must therefore choose and
-document an explicit downstream method boundary; silently applying both would
-make the stored flux and its diagnostics impossible to interpret.
+The four-point APIs have no diffusion-policy flag and do not apply this
+correction. A host must choose and document an explicit downstream method
+boundary; applying this correction after the canonical four-point blend would
+violate that route's no-separate-diffusion contract.
 
 ## Geometry and current policy
 
@@ -123,16 +126,21 @@ The focused implementation check is
 [`unit_test_m1_diffusion_flux.c`](../../../Unit_Tests/unit_test_m1_diffusion_flux.c).
 The ordinary runner downloads the pinned external fixtures by default, or
 uses a directory supplied through `M1_FIXTURE_DIR`. It passes
-`jthick_thcm1.bin` to that test and it replays the six
-seeded radiation baseline/perturbed RNG pairs from the retained package.
+`jthick_thcm1.bin` to that test and it replays the retained baseline/perturbed
+radiation RNG pairs from the package.
 Each endpoint is evaluated by GRHayL and compared directly with the retained
 values attributed to the THC_M1 `calc_Pthick` result projected to comoving `J`;
 the paired replay also compares `G(x1)-G(x0)` with `T(x1)-T(x0)` using the
 existing fixture policy. This is scalar thick-limit replay, not evidence for
-full-grid thick-limit convergence or verified THC_M1 provenance. The retained
-replay agrees for all 12 endpoint comparisons and
-all 6 paired-response comparisons: six baseline and six perturbed states, using
-the existing `pointwise_a1_a2_v1` policy. The optional
+full-grid thick-limit convergence or verified THC_M1 provenance.
+Each retained baseline/perturbed pair is exercised under the existing
+`pointwise_a1_a2_v1` policy by
+[`m1_thcm1_fixture_compare_paired`](../../../Unit_Tests/m1_helpers/m1_thcm1_fixture_utils.c),
+which evaluates every endpoint against its retained baseline or perturbed
+reference and then gates the perturbed-minus-baseline response against the
+corresponding retained pair difference; every comparison is normalized by the
+fixture `normalization` array and must clear the policy's absolute and
+relative tolerances before the pair is accepted. The optional
 Fick helper is not cross-code compared because THC_M1 has no one-to-one public
 operation for that caller-prepared corrected flux; its local boundary and
 arithmetic checks remain the appropriate coverage. The shared source and API are

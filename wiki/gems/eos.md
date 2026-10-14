@@ -14,19 +14,19 @@ EOS provides hybrid, simple, and tabulated equation-of-state support through ini
 - [Tabulated interpolator catalog](eos/tabulated-interpolator-catalog.md)
 - [CompOSE-to-NRPyLeakage adapter how-to](neutrinos/compose-eos-adapter-how-to.md)
 - [EOS tests and fixtures](eos/tests-and-fixtures.md)
-- `docs/raw/EOS.dox`
-- `docs/raw/GRHayL_Core.dox`
-- `GRHayL/include/ghl.h`
-- `wiki/physics/variables-and-conventions.md`
+- [docs/raw/EOS.dox](../../docs/raw/EOS.dox)
+- [docs/raw/GRHayL_Core.dox](../../docs/raw/GRHayL_Core.dox)
+- [GRHayL/include/ghl.h](../../GRHayL/include/ghl.h)
+- [wiki/physics/variables-and-conventions.md](../physics/variables-and-conventions.md)
 
 ## Public Headers
 
 - `GRHayL/include/ghl.h`
-- `GRHayL/include/ghl_eos_functions.h`
-- `GRHayL/include/ghl_nrpyeos_hybrid.h`
-- `GRHayL/include/ghl_nrpyeos_tabulated.h`
+- [GRHayL/include/ghl_eos_functions.h](../../GRHayL/include/ghl_eos_functions.h)
+- [GRHayL/include/ghl_nrpyeos_hybrid.h](../../GRHayL/include/ghl_nrpyeos_hybrid.h)
+- [GRHayL/include/ghl_nrpyeos_tabulated.h](../../GRHayL/include/ghl_nrpyeos_tabulated.h)
 
-`GRHayL/include/ghl_eos_functions_declaration.h` is an internal,
+[GRHayL/include/ghl_eos_functions_declaration.h](../../GRHayL/include/ghl_eos_functions_declaration.h) is an internal,
 non-installed storage-definition companion.
 
 Key public surface:
@@ -39,11 +39,11 @@ Key public surface:
 
 ## Implementation Paths
 
-- Hybrid EOS: `GRHayL/EOS/Hybrid/`
-- Tabulated EOS: `GRHayL/EOS/Tabulated/`
-- Tabulated interpolators: `GRHayL/EOS/Tabulated/interpolators/`
-- Stellar-collapse table adapter: `GRHayL/EOS/Tabulated/stellarcollapse/`
-- Core initialization: `GRHayL/GRHayL_Core/initialize_eos.c`
+- Hybrid EOS: [GRHayL/EOS/Hybrid/](../../GRHayL/EOS/Hybrid)
+- Tabulated EOS: [GRHayL/EOS/Tabulated/](../../GRHayL/EOS/Tabulated)
+- Tabulated interpolators: [GRHayL/EOS/Tabulated/interpolators/](../../GRHayL/EOS/Tabulated/interpolators)
+- Stellar-collapse table adapter: [GRHayL/EOS/Tabulated/stellarcollapse/](../../GRHayL/EOS/Tabulated/stellarcollapse)
+- Core initialization: [GRHayL/GRHayL_Core/initialize_eos.c](../../GRHayL/GRHayL_Core/initialize_eos.c)
 
 Focused routes:
 - Simple/ideal-fluid setup and EOS function-pointer dispatch:
@@ -68,16 +68,19 @@ Focused routes:
 
 ## Test Paths
 
-- `Unit_Tests/unit_test_piecewise_polytrope.c`
-- `Unit_Tests/unit_test_tabulated_eos.c`
-- `Unit_Tests/test_compute_h_and_cs2.c`
-- `Unit_Tests/tabulated_eos_unit_test_helpers.c`
-- `Unit_Tests/sample_table/`
+- [Unit_Tests/unit_test_piecewise_polytrope.c](../../Unit_Tests/unit_test_piecewise_polytrope.c)
+- [Unit_Tests/unit_test_tabulated_eos.c](../../Unit_Tests/unit_test_tabulated_eos.c)
+- [Unit_Tests/test_compute_h_and_cs2.c](../../Unit_Tests/test_compute_h_and_cs2.c): synthetic callback shared by tabulated flux replay/generation, not an EOS-table oracle
+- [Unit_Tests/tabulated_eos_unit_test_helpers.c](../../Unit_Tests/tabulated_eos_unit_test_helpers.c)
+- [Unit_Tests/sample_table/](../../Unit_Tests/sample_table)
 
 ## Key Contracts
 
 - `ghl_eos_parameters` stores EOS type, table type, atmosphere values, bounds, hybrid pieces, and tabulated table state.
-- Initialize EOS through core initialization helpers so function pointers match EOS type.
+- On supported initialization paths, Core `*_functions_and_params` wrappers
+  select global dispatch before parameter initialization; parameter-only
+  initializers do not select it. Check returned status and maintain consistent
+  dispatch as described in [initialization and dispatch](eos/initialization-and-dispatch.md).
 - Hybrid EOS splits cold and thermal behavior and uses `neos - 1` density and
   pressure transitions; tabulated EOS interpolates table quantities and
   enforces table bounds.

@@ -97,12 +97,13 @@ static int m1_thcm1_source_fixture_build_rates(
 static int m1_thcm1_source_fixture_local_policy_case(const char *case_id) {
   static const char *const prefixes[]
         = { "rngpkt-v2-rd-radiation-anchor-energy-floor-a01:baseline:",
-            "rngpkt-v2-rd-metric-anchor-offdiagonal-spd-a01:baseline:" };
+            "rngpkt-v2-rd-metric-anchor-offdiagonal-spd-a01:baseline:",
+            "rngpkt-v2-rd-radiation-anchor-realizability-cone-a01:baseline:" };
   for(size_t i = 0; i < sizeof(prefixes) / sizeof(prefixes[0]); ++i) {
     const size_t length = strlen(prefixes[i]);
     if(strncmp(case_id, prefixes[i], length) == 0
        && m1_thcm1_source_fixture_species(case_id + length) >= 0) {
-      return 1;
+      return i == 2 ? 2 : 1;
     }
   }
   return 0;
@@ -173,7 +174,8 @@ static int m1_thcm1_source_fixture_evaluate_one(
   }
   nu_params.N_floor = M1_THCM1_SOURCE_NUMBER_FLOOR;
 
-  if(m1_thcm1_source_fixture_local_policy_case(record->case_id)) {
+  const int policy_case = m1_thcm1_source_fixture_local_policy_case(record->case_id);
+  if(policy_case == 1) {
     const ghl_m1_rad_state radiation
           = { .E = state.E, .F = { state.F[0], state.F[1], state.F[2] } };
     ghl_m1_closure closure = { 0 };
@@ -202,6 +204,53 @@ static int m1_thcm1_source_fixture_evaluate_one(
             error, error_size,
             "source zero-flux fallback violates its published-tensor contract");
       return 0;
+    }
+  }
+
+  if(policy_case == 2) {
+    /* The pointwise owner independently proves this anchor's retained
+     * pressure is nonrealizable. Its derived source records must instead
+     * use the analytic Eulerian fallback at both paired inputs. */
+    const ghl_m1_rad_state radiation
+          = { .E = state.E, .F = { state.F[0], state.F[1], state.F[2] } };
+    ghl_m1_closure closure = { 0 };
+    if(!(state.E > 0.0) || state.F[0] == 0.0 || state.F[1] != 0.0 || state.F[2] != 0.0
+       || ghl_m1_compute_closure_with_primitives(
+                &m1_params, &metric, &prims, &radiation, &closure)
+                != ghl_success
+       || closure.solve_status != ghl_m1_closure_solve_endpoint_fallback
+       || closure.four_point_compatibility || closure.root_iterations != 0
+       || closure.root_residual != 0.0) {
+      m1_thcm1_source_fixture_error(
+            error, error_size, "named source covariance case lost its fallback");
+      return 0;
+    }
+    const double f = fabs(state.F[0] / state.E);
+    const double chi = 1.0 / 3.0 + f * f * (6.0 - 2.0 * f + 6.0 * f * f) / 15.0;
+    const double transverse = 0.5 * (1.0 - chi);
+    const double tolerance = 1024.0 * DBL_EPSILON;
+    if(!(f > 0.0 && f <= 1.0) || !isfinite(closure.chi)
+       || fabs(closure.chi - chi) > tolerance
+       || fabs((closure.P[0][0] + closure.P[1][1] + closure.P[2][2]) / state.E - 1.0)
+                > 128.0 * DBL_EPSILON
+       || closure.P[0][0] / state.E - f * f < -tolerance
+       || closure.P[1][1] / state.E < -tolerance
+       || closure.P[2][2] / state.E < -tolerance) {
+      m1_thcm1_source_fixture_error(
+            error, error_size, "source covariance fallback is nonrealizable");
+      return 0;
+    }
+    for(int i = 0; i < 3; ++i) {
+      for(int j = 0; j < 3; ++j) {
+        const double expected = i == j ? (i == 0 ? chi : transverse) : 0.0;
+        if(metric.gammaDD[i][j] != (i == j ? 1.0 : 0.0) || !isfinite(closure.P[i][j])
+           || fabs(closure.P[i][j] / state.E - expected) > tolerance
+           || closure.P[i][j] != closure.P[j][i] || (i != j && closure.P[i][j] != 0.0)) {
+          m1_thcm1_source_fixture_error(
+                error, error_size, "source covariance fallback pressure changed");
+          return 0;
+        }
+      }
     }
   }
 
@@ -327,7 +376,7 @@ int m1_thcm1_run_instantaneous_source_fixtures(
     return 0;
   }
 
-  size_t local_policy_cases = 0;
+  size_t local_policy_cases = 0, covariance_policy_cases = 0;
   for(size_t index = 0; index < collection.record_count; ++index) {
     m1_thcm1_fixture_record *record = &collection.records[index];
     const int species = m1_thcm1_source_fixture_species(record->seed_id);
@@ -383,7 +432,12 @@ int m1_thcm1_run_instantaneous_source_fixtures(
         m1_thcm1_fixture_free(&collection);
         return 0;
       }
-      ++local_policy_cases;
+      if(m1_thcm1_source_fixture_local_policy_case(record->case_id) == 1) {
+        ++local_policy_cases;
+      }
+      else {
+        ++covariance_policy_cases;
+      }
       /* These named records are local two-state admissibility/exchange
        * checks.  They are deliberately excluded from source agreement counts
        * because their published closure policy differs from THC_M1. */
@@ -407,15 +461,16 @@ int m1_thcm1_run_instantaneous_source_fixtures(
     }
   }
   m1_thcm1_fixture_free(&collection);
-  if(local_policy_cases != 6) {
+  if(local_policy_cases != 6 || covariance_policy_cases != 3) {
     m1_thcm1_source_fixture_error(
           error, error_size,
-          "source corpus changed its named zero-flux policy inventory");
+          "source corpus changed its named fallback-policy inventory");
     return 0;
   }
   ghl_info(
         "THC_M1 source fixtures: %zu named zero-flux policy pairs passed local "
-        "admissibility/exchange checks\n",
-        local_policy_cases);
+        "admissibility/exchange checks; %zu named covariance policy pairs passed "
+        "local fallback/exchange checks\n",
+        local_policy_cases, covariance_policy_cases);
   return 1;
 }

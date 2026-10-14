@@ -2,9 +2,9 @@
 
 This knowledge base routes agents to GRHayL source, tests, implementations,
 and Doxygen source documentation without replacing them. Repo-local files are
-the authority: prefer `README.md`, `Doxyfile`, `configure`, `docs/raw/`,
-`GRHayL/`, `Unit_Tests/`, `.github/workflows/`, and
-`implementations/GRHayLib/` before broad searches.
+the authority: prefer [README.md](../README.md), [Doxyfile](../Doxyfile), [configure](../configure), [docs/raw/](../docs/raw),
+[GRHayL/](../GRHayL), [Unit_Tests/](../Unit_Tests), [.github/workflows/](../.github/workflows), and
+[implementations/GRHayLib/](../implementations/GRHayLib) before broad searches.
 
 KB pages summarize navigation and review impact. If a KB page conflicts with
 source, headers, tests, CI, or Doxygen source, trust the underlying repo files
@@ -14,31 +14,28 @@ Availability claims are layered: declaration, definition, build inclusion,
 dispatch/initialization, test selection, execution, and downstream proof are
 distinct. Current unresolved product choices live only in
 [Contradictions](contradictions.md); owner leaves state safe observed behavior.
-The Radiation M1 gem is library-level; the implementation routes below are
-repository-wide navigation and do not mean that downstream GRHayLib or other
-host integration is part of the gem.
 
 ## Router
 
 | Go to | Use it for | Primary ground truth |
 | --- | --- | --- |
 | [Catalog](catalog.md) | Query routing by term, alias, gem, and workflow. | `README.md`, `docs/raw/`, `GRHayL/`, `Unit_Tests/` |
-| [Source Map](source-map.md) | Source tree ownership and dependency routing. | `GRHayL/`, `GRHayL/include/`, `GRHayL/make.code.defn` |
-| [Public API Map](public-api-map.md) | Public headers, structs, function families, and callable surface. | `GRHayL/include/`, `docs/raw/GRHayL_Core.dox` |
-| [Core/Chalice](core/index.md) | Shared Core structs, pack/unpack helpers, metrics, `u0`, stress-energy, EOS dispatch, errors, IO, debug utilities, and Core fixtures. | `GRHayL/GRHayL_Core/`, `GRHayL/include/ghl.h`, `docs/raw/GRHayL_Core.dox`, `Unit_Tests/unit_test_grhayl_core_test_suite.c` |
-| [Neutrinos](gems/neutrinos.md) | NRPyLeakage API, physics/EOS contracts, generated-code provenance, implementation flow, portability, and tests. | `GRHayL/Neutrinos/NRPyLeakage/`, `GRHayL/include/ghl_radiation.h`, `GRHayL/include/ghl_nrpyleakage.h`, `Unit_Tests/unit_test_nrpyleakage_*.c` |
+| [Source Map](source-map.md) | Source tree ownership and dependency routing. | `GRHayL/`, [GRHayL/include/](../GRHayL/include), [GRHayL/make.code.defn](../GRHayL/make.code.defn) |
+| [Public API Map](public-api-map.md) | Public headers, structs, function families, and callable surface. | `GRHayL/include/`, [docs/raw/GRHayL_Core.dox](../docs/raw/GRHayL_Core.dox) |
+| [Core/Chalice](core/index.md) | Shared Core structs, pack/unpack helpers, metrics, `u0`, stress-energy, EOS dispatch, errors, IO, debug utilities, and Core fixtures. | [GRHayL/GRHayL_Core/](../GRHayL/GRHayL_Core), [GRHayL/include/ghl.h](../GRHayL/include/ghl.h), `docs/raw/GRHayL_Core.dox`, [Unit_Tests/unit_test_grhayl_core_test_suite.c](../Unit_Tests/unit_test_grhayl_core_test_suite.c) |
+| [Neutrinos](gems/neutrinos.md) | NRPyLeakage API, physics/EOS contracts, generated-code provenance, implementation flow, portability, and tests. | [GRHayL/Neutrinos/NRPyLeakage/](../GRHayL/Neutrinos/NRPyLeakage), [GRHayL/include/ghl_radiation.h](../GRHayL/include/ghl_radiation.h), [GRHayL/include/ghl_nrpyleakage.h](../GRHayL/include/ghl_nrpyleakage.h), `Unit_Tests/unit_test_nrpyleakage_*.c` |
 | [Radiation M1](gems/radiation-m1.md) | Grey one-group, three-species neutrino M1, rate provider, source/implicit coupling, canonical four-point Rusanov transport, optional diffusion helpers, and tests/fixtures. | `GRHayL/Radiation/`, `GRHayL/include/ghl_m1.h`, `GRHayL/include/ghl_neutrino_rate_provider.h`, `.github/run_tests.sh` |
-| [Gems](gems/index.md) | Gem-by-gem module summaries. | `GRHayL/Atmosphere/`, `GRHayL/Con2Prim/`, `GRHayL/EOS/`, `GRHayL/Flux_Source/`, `GRHayL/Induction/`, `GRHayL/Neutrinos/`, `GRHayL/Radiation/`, `GRHayL/Reconstruction/` |
+| [Gems](gems/index.md) | Gem-by-gem module summaries. | [GRHayL/Atmosphere/](../GRHayL/Atmosphere), [GRHayL/Con2Prim/](../GRHayL/Con2Prim), [GRHayL/EOS/](../GRHayL/EOS), [GRHayL/Flux_Source/](../GRHayL/Flux_Source), [GRHayL/Induction/](../GRHayL/Induction), [GRHayL/Neutrinos/](../GRHayL/Neutrinos), [GRHayL/Radiation/](../GRHayL/Radiation), [GRHayL/Reconstruction/](../GRHayL/Reconstruction) |
 | [Implementations](implementations/index.md) | Downstream/direct-compile implementation routers, including the [GRHayLib Cactus thorn](implementations/grhaylib.md). | `implementations/GRHayLib/` |
-| [Build And CI](build-and-ci.md) | Configure, HDF5, Makefile, install, and CI workflow routes. | `README.md`, `configure`, `.github/workflows/`, `.github/run_tests.sh` |
+| [Build And CI](build-and-ci.md) | Configure, HDF5, Makefile, install, and CI workflow routes. | `README.md`, `configure`, `.github/workflows/`, [.github/run_tests.sh](../.github/run_tests.sh) |
 | [Test Map](test-map.md) | Unit tests, the [Unit_Tests hub](tests/index.md), generated reference-data programs, sample EOS table, and fixture routing. | `Unit_Tests/`, `.github/run_tests.sh` |
-| [Generated Boundaries](generated-boundaries.md) | Generated outputs, Doxygen output, NRPy-derived files, and build products. | `Doxyfile`, `docs/raw/`, `GRHayL/Flux_Source/generate_flux_source.py`, `GRHayL/*/make.code.defn`, [Flux Source generated NRPy boundary](gems/flux-source/generated-nrpy-boundary.md), [NRPyLeakage generator provenance](gems/neutrinos/generator-provenance.md) |
+| [Generated Boundaries](generated-boundaries.md) | Generated outputs, Doxygen output, NRPy-derived files, and build products. | `Doxyfile`, `docs/raw/`, [GRHayL/Flux_Source/generate_flux_source.py](../GRHayL/Flux_Source/generate_flux_source.py), `GRHayL/*/make.code.defn`, [Flux Source generated NRPy boundary](gems/flux-source/generated-nrpy-boundary.md), [NRPyLeakage generator provenance](gems/neutrinos/generator-provenance.md) |
 | [Change Impact](change-impact.md) | Which docs/tests to inspect after source changes. | `GRHayL/`, `GRHayL/include/`, `docs/raw/`, `Unit_Tests/` |
 | [Contradictions](contradictions.md) | Current unresolved repo conflicts and smallest maintainer decisions; no resolved history. | Exact competing repo-local files named by each row |
 | [Workflows](workflows.md) | Common agent workflows for docs, tests, builds, and review. | `README.md`, `configure`, `.github/run_tests.sh` |
-| [Physics Variables](physics/variables-and-conventions.md) | Primitive/conservative variables, stress-energy notation, magnetic rescaling. | `docs/raw/derivation.md`, `GRHayL/include/ghl.h` |
-| [Evolution Equation Map](physics/evolution-equation-map.md) | Flux/source/evolution equation routes and implementation entry points. | `docs/raw/derivation.md`, `docs/raw/Flux_Source.dox`, `GRHayL/Flux_Source/` |
-| [KB Checks](lint/CHECKS.md) | Manual checks for links, policy, page contracts, source authority, and duplication. | `AGENTS.md`, `docs/raw/`, KB pages |
+| [Physics Variables](physics/variables-and-conventions.md) | Primitive/conservative and radiation variables, stress-energy notation, densitization, magnetic rescaling. | [docs/raw/derivation.md](../docs/raw/derivation.md), `GRHayL/include/ghl.h` |
+| [Evolution Equation Map](physics/evolution-equation-map.md) | GRMHD and Radiation M1 flux/source/evolution equation routes and implementation entry points. | `docs/raw/derivation.md`, [docs/raw/Flux_Source.dox](../docs/raw/Flux_Source.dox), `GRHayL/Flux_Source/` |
+| [KB Checks](lint/CHECKS.md) | Manual checks for links, policy, page contracts, source authority, and duplication. | [AGENTS.md](../AGENTS.md), `docs/raw/`, KB pages |
 
 ## Where Do I Start?
 
@@ -47,23 +44,23 @@ host integration is part of the gem.
 | Find a term or alias | [Catalog](catalog.md) |
 | Build or install GRHayL | [Build And CI](build-and-ci.md), `README.md`, `configure` |
 | Understand default/no-HDF5 callable surface | [Build And CI](build-and-ci.md), [Public API Map](public-api-map.md), `configure`, recursive `GRHayL/**/make.code.defn` |
-| Understand modular design | `README.md`, `docs/raw/mainpage.md`, [Gems](gems/index.md) |
+| Understand modular design | `README.md`, [docs/raw/mainpage.md](../docs/raw/mainpage.md), [Gems](gems/index.md) |
 | Work on Core/chalice shared structs, public enums, parameters, packing, metrics, `u0`, stress-energy, EOS dispatch, errors, IO, or debug utilities | [Core/Chalice](core/index.md), [Shared parameters and enums](core/shared-parameters-and-enums.md), `docs/raw/GRHayL_Core.dox`, `GRHayL/include/ghl.h` |
 | Inspect public structs or API entry points | [Public API Map](public-api-map.md), `GRHayL/include/`, `docs/raw/GRHayL_Core.dox` |
-| Work on atmosphere prescriptions | [Gems](gems/index.md), `docs/raw/Atmosphere.dox`, `GRHayL/Atmosphere/` |
-| Work on conservative-to-primitive solvers | [Gems](gems/index.md), `docs/raw/Con2Prim.dox`, `GRHayL/Con2Prim/` |
-| Add or select a Con2Prim solver | [Con2Prim solver matrix](gems/con2prim/solver-matrix.md), [GRHayLib runtime contract](implementations/grhaylib/runtime-parameter-contract.md), `GRHayL/include/ghl.h`, `GRHayL/include/ghl_con2prim.h`, selector/manifests/tests |
-| Work on EOS routines, tabulated interpolators, table adapters, or HDF5 behavior | [Gems](gems/index.md), [Stellarcollapse table adapter](gems/eos/stellarcollapse-table-adapter.md), [Tabulated interpolator catalog](gems/eos/tabulated-interpolator-catalog.md), `docs/raw/EOS.dox`, `GRHayL/EOS/`, `configure` |
+| Work on atmosphere prescriptions | [Gems](gems/index.md), [docs/raw/Atmosphere.dox](../docs/raw/Atmosphere.dox), `GRHayL/Atmosphere/` |
+| Work on conservative-to-primitive solvers | [Gems](gems/index.md), [docs/raw/Con2Prim.dox](../docs/raw/Con2Prim.dox), `GRHayL/Con2Prim/` |
+| Add or select a Con2Prim solver | [Con2Prim solver matrix](gems/con2prim/solver-matrix.md), [GRHayLib runtime contract](implementations/grhaylib/runtime-parameter-contract.md), `GRHayL/include/ghl.h`, [GRHayL/include/ghl_con2prim.h](../GRHayL/include/ghl_con2prim.h), selector/manifests/tests |
+| Work on EOS routines, tabulated interpolators, table adapters, or HDF5 behavior | [Gems](gems/index.md), [Stellarcollapse table adapter](gems/eos/stellarcollapse-table-adapter.md), [Tabulated interpolator catalog](gems/eos/tabulated-interpolator-catalog.md), [docs/raw/EOS.dox](../docs/raw/EOS.dox), `GRHayL/EOS/`, `configure` |
 | Work on fluxes, characteristic speeds, source terms, or Flux_Source generators | [Evolution Equation Map](physics/evolution-equation-map.md), [Flux_Source hub](gems/flux-source.md), `docs/raw/Flux_Source.dox`, `GRHayL/Flux_Source/` |
-| Work on vector-potential induction | [Induction hub](gems/induction.md), [Evolution Equation Map](physics/evolution-equation-map.md), `docs/raw/Induction.dox`, `GRHayL/Induction/` |
+| Work on vector-potential induction | [Induction hub](gems/induction.md), [Evolution Equation Map](physics/evolution-equation-map.md), [docs/raw/Induction.dox](../docs/raw/Induction.dox), `GRHayL/Induction/` |
 | Work on neutrino leakage | [Neutrinos hub](gems/neutrinos.md), [physics and EOS contract](gems/neutrinos/physics-and-eos-contract.md), `GRHayL/Neutrinos/`, `GRHayL/include/ghl_radiation.h` |
-| Work on neutrino M1 transport or its provider boundary | [Radiation M1 hub](gems/radiation-m1.md), [provider contract](gems/radiation-m1/rate-provider-contract.md), [tests and fixtures](gems/radiation-m1/tests-and-fixtures.md), `GRHayL/Radiation/Neutrinos/`, `GRHayL/include/ghl_m1.h`, `GRHayL/include/ghl_neutrino_rate_provider.h` |
-| Find M1 initialization, solver/closure controls, or the shared public helper surface | [M1 public API quick reference](gems/radiation-m1/m1-public-api-quick-reference.md), [Evolution Equation Map](physics/evolution-equation-map.md), [Public API Map](public-api-map.md), `GRHayL/include/ghl_m1.h` |
-| Understand grey neutrino M1 physics scope, the reuse doctrine, or the post-phase-1 roadmap | [Radiation M1 grey physics scope](gems/radiation-m1/neutrino-grey-physics-scope.md), [neutrino reuse strategy](gems/radiation-m1/neutrino-reuse-strategy.md), [post-phase-1 roadmap](gems/radiation-m1/post-phase1-roadmap.md), `GRHayL/include/ghl_m1.h`, `GRHayL/include/ghl_neutrino_rate_provider.h` |
 | Find NRPyLeakage generators or explain generated `tmp_*` expressions | [NRPyLeakage generator provenance](gems/neutrinos/generator-provenance.md), [Generated Boundaries](generated-boundaries.md) |
 | Port NRPyLeakage without linking the full library | [Neutrinos API and data](gems/neutrinos/api-and-data.md), [implementation flow](gems/neutrinos/implementation-flow.md), [physics and EOS contract](gems/neutrinos/physics-and-eos-contract.md) |
 | Adapt a CompOSE EOS for NRPyLeakage | [CompOSE EOS adapter how-to](gems/neutrinos/compose-eos-adapter-how-to.md), [physics and EOS contract](gems/neutrinos/physics-and-eos-contract.md), [current StellarCollapse loader boundary](gems/eos/stellarcollapse-table-adapter.md) |
-| Work on reconstruction | [Reconstruction hub](gems/reconstruction.md), [face/stencil contract](gems/reconstruction/face-and-stencil-contract.md), `GRHayL/include/ghl_reconstruction.h`, `GRHayL/Reconstruction/`, `docs/raw/Reconstruction.dox` as read-only evidence |
+| Work on neutrino M1 transport or its provider boundary | [Radiation M1 hub](gems/radiation-m1.md), [provider contract](gems/radiation-m1/rate-provider-contract.md), [tests and fixtures](gems/radiation-m1/tests-and-fixtures.md), `GRHayL/Radiation/Neutrinos/`, `GRHayL/include/ghl_m1.h`, `GRHayL/include/ghl_neutrino_rate_provider.h` |
+| Find M1 initialization, solver/closure controls, or the shared public helper surface | [M1 public API quick reference](gems/radiation-m1/m1-public-api-quick-reference.md), [Evolution Equation Map](physics/evolution-equation-map.md), [Public API Map](public-api-map.md), `GRHayL/include/ghl_m1.h` |
+| Understand grey neutrino M1 physics scope, the reuse doctrine, or the post-phase-1 roadmap | [Radiation M1 grey physics scope](gems/radiation-m1/neutrino-grey-physics-scope.md), [neutrino reuse strategy](gems/radiation-m1/neutrino-reuse-strategy.md), [post-phase-1 roadmap](gems/radiation-m1/post-phase1-roadmap.md), `GRHayL/include/ghl_m1.h`, `GRHayL/include/ghl_neutrino_rate_provider.h` |
+| Work on reconstruction | [Reconstruction hub](gems/reconstruction.md), [face/stencil contract](gems/reconstruction/face-and-stencil-contract.md), [GRHayL/include/ghl_reconstruction.h](../GRHayL/include/ghl_reconstruction.h), `GRHayL/Reconstruction/`, [docs/raw/Reconstruction.dox](../docs/raw/Reconstruction.dox) as read-only evidence |
 | Understand GRMHD equations | [Physics Variables](physics/variables-and-conventions.md), [Evolution Equation Map](physics/evolution-equation-map.md), `docs/raw/derivation.md` |
 | Connect to downstream infrastructure | [Implementations](implementations/index.md), [GRHayLib Cactus thorn](implementations/grhaylib.md), `implementations/GRHayLib/` |
 | Verify GRHayLib layout/parameters/runtime | [Cactus build boundary](implementations/grhaylib/cactus-build-boundary.md), [runtime parameter contract](implementations/grhaylib/runtime-parameter-contract.md), [verification and drift](implementations/grhaylib/verification-and-drift.md); Cactus proof requires real environment |

@@ -17,9 +17,9 @@ truth.
 | `GRHayL/include/ghl_nrpyleakage.h` | Legacy leakage data and public leakage routines, plus the shared `ghl_nrpyleakage_normalize_nucleon_fractions` interpolation-noise normalizer used by the M1 adapter. The M1 raw-rate adapter is private to Radiation. |
 
 `ghl_m1_closure_private.h`, `ghl_m1_rusanov_private.h`, `ghl_m1_utils.h`,
-`ghl_m1_neutrino_implicit.h`, and `ghl_m1_neutrino_rate_backend.h` are private
-build inputs listed through `INCS`;
-they are not installed as public headers.
+`ghl_m1_neutrino_implicit.h`, `ghl_m1_nrpyleakage_kernel.h`, and
+`ghl_m1_neutrino_rate_backend.h` are private build inputs listed through
+`INCS`; they are not installed as public headers.
 
 The installed `ghl_radiation.h` and `ghl_neutrino_rate_provider.h` surfaces do
 not pull in the tabulated-EOS/HDF5 header, and the provider translation unit
@@ -43,10 +43,12 @@ both four-point APIs and its private five-component low-flux wrapper, is
 compiled by the shared Radiation manifest from
 `GRHayL/Radiation/ghl_m1_four_point_blended_rusanov.c`. That wrapper accepts
 the prepared volume-weighted operands and retains M1 error and publication
-behavior. It calls the unit-agnostic, undensitized component-wise scalar
-arithmetic in `GRHayL/Radiation/ghl_calculate_Rusanov_flux.c` through the
-public `ghl_calculate_Rusanov_flux` helper declared in `ghl_m1.h`;
-`GRHayL/Radiation/ghl_m1_rusanov_private.h` holds the shared inline arithmetic.
+behavior. It calls the unit-agnostic component-wise scalar arithmetic in
+`GRHayL/Radiation/ghl_calculate_Rusanov_flux.c` directly through the private
+`ghl_rusanov_candidate_finite` helper declared in
+[`ghl_m1_rusanov_private.h`](../../../GRHayL/Radiation/ghl_m1_rusanov_private.h).
+The public `ghl_calculate_Rusanov_flux` wrapper shares this arithmetic and
+accepts undensitized operands.
 Both `ghl_calculate_Rusanov_flux` and the typed M1 wrapper
 `ghl_m1_compute_rusanov_flux` are Radiation-owned operations declared in
 `ghl_m1.h`: the unit-agnostic helper applies a caller-supplied interface
@@ -90,7 +92,7 @@ and four-point blended Rusanov transport without a separate diffusion
 correction. The public `Jthick` and diffusion functions are separate optional
 helpers and are not selected by that canonical transport operation. A finite
 full-four-dimensional closure candidate that fails the
-physical PSD check is replaced by the built-in Eulerian Minerbo admissibility
+pressure or Eulerian covariance positivity check is replaced by the built-in Eulerian Minerbo admissibility
 fallback and marked in the returned closure; this is not a user-selectable
 alternative. Its local implicit source update uses the existing
 finite-difference/Newton solver. Host mesh loops, reconstruction, boundaries,

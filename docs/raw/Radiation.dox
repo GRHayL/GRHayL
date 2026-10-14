@@ -26,9 +26,9 @@
  * and publishing both species atomically. Single-species source operations
  * reject electron pair rates. The equations and approximation are documented
  * in the [pair source model](Radiation_pair_source_model.md).
- * The closure enforces the radiation trace at zero flux, using its flagged
- * Eulerian admissibility fallback when necessary. The neutrino Newton solve
- * can use an admissible source predictor at an exact-zero-flux start without
+ * The closure enforces the radiation trace, pressure positivity, and Eulerian
+ * covariance positivity, using its flagged Eulerian admissibility fallback
+ * when necessary. The neutrino Newton solve can use an admissible source predictor at an exact-zero-flux start without
  * changing the source base or residual equation.
  *
  * The table-backed production provider is initialized by

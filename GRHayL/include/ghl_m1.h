@@ -42,7 +42,7 @@ typedef struct ghl_m1_closure {
   ghl_m1_closure_solve_status_t solve_status;
   /**
    * True when the published tensor uses the primary full-four-dimensional
-   * construction. False denotes the exceptional finite non-PSD admissibility
+   * construction. False denotes the exceptional Eulerian admissibility
    * fallback. This field is diagnostic only and is not a runtime selector.
    *
    * When it is false, @c chi is the Eulerian Minerbo Eddington factor built
@@ -59,16 +59,13 @@ typedef struct ghl_m1_closure {
    *   dyad vanishes identically, so the primary candidate can fail the
    *   pressure-trace invariant while the Eulerian tensor remains admissible.
    *   This is expected and carries no admissibility concern.
-   * - A finite-flux candidate rejected by the physical PSD check. The
-   *   \f$O(v)\f$-accurate relativistic thick tensor is not positive semidefinite for
-   *   every realizable state; the primary candidate's smallest eigenvalue can
-   *   reach a sizable negative fraction of the tensor norm. Repository
-   *   measurements place this regime at an Eulerian flux transverse to the
-   *   fluid velocity with fluid Eulerian speed above roughly 0.5c. Flux
-   *   parallel or antiparallel to the velocity does not reach it at any speed
-   *   tested up to 0.9c, and no state in the repository validation campaign
-   *   reaches it. Hosts operating with fast transverse flows should monitor
-   *   this field.
+   * - A finite-flux candidate rejected by pressure or Eulerian covariance
+   *   positivity. Radiation moments require C^{ij} = P^{ij} - F^i F^j/E to
+   *   be positive semidefinite, where F^i is the raised stored covariant flux.
+   *   Pressure positivity alone does not ensure this condition. Moving-fluid
+   *   transverse radiation can require this fallback without a universal
+   *   fluid-speed cutoff. Hosts requiring the primary construction should
+   *   monitor this field.
    */
   bool four_point_compatibility;
 } ghl_m1_closure;
@@ -367,8 +364,8 @@ struct ghl_m1_parameters {
  * Initialize the M1 runtime parameters used by the radiation routines.
  *
  * This routine initializes the canonical M1 method: metric light-cone
- * transport speeds, linear-factor realizability repair, and the primary full
- * four-dimensional closure with its flagged physical-PSD admissibility
+ * transport speeds, squared-ratio realizability repair, and the primary full
+ * four-dimensional closure with its flagged pressure/covariance admissibility
  * fallback.
  */
 ghl_error_codes_t ghl_m1_initialize(
@@ -443,7 +440,7 @@ ghl_error_codes_t ghl_m1_apply_energy_floor(
       bool *restrict floor_applied);
 
 /** @ingroup m1_closure
- * Repair a radiation state using the canonical linear-factor bound. */
+ * Repair a radiation state using the canonical squared-ratio flux rescale. */
 ghl_error_codes_t ghl_m1_realizability_repair(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,

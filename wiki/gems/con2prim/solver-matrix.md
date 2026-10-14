@@ -2,8 +2,8 @@
 
 Purpose: source-grounded route for Con2Prim method support, dispatch, build
 evidence, public API contracts, and diagnostics. This page covers
-`GRHayL/Con2Prim/**`, `GRHayL/include/ghl.h`,
-`GRHayL/include/ghl_con2prim.h`, `docs/raw/Con2Prim.dox`, and direct
+`GRHayL/Con2Prim/**`, [GRHayL/include/ghl.h](../../../GRHayL/include/ghl.h),
+[GRHayL/include/ghl_con2prim.h](../../../GRHayL/include/ghl_con2prim.h), [docs/raw/Con2Prim.dox](../../../docs/raw/Con2Prim.dox), and direct
 Con2Prim tests. Repo-local source remains authority.
 
 Support labels below require more than file existence: enum/name mapping,
@@ -21,18 +21,18 @@ where applicable.
 | `Noble1D_entropy2` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only; the manifest includes the density residual and wrapper. | Hybrid Doxygen table lists it. The hard-coded hybrid test covers compatible Simple/Hybrid recovery and rejects incompatible hybrid metadata. | Main/backup keywords and parser accept it; GRHayLib requires entropy and rejects incompatible hybrid metadata. | Supported only for a one-piece constant-Gamma EOS with `Gamma_th == Gamma_ppoly[0]`. Direct recovery returns a positive unclamped root; the standard post-recovery limiter owns configured density bounds. |
 | `Font1D` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only. | Hybrid Doxygen table and hybrid selected-method test list it. `unit_test_hybrid_failure.c` independently checks curved zero-momentum, magnetized, and below-EOS-density round trips. | Main/backup keywords and parser accept it; simple and tabulated checks reject it. | Hybrid supported; cold pressure/energy use bounded EOS density, but `P/rho` in the enthalpy closure uses the recovered conservation-owned density; raw Doxygen says simple excludes it. |
 | `Palenzuela1D` | Enum/name plus hybrid/tabulated energy declarations and definitions exist. | Both selector/build paths exist. | Both Doxygen tables and hybrid/tabulated tests list it. | Main/backup keywords and parser accept it for all EOS families. | Hybrid/simple supported; tabulated supported when HDF5 enabled. |
-| `Palenzuela1D_entropy` | Enum/name plus hybrid/tabulated entropy declarations and definitions exist. | Both selector/build paths exist. | Both Doxygen tables and hybrid/tabulated tests list it. | Main/backup keywords and parser accept it; GRHayLib requires `evolve_entropy`. | Hybrid/simple supported; tabulated supported when HDF5 is enabled. Both require valid entropy conservative input; Core dispatch does not gate on `params->evolve_entropy`. |
+| `Palenzuela1D_entropy` | Enum/name plus hybrid/tabulated entropy declarations and definitions exist. | Both selector/build paths exist. | Both Doxygen tables and hybrid/tabulated tests list it. | Main/backup keywords and parser accept it; GRHayLib requires `evolve_entropy`. | Hybrid/simple supported; tabulated supported when HDF5 is enabled. Hybrid requires valid entropy conservative input; tabulated requires it only when `params->evolve_temp` is true. Core dispatch does not gate on `params->evolve_entropy`; see the [Palenzuela caller contract](internal-numerics-and-root-finding.md#palenzuela-internal-route). |
 | `Newman1D` | Enum/name plus tabulated energy declaration and definition exist. | Tabulated selector/build only. | Tabulated Doxygen table and tabulated tests list it; debug binary uses it. | Main/backup keywords and parser accept `Newman1D`; simple/hybrid checks reject it. | Tabulated supported when HDF5 enabled. |
 | `Newman1D_entropy` | Enum/name plus tabulated entropy declaration and definition exist. | Tabulated selector/build only. | Tabulated Doxygen table and tabulated tests list it. | Main/backup keywords and parser accept it; simple/hybrid checks reject it and GRHayLib requires `evolve_entropy`. | Tabulated supported when HDF5 is enabled with valid entropy conservative input; Core dispatch does not gate on `params->evolve_entropy`. |
 | Archival Cerda-Duran path | No enum/name/public declaration; retained source contains old-style definitions using identifiers that do not match current public types. | No selector; `con2prim_CerdaDuran3D.cc` is intentionally absent from manifests. | Explicitly excluded from generated Doxygen and absent from tests. | Cerda-Duran keyword entries are commented out and parser has no case. | Archival numerical reference only; unsupported and unbuilt. |
 
 All matrix seams come from `GRHayL/include/ghl.h`,
 `GRHayL/include/ghl_con2prim.h`,
-`GRHayL/Con2Prim/get_con2prim_routine_name.c`,
-`GRHayL/Con2Prim/con2prim_multi_method.c`, recursive Con2Prim
+[GRHayL/Con2Prim/get_con2prim_routine_name.c](../../../GRHayL/Con2Prim/get_con2prim_routine_name.c),
+[GRHayL/Con2Prim/con2prim_multi_method.c](../../../GRHayL/Con2Prim/con2prim_multi_method.c), recursive Con2Prim
 `make.code.defn` files, `docs/raw/Con2Prim.dox`, direct tests,
-`implementations/GRHayLib/param.ccl`, and
-`implementations/GRHayLib/src/initialize_and_shutdown.c`. GRHayLib mismatches
+[implementations/GRHayLib/param.ccl](../../../implementations/GRHayLib/param.ccl), and
+[implementations/GRHayLib/src/initialize_and_shutdown.c](../../../implementations/GRHayLib/src/initialize_and_shutdown.c). GRHayLib mismatches
 describe downstream evidence; this page does not assign maintainer intent.
 
 ## `ghl_con2prim_id_t`
@@ -48,14 +48,16 @@ before calling a method supported.
 ## `ghl_parameters` Con2Prim Fields
 
 Selection fields live in `GRHayL/include/ghl.h` and are initialized by
-`GRHayL/GRHayL_Core/initialize_params.c`:
+[GRHayL/GRHayL_Core/initialize_params.c](../../../GRHayL/GRHayL_Core/initialize_params.c):
 
 - `main_routine`: primary `ghl_con2prim_id_t` used by the multi-method drivers.
 - `backup_routine[3]`: up to three fallback `ghl_con2prim_id_t` values; `None`
   ends backup attempts in `GRHayL/Con2Prim/con2prim_multi_method.c`.
 - `evolve_entropy`: caller-side control used by entropy-aware tests and solver
   setup.
-- `evolve_temp`: tabulated-temperature evolution flag stored in parameters.
+- `evolve_temp`: selects energy/entropy inversion versus the incoming-temperature
+  branch in tabulated Palenzuela callbacks; see their caller contract above.
+  Do not generalize that branch to Newman or Noble.
 - `calc_prim_guess`: when true, multi-method drivers call
   `ghl_guess_primitives` before selector dispatch.
 - `psi6threshold`: affects conservative and primitive limit handling.
@@ -66,8 +68,8 @@ Selection fields live in `GRHayL/include/ghl.h` and are initialized by
   Palenzuela and Newman paths use local hard-coded iteration/tolerance values.
 
 Tabulated EOS also carries `root_finding_precision` in `ghl_eos_parameters`
-(`GRHayL/include/ghl.h`) and initializes it in `GRHayL/GRHayL_Core/initialize_eos.c`;
-tabulated tests override it in `Unit_Tests/unit_test_con2prim_tabulated.c`.
+(`GRHayL/include/ghl.h`) and initializes it in [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c);
+tabulated tests override it in [Unit_Tests/unit_test_con2prim_tabulated.c](../../../Unit_Tests/unit_test_con2prim_tabulated.c).
 
 ## Routine-Name Mapping
 
@@ -102,20 +104,20 @@ start from densitized conservatives should route through
 ## Diagnostics Contracts
 
 `ghl_con2prim_diagnostics` is declared in `GRHayL/include/ghl_con2prim.h` and
-initialized by `GRHayL/Con2Prim/initialize_diagnostics.c`.
+initialized by [GRHayL/Con2Prim/initialize_diagnostics.c](../../../GRHayL/Con2Prim/initialize_diagnostics.c).
 
 - `tau_fix`: initialized false and accumulated true whenever the atmosphere
   floor, magnetic-energy correction, or high-`psi6` correction changes tau.
 - `Stilde_fix`: initialized false; set true by
-  `GRHayL/Con2Prim/apply_conservative_limits.c` when momentum is rescaled.
+  [GRHayL/Con2Prim/apply_conservative_limits.c](../../../GRHayL/Con2Prim/apply_conservative_limits.c) when momentum is rescaled.
 - `speed_limited`: a successful direct solver writes its current-call result;
   multi-method drivers OR those results across attempts in one logical recovery.
 - `which_routine`: initialized to `ghl_con2prim_id_None`; set by successful
   solver wrapper paths such as Noble, Font, Palenzuela, and Newman routines.
 - `backup[3]`: initialized false; multi-method drivers set slot `n` true before
   trying `params->backup_routine[n]`.
-- `n_iter`: initialized to zero and meaningful only with a successful
-  `which_routine`. Font1D resets it at entry and accumulates outer
+- `n_iter`: initialized to zero; solver-specific interpretation requires successful
+  recovery and the [Palenzuela early-return caveat](internal-numerics-and-root-finding.md#brent-and-root-helper-route). Font1D resets it at entry and accumulates outer
   `W`/fluid-momentum iterations across retries, including zero for its shortcut;
   its inner density loop is not counted. Newman records the final attempted
   helper's local `step`, not an aggregate across retries. Other solvers use
@@ -131,8 +133,8 @@ initialized by `GRHayL/Con2Prim/initialize_diagnostics.c`.
 - `GRHayL/Con2Prim/Hybrid/**`
 - `GRHayL/Con2Prim/Tabulated/**`
 - `docs/raw/Con2Prim.dox`
-- `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c`
+- [Unit_Tests/unit_test_con2prim_multi_method_hybrid.c](../../../Unit_Tests/unit_test_con2prim_multi_method_hybrid.c)
 - `Unit_Tests/unit_test_con2prim_tabulated.c`
-- `Unit_Tests/unit_test_hybrid_failure.c`
-- `Unit_Tests/unit_test_con2prim_debug.c`
-- `.github/run_tests.sh`
+- [Unit_Tests/unit_test_hybrid_failure.c](../../../Unit_Tests/unit_test_hybrid_failure.c)
+- [Unit_Tests/unit_test_con2prim_debug.c](../../../Unit_Tests/unit_test_con2prim_debug.c)
+- [.github/run_tests.sh](../../../.github/run_tests.sh)

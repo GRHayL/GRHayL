@@ -78,8 +78,10 @@ $$
 R^{\mu\nu}=E n^\mu n^\nu+F^\mu n^\nu+n^\mu F^\nu+P^{\mu\nu}.
 $$
 
-The current closure validates the spatial trace
-\(\gamma_{ij}P^{ij}=E\), symmetry, and positive semidefiniteness. The
+The current closure construction validates the spatial trace
+\(\gamma_{ij}P^{ij}=E\), symmetry, and positive semidefiniteness of both
+pressure and Eulerian covariance \(C^{ij}=P^{ij}-F^iF^j/E\). Here `F^i` is
+obtained by raising the stored covariant flux. The
 realizability cone and its repair are documented separately in
 [realizability repair](m1-realizability-repair.md).
 

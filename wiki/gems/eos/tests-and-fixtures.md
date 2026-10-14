@@ -17,8 +17,8 @@ Read with [EOS initialization and dispatch](initialization-and-dispatch.md),
 - [Unit_Tests/unit_test_piecewise_polytrope.c](../../../Unit_Tests/unit_test_piecewise_polytrope.c)
   directly initializes a hybrid piecewise-polytrope EOS and checks derived
   `K_ppoly` and `eps_integ_const` entries. It checks the initializer return,
-  all real `p_ppoly` transitions for a four-piece EOS, and exact-extent one-
-  and two-piece inputs. This is the direct regression route for
+  all real `p_ppoly` transitions for a four-piece EOS, the one-piece pressure
+  sentinel, and an exact-extent two-piece breakpoint input. This is the direct regression route for
   piecewise-polytrope constant and transition setup; it does not cover invalid
   input behavior.
 - [Unit_Tests/unit_test_tabulated_eos.c](../../../Unit_Tests/unit_test_tabulated_eos.c)
@@ -29,7 +29,7 @@ Read with [EOS initialization and dispatch](initialization-and-dispatch.md),
   beta-equilibrium rho-map helpers.
 - [Unit_Tests/unit_test_tabulated_eos_compose.c](../../../Unit_Tests/unit_test_tabulated_eos_compose.c)
   independently reads a converter-produced StellarCollapse file, checks every
-  node of every serialized field against GRHayL's loader mapping and units,
+  node of all 19 serialized fields against GRHayL's loader mapping and units,
   validates derived enthalpy and the relativistic sound-speed route, exercises
   midpoint storage-space interpolation and `eps/P/S/h` inversions from
   distinct valid initial guesses, checks the six-value NRPyLeakage interpolation
@@ -51,12 +51,6 @@ Read with [EOS initialization and dispatch](initialization-and-dispatch.md),
   beta-equilibrium rho-map error paths. Key `85` poisons fresh EOS storage
   before NN-enabled table initialization fails on a missing embedded model,
   exercising the early cleanup-owned pointer invariant.
-- [Unit_Tests/unit_test_coverage_eos.c](../../../Unit_Tests/unit_test_coverage_eos.c)
-  checks hybrid pressure-to-piece and pressure-to-density boundaries, creates
-  private synthetic HDF5 tables for malformed-axis and derived-data rejection,
-  exercises sound-speed cleaning and beta-equilibrium edges, and injects
-  GRHayL-owned allocation failures while checking status, cleanup, and output
-  preservation. Its HDF5 cases compile out when HDF5 support is disabled.
 
 The tabulated test directly calls many, but not all, registered wrappers.
 [Tabulated interpolator catalog](tabulated-interpolator-catalog.md) separates
@@ -75,9 +69,10 @@ repository fixture.
 ## Helper-Only Files
 
 - [Unit_Tests/test_compute_h_and_cs2.c](../../../Unit_Tests/test_compute_h_and_cs2.c)
-  provides the test-only `ghl_test_compute_h_and_cs2` helper for combined
-  enthalpy and sound-speed checks. It assumes LS220-style table bounds and is
-  not a standalone unit test.
+  provides the synthetic `ghl_test_compute_h_and_cs2` callback shared by
+  tabulated flux replay and its generator. It calculates enthalpy from
+  primitives and sound speed from an LS220-scale formula without consulting
+  the table or asserting results; it is not the tabulated EOS test's oracle.
 - [Unit_Tests/tabulated_eos_unit_test_helpers.c](../../../Unit_Tests/tabulated_eos_unit_test_helpers.c)
   provides analytic table-quantity helpers used by tabulated EOS validation. It
   is helper code, not a standalone test binary.
@@ -136,8 +131,15 @@ Dependent tests are impact signals for EOS changes, not primary EOS contracts:
   does not assert `Y_e` or temperature, even though constant Atmosphere copies
   `eos.Y_e_atm` and `eos.T_atm`; the initializers now set both placeholders to
   zero.
-- Con2Prim propagation of tabulated interpolation failures remains dependent
-  impact coverage rather than a direct EOS contract.
+- Existing tests do not directly exercise malformed table dimensions or axes,
+  tabulated final-state finiteness rejection, or invalid derived enthalpy
+  rejection. These remain coverage gaps.
+- [unit_test_code_error.c](../../../Unit_Tests/unit_test_code_error.c) keys
+  `89` and `90` require `ghl_error_table_bisection` from tabulated Newman1D
+  and Palenzuela1D energy recovery after failed temperature inversion. The
+  [default runner](../../../.github/run_tests.sh) includes these keys; this
+  is specific Con2Prim propagation coverage, not coverage of every EOS error
+  or mutation path.
 - Con2Prim tabulated tests route through
   [Con2Prim tests and fixtures](../con2prim/tests-and-fixtures.md).
 - Neutrinos table-backed tests route through

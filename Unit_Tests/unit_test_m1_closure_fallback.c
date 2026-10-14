@@ -27,11 +27,10 @@
  *      component is small compared with E.
  *   2. The fallback publishes rather than failing. A directional sweep through
  *      the PSD regime returns ghl_success for every state.
- *   3. The PSD regime stays where it is documented. Flux parallel or
- *      antiparallel to the fluid velocity does not reach it; transverse flux
- *      above roughly half light speed does. Pinning both directions makes a
- *      future closure change that widens the regime a test failure rather than
- *      a silent behavior change.
+ *   3. Aligned flux retains the primary construction in the sampled states.
+ *      Transverse flux publishes realizable moments, using the flagged fallback
+ *      when pressure or covariance positivity rejects the primary candidate.
+ *      The fallback has no universal fluid-speed cutoff.
  */
 
 static int failures = 0;
@@ -369,6 +368,35 @@ static void check_private_comoving_invariant(void) {
      || evaluation.chi != 26.0 || evaluation.residual != 27.0
      || evaluation.normalized_residual != 28.0 || evaluation.physical_xi != 29.0) {
     fail("failed production evaluation finalizer changed its output payload");
+  }
+}
+
+static void check_fallback_covariance_rejection(void) {
+  ghl_m1_parameters params;
+  if(ghl_m1_initialize(1e-12, 1e-12, 1e-8, 1e-6, 1e-12, 20, 1e-10, &params)
+     != ghl_success) {
+    fail("fallback covariance parameters rejected");
+  }
+  ghl_metric_quantities metric;
+  m1_setup_flat_metric(&metric);
+  const ghl_primitive_quantities prims = { .u0 = 1.0 };
+  const ghl_m1_rad_state rad = { .E = 1.0, .F = { 0.8, 0.0, 0.0 } };
+  /* Positive pressure alone is insufficient: C_xx = 1/3 - 0.8^2 < 0.
+   * Check the production publication boundary with a rejected candidate. */
+  ghl_m1_closure candidate = {
+    .P = { { 1.0 / 3.0, 0.0, 0.0 }, { 0.0, 1.0 / 3.0, 0.0 }, { 0.0, 0.0, 1.0 / 3.0 } }
+  };
+  const ghl_m1_closure candidate_before = candidate;
+  const ghl_m1_closure sentinel = { .chi = -7.0, .root_iterations = -11 };
+  ghl_m1_closure closure = sentinel;
+  if(ghl_m1_closure_private_publish_fallback(
+           &params, &metric, &prims, &rad, &candidate, &closure)
+     != ghl_error_m1_invalid_state) {
+    fail("fallback published a candidate with negative covariance");
+  }
+  if(memcmp(&closure, &sentinel, sizeof(closure)) != 0
+     || memcmp(&candidate, &candidate_before, sizeof(candidate)) != 0) {
+    fail("rejected fallback covariance changed a candidate or output");
   }
 }
 
@@ -798,7 +826,46 @@ static void check_zero_flux_fallback(const double energy) {
   }
 }
 
-/* Pin the documented regime boundary in both directions. */
+/* In this flat, unit-energy sweep, PSD is equivalent to nonnegative principal
+ * minors of C = P - F F^T. This oracle is independent of the production
+ * metric-congruence and Jacobi validation machinery. */
+static int flat_unit_energy_covariance_is_psd(
+      const ghl_m1_rad_state *restrict rad_state,
+      const ghl_m1_closure *restrict closure) {
+  double C[3][3];
+  double scale = 1.0;
+  for(int i = 0; i < 3; ++i) {
+    for(int j = 0; j < 3; ++j) {
+      C[i][j] = closure->P[i][j] - rad_state->F[i] * rad_state->F[j];
+      if(!isfinite(C[i][j])) {
+        return 0;
+      }
+      scale = fmax(scale, fabs(C[i][j]));
+    }
+  }
+  const double tolerance = 4096.0 * DBL_EPSILON;
+  for(int i = 0; i < 3; ++i) {
+    for(int j = 0; j < 3; ++j) {
+      C[i][j] /= scale;
+    }
+    if(C[i][i] < -tolerance) {
+      return 0;
+    }
+  }
+  for(int i = 0; i < 3; ++i) {
+    for(int j = i + 1; j < 3; ++j) {
+      if(C[i][i] * C[j][j] - C[i][j] * C[j][i] < -tolerance) {
+        return 0;
+      }
+    }
+  }
+  const double determinant = C[0][0] * (C[1][1] * C[2][2] - C[1][2] * C[2][1])
+                             - C[0][1] * (C[1][0] * C[2][2] - C[1][2] * C[2][0])
+                             + C[0][2] * (C[1][0] * C[2][1] - C[1][1] * C[2][0]);
+  return determinant >= -tolerance;
+}
+
+/* Check the sampled aligned path and transverse moment realizability. */
 static void check_psd_regime_boundary(void) {
   ghl_m1_parameters params;
   setup_parameters(&params);
@@ -844,8 +911,8 @@ static void check_psd_regime_boundary(void) {
         }
       }
 
-      /* Transverse flux: below the documented onset the primary construction
-       * must still be published. */
+      /* Moderate transverse flow can require the covariance fallback even
+       * when the primary pressure tensor alone is positive definite. */
       if(speed <= 0.4) {
         ghl_m1_rad_state rad_state;
         rad_state.E = 1.0;
@@ -857,12 +924,22 @@ static void check_psd_regime_boundary(void) {
         if(ghl_m1_compute_closure_with_primitives(
                  &params, &metric, &prims, &rad_state, &closure)
            != ghl_success) {
-          fail("transverse-flux state below the onset failed to publish a closure");
+          fail("moderate transverse-flux state failed to publish a closure");
           return;
         }
-        if(!closure.four_point_compatibility) {
-          fail("transverse flux below half light speed reached the PSD fallback; "
-               "the documented regime has widened");
+        if(!published_tensor_is_exactly_symmetric(&closure)
+           || !flat_unit_energy_covariance_is_psd(&rad_state, &closure)) {
+          fail("transverse-flux closure published nonrealizable moments");
+          return;
+        }
+        if(!closure.four_point_compatibility
+           && (closure.solve_status != ghl_m1_closure_solve_endpoint_fallback
+               || closure.root_iterations != 0 || closure.root_residual != 0.0)) {
+          fail("transverse-flux fallback published inconsistent diagnostics");
+          return;
+        }
+        if(speed_step == 4 && flux_factor == 0.8 && closure.four_point_compatibility) {
+          fail("known nonrealizable primary covariance did not select the fallback");
           return;
         }
       }
@@ -1115,6 +1192,7 @@ static void check_workspace_failure_paths(void) {
 
 int main(void) {
   check_private_comoving_invariant();
+  check_fallback_covariance_rejection();
   check_private_fallback_invariants();
   check_private_eulerian_pressure_construction();
   check_private_root_driver();

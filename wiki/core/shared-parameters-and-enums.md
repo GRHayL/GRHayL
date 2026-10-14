@@ -56,7 +56,7 @@ and the EOS array bound to EOS pages; the header remains layout authority.
 
 | Public enum | Primary route | Use for |
 | --- | --- | --- |
-| `ghl_error_codes_t` | [errors, IO, debug, utilities](errors-io-debug-utilities.md) | Return-code vocabulary for EOS, Con2Prim, table, HDF5, atmosphere/floor, velocity, allocation, and utility errors. Message text is owned by [`abort_if_error.c`](../../GRHayL/GRHayL_Core/abort_if_error.c). |
+| `ghl_error_codes_t` | [errors, IO, debug, utilities](errors-io-debug-utilities.md), [Radiation M1 contract](../gems/radiation-m1/neutrino-m1-contract.md) | Return-code vocabulary for EOS, Con2Prim, table, HDF5, atmosphere/floor, velocity, allocation, Radiation M1, and utility errors. Message text is owned by [`abort_if_error.c`](../../GRHayL/GRHayL_Core/abort_if_error.c). |
 | `ghl_con2prim_id_t` | [Con2Prim solver matrix](../gems/con2prim/solver-matrix.md) | Solver IDs such as `Noble2D`, `Font1D`, `Palenzuela1D`, `Newman1D`, entropy variants, and `None` backup sentinel. |
 | `ghl_eos_t` | [EOS initialization and dispatch](../gems/eos/initialization-and-dispatch.md) | EOS family selection: simple, hybrid, or tabulated. |
 | `ghl_eos_table_t` | [EOS initialization and dispatch](../gems/eos/initialization-and-dispatch.md) and tabulated EOS pages | Table-family selection, currently including `ghl_eos_table_stellarcollapse` and unknown/type-count sentinels. |
@@ -83,8 +83,8 @@ Route fields by ownership:
 - `max_Lorentz_factor` and `inv_sq_max_Lorentz_factor`: route velocity limiting
   to [Core velocity/u0 contract](velocity-u0-contract.md) and primitive-limit
   wrapper behavior to [Con2Prim limits and conversions](../gems/con2prim/limits-and-conversions.md).
-  Initialization stores the requested maximum Lorentz factor and derives its
-  inverse square, while the limiter rejects a required cap that cannot produce
+  The caller must supply a finite maximum Lorentz factor of at least one.
+  Initialization stores that value and derives its inverse square, while the limiter rejects a required cap that cannot produce
   a representably subluminal, within-cap result.
 - `psi6threshold`: route conservative/floor adjustment behavior to
   [Con2Prim limits and conversions](../gems/con2prim/limits-and-conversions.md).
@@ -109,6 +109,17 @@ The initializer returns `void` and performs no enum, pointer, finiteness, or
 range validation. In particular, it reads all three entries of the caller's
 `backup_routine` array and computes `1.0 / max_Lorentz_factor^2` directly.
 Callers own those preconditions; the implementation provides no failure code.
+
+## Radiation Configuration Routes
+
+Radiation configuration is separate from the Core `ghl_parameters` object.
+M1 parameters, species, source-path and composition-policy enums are declared
+in [ghl_m1.h](../../GRHayL/include/ghl_m1.h); provider channel, bounds and recovery
+policies are declared in
+[ghl_neutrino_rate_provider.h](../../GRHayL/include/ghl_neutrino_rate_provider.h).
+Use the [M1 API reference](../gems/radiation-m1/m1-public-api-quick-reference.md)
+and [provider contract](../gems/radiation-m1/rate-provider-contract.md) for their
+initialization and caller-owned lifecycle.
 
 ## `ghl_eos_parameters`
 
@@ -138,9 +149,11 @@ Use field groups as routes:
 Core EOS setup entry points are declared in
 [`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h) and implemented in
 [`GRHayL/GRHayL_Core/initialize_eos.c`](../../GRHayL/GRHayL_Core/initialize_eos.c).
-They initialize family-relevant subsets, not every byte/field of the public
-struct. Simple/hybrid setup explicitly defines the cross-family `Y_e_atm` and
-`T_atm` placeholders as zero because constant Atmosphere reads them. Use the
+On success they replace the destination with a zero-initialized aggregate whose
+family-relevant members have been populated; unused members have zero/null
+values. This is a member-value contract, not a guarantee about padding bytes.
+Simple/hybrid setup explicitly defines the cross-family `Y_e_atm` and `T_atm`
+placeholders as zero because constant Atmosphere reads them. Use the
 [Atmosphere prescription contract](../gems/atmosphere/prescription-contract.md)
 for reset semantics and the [EOS dispatch contract](eos-dispatch-contract.md)
 for initialization ordering and failure behavior.

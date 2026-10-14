@@ -17,8 +17,10 @@ state definition are in [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h):
 | `ghl_m1_neutrino_nux` | one lumped heavy-lepton species | `0` |
 
 `nu_x` represents the sum of `nu_mu`, `anti-nu_mu`, `nu_tau`, and
-`anti-nu_tau`. Both built-in provider backends require
-`nu_x_multiplicity == 4` and return that state already summed. A host must not
+`anti-nu_tau`. The production NRPyLeakage provider (selected by both
+`ghl_neutrino_rate_provider_initialize_default` and
+`ghl_neutrino_rate_provider_initialize_nrpyleakage`) requires
+`nu_x_multiplicity == 4` and returns that state already summed. A host must not
 multiply it again. This multiplicity is a species-model convention, not a
 fourth evolved state or a caller-selectable flavor resolution; see the
 [provider header](../../../GRHayL/include/ghl_neutrino_rate_provider.h)

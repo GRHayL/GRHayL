@@ -15,7 +15,10 @@ once when storing returned face or matter quantities.
 
 The number floor is separate from the energy/flux realizability repair. The
 default electron-fraction convention uses only the charged-current lepton
-exchange; total radiation-number exchange remains a separate diagnostic.
+exchange; the `ghl_m1_neutrino_ye_from_signed_total_number` source option is
+an opt-in alternative that derives `dYe_matter` from signed total-number
+bookkeeping. Under the default, total radiation-number exchange remains a
+separate diagnostic and is not folded into `Y_e`.
 
 ## Frozen inputs
 
@@ -60,8 +63,8 @@ Canonical neutrino transport calls use the same primary numerical method:
 - metric light-cone wave speeds, with no optical-depth cap;
 - realizability repair by the `E^2(1-epsilon)/F^2` flux rescale;
 - a full four-dimensional primary closure with the radiation trace invariant
-  enforced on every published tensor. A finite tensor that fails the PSD
-  check, or an exact-zero-flux candidate that fails tensor validation, uses
+  enforced on every published tensor. A finite tensor that fails pressure or
+  Eulerian covariance positivity, or an exact-zero-flux candidate that fails tensor validation, uses
   the built-in Eulerian Minerbo admissibility fallback and is reported with
   `four_point_compatibility=false`; and
 - four-point blended Rusanov transport, with no separate diffusion correction.
@@ -79,6 +82,14 @@ closure iteration limits, finite-difference step sizes, Newton iteration limits
 and tolerances, and four-point limiter/opacity-suppression parameters remain
 ordinary configurable numerical controls within their documented ranges. They
 tune this method; they do not select an alternative method.
+
+The pressure and Eulerian covariance positivity guards belong to closure
+construction. Supplied-closure consumers check finite pressure entries, trace,
+and symmetry without repeating those guards. The caller supplies an admissible
+closure matching the metric, primitives, and E/F state; see the
+[public API prerequisites](m1-public-api-quick-reference.md#prerequisites-and-outputfailure-boundaries)
+and `ghl_m1_validate_closure_tensor` in
+[ghl_m1_utils.h](../../../GRHayL/Radiation/ghl_m1_utils.h).
 
 ## Four-point transport
 
@@ -144,9 +155,14 @@ source-regime handling and whether a closure fallback was used.
 
 Radiation increments in the exchange packet are undensitized. Matter energy
 and momentum increments are densitized with the supplied metric determinant;
-the electron-fraction recommendation is derived from charged-current lepton
-exchange and baryon normalization. The total number increment is not folded
-into the electron-fraction field.
+the electron-fraction recommendation uses charged-current lepton exchange
+and baryon normalization by default. The single-species source dispatcher can
+select `ghl_m1_neutrino_ye_from_signed_total_number`, which instead uses
+`rates->lepton_weight * dN_rad_total`; `dL_rad_cc` remains available separately.
+See [exchange equations](m1-exchange-equations.md) and
+[the source dispatcher](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c).
+The paired electron-flavor operator retains its charged-current composition
+exchange and adds no pair contribution to `dYe_matter`.
 
 The baryon normalization is the undensitized Eulerian baryon number density
 `n_b_cons = W*rho/m_b`. Convert a densitized host variable before passing it;
@@ -160,7 +176,9 @@ and electron-fraction increment before matter recovery and publication.
 
 ## Provider and stage boundary
 
-The provider owns rate construction, caching, units, and provider diagnostics.
+See the [rate-provider contract](rate-provider-contract.md) for the full
+provider boundary. The provider owns rate construction, caching, units, and
+provider diagnostics.
 The host chooses when to refresh the provider and passes one frozen bundle to
 each local solve. Rates are refreshed only at the declared next stage. The
 host initializes caller-owned `ghl_m1_neutrino_diagnostics` and
@@ -175,5 +193,10 @@ only in test-local support.
 - `docs/raw/Radiation_integration_contract.md`
 - `GRHayL/Radiation/make.code.defn`
 - `GRHayL/Radiation/Neutrinos/make.code.defn`
-- `GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c`
+- `GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c`,
+  `ghl_m1_neutrino_pair_source.c`, and
+  `ghl_m1_neutrino_implicit_{residual,jacobian,solve}.c` (source-update
+  behaviors); `ghl_m1_neutrino_rates.c` and `ghl_m1_neutrino_repair.c`
+  (rate validation and repair); `ghl_m1_neutrino_lepton_increment.c` and
+  `ghl_m1_neutrino_exchange.c` (exchange assembly)
 - `GRHayL/include/make.code.defn`

@@ -4,10 +4,9 @@ This leaf indexes the public shared-M1 surface declared in
 [`GRHayL/include/ghl_m1.h`](../../../GRHayL/include/ghl_m1.h): initialization
 and solver/closure controls, and the shared helper kernels the neutrino path
 and hosts may call. The installed header remains the complete declaration
-surface; this page routes it. It does not describe the neutrino-specific
-entry points, which the [neutrino M1 contract](neutrino-m1-contract.md) and
-the [Radiation M1 hub](../radiation-m1.md) cover, and it does not cover the
-rate provider, which is owned by the
+surface; this page routes it. Neutrino source/transport
+entry points are covered by the [neutrino M1 contract](neutrino-m1-contract.md) and
+the [Radiation M1 hub](../radiation-m1.md); rate-provider operations are owned by the
 [rate-provider contract](rate-provider-contract.md).
 
 ## Source ownership
@@ -27,7 +26,7 @@ are not part of the installed surface.
 - `ghl_m1_initialize` and `ghl_m1_initialize_with_newton_tolerances`
   initialize the canonical M1 method bundle: metric light-cone transport
   speeds, the squared-ratio realizability rescale, and the primary full
-  four-dimensional closure with its flagged physical-PSD admissibility
+  four-dimensional closure with its flagged pressure/covariance admissibility
   fallback.
 - `ghl_m1_set_newton_tolerances` updates the mixed relative/absolute Newton
   tolerances on an initialized bundle; `ghl_m1_set_closure_solver_controls`
@@ -35,9 +34,11 @@ are not part of the installed surface.
   iteration bound; `ghl_m1_set_closure_residual_tolerance` sets the maximum
   normalized Minerbo consistency residual a finite candidate may publish.
 
-Initialization and the parameter setters validate the parameter values;
-after that, kernels trust the metric and parameter structs and do not
-re-validate them per call. The canonical transport controls in the bundle
+Initialization and the parameter setters validate their parameter values.
+Callers supply coherent metric data and initialized parameter structs;
+individual kernels perform the local checks described by their contracts,
+without a universal per-call validation of either complete struct. The
+canonical transport controls in the bundle
 (`minmod_theta` and `mindiss`) are defined by the
 [four-point blended Rusanov](m1-four-point-blended-rusanov.md) leaf.
 
@@ -85,21 +86,50 @@ re-validate them per call. The canonical transport controls in the bundle
   `ghl_m1_newton_project_admissible` — see
   [implicit Newton and failure policy](m1-implicit-newton-and-failure-policy.md).
 
+## Header-inline neutrino adapters
+
+[ghl_m1.h](../../../GRHayL/include/ghl_m1.h) also supplies caller-compiled
+adapters for the shared E/F kernels. `ghl_m1_neutrino_project_rad_state` copies
+E/F from a non-null neutrino state; it does not copy or repair `N`. The
+status-returning wrappers reject a null state before calling the corresponding
+shared operation, whose remaining prerequisites and output contract apply.
+
+| Neutrino adapter | Shared operation |
+| --- | --- |
+| `ghl_m1_compute_neutrino_closure` | `ghl_m1_compute_closure_with_primitives` |
+| `ghl_m1_compute_neutrino_comoving_moments` | `ghl_m1_compute_comoving_moments` |
+| `ghl_m1_compute_neutrino_stress_energy` | `ghl_m1_compute_stress_energy` |
+| `ghl_m1_compute_neutrino_geometry_sources` | `ghl_m1_compute_geometry_sources` |
+| `ghl_m1_compute_neutrino_Jthick` | `ghl_m1_compute_Jthick` |
+| `ghl_m1_compute_neutrino_diagnostics` | `ghl_m1_compute_diagnostics` |
+
 ## Prerequisites and output/failure boundaries
 
-- Every public runtime kernel validates its own required pointers, its
-  direction argument where it takes one, and the scalar inputs and radiation
-  state it consumes; a kernel consuming a closure tensor checks finiteness,
-  pressure trace, and symmetry. Hosts must pass coherent metric quantities
-  and an initialized parameter bundle.
-- Every public kernel writes declared outputs only on success: on any
-  non-success return the output arguments are unchanged, so callers can
-  retain their pre-call state transactionally.
+- Follow each entry point's header contract for required pointers, directions,
+  scalar inputs, state and closure validation. Hosts supply coherent metric
+  quantities and an initialized parameter bundle; a supplied closure must
+  correspond to the metric, primitives, and E/F state being consumed.
+- Kernels that consume a supplied closure, including the neutrino
+  `..._from_closure` number-current/source variants and shared moment, physical
+  flux, and stress helpers, check finite pressure entries, trace, and symmetry
+  through `ghl_m1_validate_closure_tensor` in
+  [ghl_m1_utils.h](../../../GRHayL/Radiation/ghl_m1_utils.h). They do not repeat
+  construction's pressure or Eulerian covariance positivity guards. Supply a
+  closure produced by `ghl_m1_compute_closure_with_primitives`, or equivalently
+  validated, for the consumed inputs. Other state and scalar checks remain
+  operation-specific.
+- Publication and diagnostic behavior are operation-specific. Pointwise
+  arithmetic helpers retain their declared unchanged-output error contracts.
+  The [Newton driver](../../../GRHayL/Radiation/ghl_m1_newton.c) can update
+  diagnostics on failure while publishing its state only on success. The
+  [neutrino source dispatcher](neutrino-m1-contract.md#failure-and-fallback-behavior)
+  instead initializes its state output to the source base and its exchange
+  packet to zero. A blanket unchanged-output rule does not cover those records.
 - A completed `ghl_m1_compute_Jthick` call can still report an unusable
   thick-limit candidate through its validity flag; success means the
   arithmetic completed, not that the optional diffusion route is available.
-- A finite full-four-dimensional closure candidate that fails the physical
-  PSD check is replaced by the built-in Eulerian Minerbo admissibility
+- A finite full-four-dimensional closure candidate that fails pressure or Eulerian covariance
+  positivity is replaced by the built-in Eulerian Minerbo admissibility
   fallback flagged in the closure record; the fallback is diagnostic-only
   metadata, not a user-selectable method.
 

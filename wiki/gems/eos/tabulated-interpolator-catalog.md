@@ -82,6 +82,10 @@ The auxiliary-input helper is
 [`GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities.c`](../../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities.c).
 After temperature recovery it returns the final direct-interpolation status;
 callers therefore see a final bounds/interpolation failure instead of success.
+The temperature output has already been updated on that path. See the
+[caller domain and temperature-recovery contract](tabulated-interpolation-and-bounds.md#caller-domain)
+for finite-input requirements, valid initial guesses, unchecked generic keys
+and counts, and the bisection lower-temperature saturation rule.
 
 Table index routing currently exposes `ghl_tabulated_get_index_T`, assigned to
 `NRPyEOS_tabulated_get_index_T` in
@@ -107,9 +111,14 @@ a separate page. The source is
 [`GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c).
 
 `NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T` builds cached
-`Ye_of_lr` by finding the electron fraction where `munu` changes sign at a
-constant temperature. `NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T`
-extends that cache with `lp_of_lr`, `le_of_lr`, and `lh_of_lr`. Consumer routes
+`Ye_of_lr` from the temperature-grid bin selected by `get_index_T`; it does
+not interpolate `munu` to an off-grid requested temperature. At each density,
+it uses the first strict adjacent sign crossing. If none exists, it stores
+minimum `Ye` and still succeeds; an exact zero node alone does not count as
+a crossing. `NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T`
+extends that cache with `lp_of_lr`, `le_of_lr`, and `lh_of_lr`, evaluating
+thermodynamics at the original requested temperature. Off-grid calls therefore
+do not establish exact beta equilibrium at that temperature. Consumer routes
 include `Ye_of_rho`, `P_from_rho`, `rho_from_P`, `eps_from_rho`,
 `dP_drho_from_rho`, and `deps_dP_from_rho`. Memory cleanup is
 `NRPyEOS_tabulated_free_beq_quantities`; the tabulated registry assigns the
@@ -118,8 +127,18 @@ calls the concrete routine.
 
 Cache consumers do not allocate on demand. Call the `Ye_of_rho` builder before
 `Ye_from_rho`; call the combined `Ye_P_eps_of_rho` builder before pressure,
-energy, inverse-pressure, or derivative consumers. Calling consumers with null
-cache fields is outside the implemented contract.
+energy, inverse-pressure, or derivative consumers. Require successful construction before consuming the caches. The combined
+builder can update `Ye_of_lr` and then fail while retaining older pressure/energy
+caches; non-NULL fields do not establish a consistent completed rebuild.
+A failed Ye allocation sequence can also leave a non-NULL uninitialized Ye
+cache, and a successful Ye-only rebuild leaves existing thermodynamic caches
+unchanged. Rebuild the combined cache when all maps must describe the same
+requested state. Calling consumers with null cache fields is outside the
+implemented contract; their density or pressure arguments must be finite and
+positive. Pressure inversion assumes a suitable increasing cached pressure curve.
+Derivative arithmetic must remain usable; `deps_dP_from_rho` additionally
+requires nonzero `dP_drho` because it divides by that slope. Table loading
+does not certify these cache-specific conditions.
 
 ## Enthalpy And Sound Speed
 
@@ -142,7 +161,11 @@ non-finite, superluminal, and negative values, and only clamps values when
 Runtime enthalpy/sound-speed routing for tabulated EOS is
 [`GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_enthalpy_and_cs2.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_enthalpy_and_cs2.c).
 The callback enforces `(rho,Y_e,T)` bounds on `ghl_primitive_quantities`,
-computes pressure and internal energy, and returns enthalpy and `cs2`.
+computes pressure and internal energy, and returns enthalpy and `cs2` on
+success. It returns the interpolation status but still writes enthalpy after
+an interpolation error; bounded primitive fields may already be changed.
+Failure does not guarantee valid new thermodynamic outputs; see the
+[enthalpy error contract](tabulated-interpolation-and-bounds.md#enthalpy-and-cs2).
 
 ## Direct Test Evidence
 

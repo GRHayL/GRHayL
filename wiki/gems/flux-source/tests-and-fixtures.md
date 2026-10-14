@@ -23,9 +23,9 @@ Status vocabulary on this page:
 
 | Test | Main evidence | Fixture files read | Notes |
 | --- | --- | --- | --- |
-| Hybrid HLLE flux replay | [Unit_Tests/unit_test_hybrid_flux.c](../../../Unit_Tests/unit_test_hybrid_flux.c) | `hybrid_flux_input.bin`, `hybrid_flux_output.bin`, `hybrid_flux_output_pert.bin` | Direct replay of hybrid and hybrid-entropy variants, all three directions. Also checks wave-bound/error contracts and independent asymmetric fixed-bound HLLE algebra. Speeds are fixture inputs, not recomputed. Stored outputs come from kernels that floor roundoff-negative wave speeds at zero, so every sample, including those with a slightly negative stored `cmin` or `cmax`, uses `ghl_pert_test_fail` perturbation replay. |
-| Tabulated HLLE flux replay | [Unit_Tests/unit_test_tabulated_flux.c](../../../Unit_Tests/unit_test_tabulated_flux.c) | `tabulated_flux_input.bin`, `tabulated_flux_output.bin`, `tabulated_flux_output_pert.bin` | Direct replay of tabulated and tabulated-entropy variants, all directions. Also checks wave-bound/error contracts and independent asymmetric fixed-bound HLLE algebra. It initializes LS220, then uses `ghl_test_compute_h_and_cs2`. Stored outputs come from the same flooring kernels, and every sample uses `ghl_pert_test_fail` perturbation replay. |
-| ET Legacy flux/source replay | [Unit_Tests/unit_test_ET_Legacy_flux_source.c](../../../Unit_Tests/unit_test_ET_Legacy_flux_source.c) | `ET_Legacy_flux_source_input.bin`, `ET_Legacy_flux_source_output.bin`, `ET_Legacy_flux_source_output_pert.bin` | Direct combined replay: all speed directions, non-entropy hybrid fluxes, flux divergence, and source terms. It installs a test-local combined enthalpy/sound-speed callback. |
+| Hybrid HLLE flux replay | [Unit_Tests/unit_test_hybrid_flux.c](../../../Unit_Tests/unit_test_hybrid_flux.c) | `hybrid_flux_input.bin`, `hybrid_flux_output.bin`, `hybrid_flux_output_pert.bin` | Direct replay of hybrid and hybrid-entropy variants, all three directions. Also checks wave-bound/error contracts and independent asymmetric fixed-bound HLLE algebra. Speeds are fixture inputs, not recomputed. The current generator floors roundoff-negative wave speeds at zero. Replay applies `ghl_pert_test_fail` to every sample, including a slightly negative stored `cmin` or `cmax`. |
+| Tabulated HLLE flux replay | [Unit_Tests/unit_test_tabulated_flux.c](../../../Unit_Tests/unit_test_tabulated_flux.c) | `tabulated_flux_input.bin`, `tabulated_flux_output.bin`, `tabulated_flux_output_pert.bin` | Direct replay of tabulated and tabulated-entropy variants, all directions. Also checks wave-bound/error contracts and independent asymmetric fixed-bound HLLE algebra. It initializes LS220, then uses `ghl_test_compute_h_and_cs2`. The current generator uses the same flooring kernels; every replay sample uses `ghl_pert_test_fail`. |
+| ET Legacy flux/source replay | [Unit_Tests/unit_test_ET_Legacy_flux_source.c](../../../Unit_Tests/unit_test_ET_Legacy_flux_source.c) | `ET_Legacy_flux_source_input.bin`, `ET_Legacy_flux_source_output.bin`, `ET_Legacy_flux_source_output_pert.bin` | Direct combined replay: all speed directions, non-entropy hybrid fluxes, flux divergence, and source terms. It installs one test-local combined enthalpy/sound-speed callback. |
 | CompOSE production-EOS integration | [Unit_Tests/unit_test_tabulated_eos_compose.c](../../../Unit_Tests/unit_test_tabulated_eos_compose.c) | Caller-supplied HDF5 path; Ubuntu-GCC builds `compose-test-table.h5` in the workspace root and passes it to the test. | Analytic asymmetric magnetized characteristic-speed expectations in all directions, production tabulated table-bound/mutation, identical-state HLLE/entropy flux, and source-term checks. This focused execution exists only in the Ubuntu-GCC `compose-regularized-eos` job. |
 
 Related contract routes:
@@ -49,19 +49,22 @@ inputs only. Each perturbed input gets an independent uniform relative factor
 of up to `1e-14` (hybrid, ET Legacy) or `1e-12` (tabulated).
 The repository records no conditioning rationale for the difference. Replay
 through `ghl_pert_test_fail` scales each family's bar with its own
-trusted-versus-perturbed separation, so tabulated replay is correspondingly
-looser. Exact cutoffs live in `GRHayL/include/ghl_unit_tests.h` and the
+trusted-versus-perturbed output separation, subject to shared minimum
+tolerances. Larger input perturbations can widen that bar but do not establish
+a uniformly looser tolerance. Exact cutoffs live in [GRHayL/include/ghl_unit_tests.h](../../../GRHayL/include/ghl_unit_tests.h) and the
 replay sources.
 
-Generator source presence does not mean CI regenerates trusted data. The
+Current generator behavior alone does not establish the historical producer
+of downloaded fixtures. Generator source presence does not mean CI regenerates
+trusted data. The
 ordinary runner downloads trusted fixtures before running tests, and workflow
 test jobs also download fixture files before execution.
 
 The hybrid and tabulated generators rescale each face velocity to an ADM
 Lorentz factor from 1.2 through 5, well below their `W_max=10` cap, while
-keeping its random direction. Replay therefore calls
-`ghl_limit_v_and_compute_u0` without reaching its cap branch, so the stored
-references do not depend on limiter rounding. The direct Core limiter tests in
+keeping its random direction. For inputs produced by these generators, replay
+calls `ghl_limit_v_and_compute_u0` below its cap branch, avoiding cap-boundary
+sensitivity. The direct Core limiter tests in
 the [velocity/u0 contract](../../core/velocity-u0-contract.md#tests) own
 cap-boundary coverage.
 
@@ -93,7 +96,7 @@ routes belong to [characteristic-speeds-contract.md](characteristic-speeds-contr
   table.
 - `unit_test_tabulated_flux` requires HDF5-enabled tabulated EOS support and
   `LS220_234r_136t_50y_analmu_20091212_SVNr26.h5` in the working directory.
-- `.github/run_tests.sh` downloads
+- [.github/run_tests.sh](../../../.github/run_tests.sh) downloads
   `LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2` from the repo-visible
   stellarcollapse URL and uncompresses it before `unit_test_tabulated_flux`.
 - Workflow flux jobs download LS220 only for the `tabulated_flux` matrix entry.
@@ -109,7 +112,7 @@ routes belong to [characteristic-speeds-contract.md](characteristic-speeds-contr
   `./test/unit_test_ET_Legacy_flux_source`, `./test/unit_test_hybrid_flux`, and
   `./test/unit_test_tabulated_flux`.
 - The runner downloads Flux fixtures from the immutable TestData reference
-  recorded in `.github/et-legacy-testdata-ref`. Its exit trap removes only
+  recorded in [.github/et-legacy-testdata-ref](../../../.github/et-legacy-testdata-ref). Its exit trap removes only
   run-created paths, including its private expected-error work directory, and
   preserves preexisting paths.
 - The workflow files under [.github/workflows/](../../../.github/workflows/)
@@ -130,8 +133,8 @@ verification.
 
 ## Not Flux_Source HLLE Coverage
 
-`Unit_Tests/unit_test_HLL_flux.c` and
-`Unit_Tests/unit_test_ET_Legacy_HLL_flux.c` are Induction vector-potential HLL
+[Unit_Tests/unit_test_HLL_flux.c](../../../Unit_Tests/unit_test_HLL_flux.c) and
+[Unit_Tests/unit_test_ET_Legacy_HLL_flux.c](../../../Unit_Tests/unit_test_ET_Legacy_HLL_flux.c) are Induction vector-potential HLL
 evidence, not Flux_Source HLLE coverage. They route through
 [Induction HLL flux contract](../induction/hll-flux-contract.md), where the
 public evidence is `ghl_HLL_flux_with_B`, `ghl_HLL_flux_with_Btilde`, and

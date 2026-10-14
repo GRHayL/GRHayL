@@ -68,8 +68,7 @@ free-neutron and free-proton fractions required by leakage.
 
 ### Implemented Fixed Offline Profile
 
-The repository now implements only one production instance of the offline
-route:
+The repository implements the fixed offline profile
 [`sro-sly4-sna-141-regularized-v1`](../../../tools/compose/README.md).
 [`compose_to_grhayl.py`](../../../tools/compose/compose_to_grhayl.py) consumes
 the fixed official generated-HDF5 schema and controls for CompOSE table 141,
@@ -223,12 +222,15 @@ neutrality. Do not alias the coordinates when muons or another charged
 component are present unless the host supplies the missing fraction and
 closure.
 
-A muon-bearing state with $Y_q\ne Y_e$ is not a drop-in current NRPyLeakage
-case even when an EOS can reconstruct `mu_e`. The callback receives only
-`(rho, Y_e, T)`, and checked-in leakage C independently uses $Y_p=Y_e$ and
-$Y_n=1-Y_e$ in reaction and scattering factors. Supporting such states needs
-an interface and leakage-formulation extension that preserves both $Y_e$ and
-$Y_q$, followed by end-to-end revalidation.
+A muon-bearing state with $Y_q\ne Y_e$ requires an explicit composition
+closure even when an EOS can reconstruct `mu_e`. The callback receives only
+`(rho, Y_e, T)` and cannot independently determine an additional evolved muon
+fraction. Current leakage C passes `Y_e` to that callback and uses the returned
+free `X_n` and `X_p` for nucleon targets. A host must supply a justified mapping
+to $Y_q$ or extend the state/interface for an independent composition degree
+of freedom. The leakage model still lacks muon charged-current channels and
+assumes equal heavy-lepton species; validating the callback alone does not
+establish a complete muon-aware leakage model.
 
 ## Decode CompOSE Thermodynamics
 
@@ -342,8 +344,9 @@ Subtracting $m_n$ from the neutron and $m_p$ from the proton would change their
 difference and is not the Hempel EOSmaker target contract.
 
 Current leakage consumes $\widehat\mu$ in the retained grey equilibrium
-degeneracies and spectral moments. Blocking no longer consumes
-$\widehat\mu$, $\mu_n$, or $\mu_p$. It reconstructs kinetic degeneracies from
+degeneracies and the paired reaction shift `q = muhat - T*(eta_n-eta_p)`.
+The occupation/overlap helper does not consume $\widehat\mu$, $\mu_n$,
+or $\mu_p$. It reconstructs kinetic degeneracies from
 `rho`, `T`, `X_n`, and `X_p`. This separation matters because thermodynamic
 chemical potentials contain rest-energy, interaction, and producer-reference
 terms that are not kinetic occupations. The free-density construction removes
@@ -445,9 +448,8 @@ neutrinos, so a neutrino chemical potential is not an alternative input.
 ### Free Neutrons And Protons
 
 CompOSE defines particle fraction $Y_i^{\rm C}=n_i/n_b$ and mass-number
-fraction $X_i=B_iY_i^{\rm C}$. The superscript distinguishes these net
-particle fractions from the current leakage routine's separate local
-approximations named `Y_n` and `Y_p`. For individual free neutrons and protons,
+fraction $X_i=B_iY_i^{\rm C}$. The superscript identifies CompOSE net
+particle fractions. For individual free neutrons and protons,
 $B_i=1$, hence
 
 $$
@@ -457,7 +459,7 @@ $$
 Use net-particle composition indices `10` for neutrons and `11` for protons.
 These must represent individual unbound nucleons. Do not substitute a grouped
 nuclear fraction, average nucleus, total neutron content, `Y_q`, `Y_e`, or
-the leakage routine's separate approximations `1-Y_e` and `Y_e`.
+total-fraction approximations `1-Y_e` and `Y_e`.
 
 CompOSE fermion fractions are particle-minus-antiparticle net fractions. The
 mapping above assumes antinucleons are absent or negligible. If they are

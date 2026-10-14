@@ -147,8 +147,8 @@ static int m1_thcm1_rusanov_eval_and_compare(
   }
   m1_thcm1_fixture_comparison_report report = { 0 };
   if(!m1_thcm1_rusanov_compare_baseline_response(
-        record, policy, operation, normalization, output_baseline, &report, error,
-        error_size)
+           record, policy, operation, normalization, output_baseline, &report, error,
+           error_size)
      || !m1_thcm1_rusanov_compare_paired_strict_relative(
            record, policy, operation, normalization, output_baseline, output_perturbed,
            &report, error, error_size)) {
@@ -224,9 +224,8 @@ int m1_thcm1_rusanov_check_neutrino_fixture(
     m1_thcm1_rusanov_neutrino_normalization(record, normalization);
     char compare_error[256] = { 0 };
     if(!m1_thcm1_rusanov_eval_and_compare(
-          m1_params, nu_params, 1, record, collection.policy,
-          "neutrino_rusanov_flux", normalization, compare_error,
-          sizeof(compare_error))) {
+             m1_params, nu_params, 1, record, collection.policy, "neutrino_rusanov_flux",
+             normalization, compare_error, sizeof(compare_error))) {
       ++failures;
       if(failures == 1) {
         m1_thcm1_fixture_set_error(
@@ -318,9 +317,9 @@ int m1_thcm1_rusanov_check_current_fixture(
     m1_thcm1_rusanov_neutrino_normalization(record, normalization);
     char compare_error[256] = { 0 };
     if(!m1_thcm1_rusanov_eval_and_compare(
-          m1_params, nu_params, 1, record, collection.policy,
-          M1_THCM1_RUSANOV_CURRENT_OPERATION, normalization, compare_error,
-          sizeof(compare_error))) {
+             m1_params, nu_params, 1, record, collection.policy,
+             M1_THCM1_RUSANOV_CURRENT_OPERATION, normalization, compare_error,
+             sizeof(compare_error))) {
       ++failures;
       if(failures == 1) {
         m1_thcm1_fixture_set_error(
@@ -396,8 +395,8 @@ int m1_thcm1_rusanov_check_generic_fixture(
     m1_thcm1_rusanov_generic_normalization(record, normalization);
     char compare_error[256] = { 0 };
     if(!m1_thcm1_rusanov_eval_and_compare(
-          NULL, NULL, 0, record, collection.policy, "rusanov_flux", normalization,
-          compare_error, sizeof(compare_error))) {
+             NULL, NULL, 0, record, collection.policy, "rusanov_flux", normalization,
+             compare_error, sizeof(compare_error))) {
       ++failures;
       if(failures == 1) {
         m1_thcm1_fixture_set_error(
@@ -427,19 +426,23 @@ int m1_thcm1_rusanov_check_fixture_regression(
     return 0;
   }
   const char *operation = current ? M1_THCM1_RUSANOV_CURRENT_OPERATION : "rusanov_flux";
-  const char *policy = current ? M1_THCM1_RUSANOV_CURRENT_POLICY : M1_THCM1_RUSANOV_POLICY;
+  const char *policy
+        = current ? M1_THCM1_RUSANOV_CURRENT_POLICY : M1_THCM1_RUSANOV_POLICY;
   char *path = NULL;
   if(!m1_thcm1_rusanov_join_path(
            fixture_dir, current ? "rusanov_neutrino_current.bin" : "rusanov_generic.bin",
            &path)) {
-    m1_thcm1_fixture_set_error(error, error_size, "Rusanov regression path allocation failed");
+    m1_thcm1_fixture_set_error(
+          error, error_size, "Rusanov regression path allocation failed");
     return 0;
   }
   m1_thcm1_fixture_collection collection = { 0 };
   const int loaded = m1_thcm1_fixture_load(
         path, operation,
-        current ? M1_THCM1_RUSANOV_NEUTRINO_INPUT_COUNT : M1_THCM1_RUSANOV_GENERIC_INPUT_COUNT,
-        current ? M1_THCM1_RUSANOV_NEUTRINO_OUTPUT_COUNT : M1_THCM1_RUSANOV_GENERIC_OUTPUT_COUNT,
+        current ? M1_THCM1_RUSANOV_NEUTRINO_INPUT_COUNT
+                : M1_THCM1_RUSANOV_GENERIC_INPUT_COUNT,
+        current ? M1_THCM1_RUSANOV_NEUTRINO_OUTPUT_COUNT
+                : M1_THCM1_RUSANOV_GENERIC_OUTPUT_COUNT,
         &collection, error, error_size);
   free(path);
   if(!loaded) {
@@ -487,7 +490,8 @@ int m1_thcm1_rusanov_check_fixture_regression(
   }
   m1_thcm1_fixture_free(&collection);
   if(!rejected) {
-    m1_thcm1_fixture_set_error(error, error_size, "Rusanov regression corruption was not rejected");
+    m1_thcm1_fixture_set_error(
+          error, error_size, "Rusanov regression corruption was not rejected");
   }
   return rejected;
 }

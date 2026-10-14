@@ -44,8 +44,15 @@ u^i=W\left(V^i-\frac{\beta^i}{\alpha}\right),
 $$
 
 where \(V^i=(v^i+\beta^i)/\alpha\). The spatial metric and its inverse must
-be coherent; current validation requires symmetric positive-definite,
-inverse-consistent `gammaDD`/`gammaUU` and a consistent positive determinant.
+be coherent: the caller supplies symmetric positive-definite,
+inverse-consistent `gammaDD`/`gammaUU` and consistent determinant data. The
+closure checks the lapse, velocity, realizability norm, and candidate tensors
+through its local arithmetic; it does not check metric symmetry, mutual
+inverse consistency, or determinant consistency. The scaled norm helper in
+[ghl_m1_utils.h](../../../GRHayL/Radiation/ghl_m1_utils.h) checks finite matrix
+entries and positive Cholesky pivots for a nonzero vector; an exactly zero
+vector returns after the finiteness checks, before factorization. These
+checks do not replace the caller's geometry prerequisites.
 
 ## Thin and thick four-dimensional tensors
 
@@ -179,8 +186,8 @@ intermediate square to overflow.
 
 The production path is a bracketed, safeguarded Brent-style scalar solve:
 
-1. Validate the metric and E/F realizability, construct the workspace, and
-   evaluate the residual at \(\xi=0\) and \(\xi=1\).
+1. Check E/F realizability, construct the workspace with the local lapse and
+   velocity checks above, and evaluate the residual at \(\xi=0\) and \(\xi=1\).
 2. If an endpoint is zero or within the implementation's internal roundoff
    gate, select the corresponding endpoint and report convergence.
 3. If the endpoints do not bracket a sign change, choose the endpoint with the
@@ -189,7 +196,9 @@ The production path is a bracketed, safeguarded Brent-style scalar solve:
    `closure_root_max_iterations`, using the configured interval tolerance.
 5. Evaluate the candidate, reject a normalized residual above
    `closure_root_residual_tolerance`, then validate its finite values, spatial
-   trace, symmetry, and positive semidefiniteness before publication.
+   trace, symmetry, pressure positivity, and Eulerian covariance positivity
+   before publication. The covariance is `C^ij = P^ij - F^i F^j/E`, where
+   `F^i` is the raised stored covariant flux.
 
 At \(\xi=0\), the evaluator computes the thick moments directly from E/F,
 using the spatial projection of \(\widetilde H_\mu\) above and subtracting
@@ -209,14 +218,29 @@ exceptional admissibility fallback. It is not a runtime method selector.
 
 ## Exceptional admissibility fallback
 
-If a finite primary candidate fails the pressure positive-semidefinite check,
-the current code constructs an Eulerian Minerbo pressure tensor from the
-metric-normalized Eulerian flux factor, validates it, and publishes it with
+During publication, rejection by either the pressure or Eulerian covariance
+positive-semidefiniteness check triggers the Eulerian Minerbo fallback. It
+constructs a pressure tensor from the metric-normalized Eulerian flux factor,
+validates it, and publishes it with
 `solve_status = endpoint_fallback` and
 `four_point_compatibility = false`. An exactly zero Eulerian flux can use this
 same fallback when the moving-fluid primary candidate cannot satisfy the
-trace validation. A nonfinite candidate, invalid root data, or failed fallback
-is an error; the code does not publish a partially validated tensor.
+trace validation. The fallback candidate is itself subjected to the same
+Eulerian covariance guard before publication and is rejected when that guard
+fails. Zero and rank-deficient covariance are valid;
+the normalized energy scale bounds subtraction roundoff near the streaming
+limit.
+
+Failure handling depends on the stage. Workspace and root-evaluation errors,
+including their nonfinite arithmetic checks, return directly; a failed
+normalized-residual gate also returns an error. Once the primary pressure
+candidate reaches the publication positivity checks, any rejection there
+attempts the Eulerian fallback, including rejection of nonfinite pressure
+entries. A subsequent trace/symmetry validation failure attempts fallback only
+at exactly zero Eulerian flux; at nonzero flux it returns an error. A failed
+fallback leaves the output unchanged. Only a fully validated candidate is
+published; rejection of a primary candidate does not by itself imply that the
+public closure call failed.
 
 This fallback is deliberately observable. The compatibility source-update
 branches are fail-closed on this fallback unless

@@ -70,10 +70,11 @@ exact clause, distinguish interpretation from requirement, and finish separable 
 | [Current Contradictions](wiki/contradictions.md) | Only unresolved current repo conflicts, safe wording, and smallest maintainer decisions. |
 | [Core KB](wiki/core/index.md) | Core/chalice router for shared structs, packing/unpacking, metric/ADM helpers, velocity `u0`, stress-energy/smallb, EOS dispatch, errors, IO, debug utilities, and Core fixtures. |
 | [Neutrinos KB](wiki/gems/neutrinos.md) | NRPyLeakage API, physics/EOS contracts, generated-code provenance, implementation flow, portability, and tests. |
+| [Radiation M1 KB](wiki/gems/radiation-m1.md) | Grey neutrino M1 state, closure, transport, local source updates, rate provider, host boundary, and fixtures. |
 | [README](README.md) | Project purpose, gem overview, build/install paths, HDF5 configuration, CI testing, and implementation overview. |
 | [Doxygen Main Page](docs/raw/mainpage.md) | Documentation source entry point used by `Doxyfile`; links gem groups, derivation, build/install, CI, and implementation notes. |
 | [Core API Docs](docs/raw/GRHayL_Core.dox) | Doxygen/source context for Core EOS initialization, struct packing/unpacking, metric helpers, and stress-energy helpers. |
-| [Gems](GRHayL/) | Source tree for Atmosphere, Con2Prim, EOS, Flux_Source, Induction, Neutrinos, and Reconstruction modules. |
+| [Gems](GRHayL/) | Source tree for Atmosphere, Con2Prim, EOS, Flux_Source, Induction, Neutrinos, Radiation, and Reconstruction modules. |
 | [Equations](docs/raw/derivation.md) | GRMHD variables, stress-energy tensor, conservative equations, flux/source terms, and magnetic-field rescaling. |
 | [Implementations](implementations/GRHayLib/) | GRHayLib downstream integration files; static parity is not Cactus build/runtime proof. |
 | [Testing](Unit_Tests/) | Unit tests, generated reference-data programs, perturbation checks, and sample EOS table. |
@@ -96,6 +97,7 @@ exact clause, distinguish interpretation from requirement, and finish separable 
 | Work on fluxes, source terms, or characteristic speeds | [Flux Source KB hub](wiki/gems/flux-source.md), [Flux Source docs](docs/raw/Flux_Source.dox), [Flux Source source](GRHayL/Flux_Source/) |
 | Work on vector-potential induction routines | [Induction KB hub](wiki/gems/induction.md), [Induction docs](docs/raw/Induction.dox), [Induction source](GRHayL/Induction/) |
 | Work on neutrino leakage support | [Neutrinos KB hub](wiki/gems/neutrinos.md), [physics and EOS contract](wiki/gems/neutrinos/physics-and-eos-contract.md), [Neutrinos source](GRHayL/Neutrinos/), [radiation header](GRHayL/include/ghl_radiation.h) |
+| Work on neutrino M1 radiation or its provider | [Radiation M1 hub](wiki/gems/radiation-m1.md), [M1 contract](wiki/gems/radiation-m1/neutrino-m1-contract.md), [rate provider](wiki/gems/radiation-m1/rate-provider-contract.md), [tests and fixtures](wiki/gems/radiation-m1/tests-and-fixtures.md), [Radiation source](GRHayL/Radiation/), [M1 header](GRHayL/include/ghl_m1.h) |
 | Find NRPyLeakage Python generators, notebook derivations, or `tmp_*` provenance | [NRPyLeakage generator provenance](wiki/gems/neutrinos/generator-provenance.md), [generated boundaries](wiki/generated-boundaries.md) |
 | Port or directly compile only the NRPyLeakage pieces | [Neutrinos API and data](wiki/gems/neutrinos/api-and-data.md), [implementation flow](wiki/gems/neutrinos/implementation-flow.md), [physics and EOS contract](wiki/gems/neutrinos/physics-and-eos-contract.md) |
 | Adapt a CompOSE EOS for NRPyLeakage | [CompOSE EOS adapter how-to](wiki/gems/neutrinos/compose-eos-adapter-how-to.md), [physics and EOS contract](wiki/gems/neutrinos/physics-and-eos-contract.md), [current StellarCollapse loader boundary](wiki/gems/eos/stellarcollapse-table-adapter.md) |

@@ -23,7 +23,9 @@ metric, direction-specific `cmin`/`cmax`, and a conservative flux output.
 Every direct symbol has a public declaration, a checked-in definition, and a
 variant-manifest entry. [configure](../../../configure) retains the real
 tabulated flux definitions under `--disable-hdf5`, and the Ubuntu-Clang
-`c2p-failure` no-HDF5 variant checks that they remain linkable. The tabulated
+`c2p-failure` no-HDF5 variant uses `nm -D --defined-only` to check legacy
+tabulated export names. It does not link a consumer or explicitly inspect the
+matching `_checked` names. The tabulated
 flux test and data generator still require HDF5/table support and are excluded
 in that mode.
 
@@ -50,7 +52,7 @@ For direction `d`, simple/hybrid callers choose
 `ghl_calculate_HLLE_fluxes_dirn<d>_hybrid` or its `_entropy` form; tabulated
 callers choose the corresponding `_tabulated` or `_tabulated_entropy` form.
 Primitive inputs remain mutable because tabulated thermodynamic callbacks can
-limit them to table bounds. Supply copies when original face states must be
+limit them to configured EOS bounds. Supply copies when original face states must be
 preserved, and initialize the EOS global callbacks before a direct kernel call.
 
 ## Caller Contract
@@ -73,6 +75,12 @@ HLLE flux callers must supply:
   calls or output writes; legacy wrappers abort on that error.
 - `cons`: caller-owned conservative output receiving flux components.
 
+`_checked` adds wave-bound validation and EOS error propagation, not general
+physical or finite-output validation. Supply finite valid geometry with
+positive lapse, finite physical primitives, a consistent initialized `u0`,
+usable EOS enthalpy, and representable intermediate arithmetic. The kernels
+do not normalize velocity or recompute `u0`.
+
 Entropy variants read `prims_r->entropy` and `prims_l->entropy` and write
 `cons->entropy`. Calling an entropy variant with unset or stale primitive
 entropy gives the conservative entropy flux a bad input even when density,
@@ -81,11 +89,14 @@ momentum, and energy fields look valid.
 Only fields listed in the matrix are written. Other members of `cons` retain
 their prior value; these routines do not initialize the whole struct.
 
-Every checked routine calls `ghl_compute_h_and_cs2` twice and returns either
-callback's exact error before writing output. Primitive arguments are mutable: production
-tabulated dispatch limits `rho`, `Y_e`, and `temperature` to table bounds, then overwrites
+After wave-bound validation, each checked routine calls `ghl_compute_h_and_cs2`
+for the right state, then the left state; it stops at the first callback error
+and returns that exact error before writing output. Primitive arguments are mutable: production
+tabulated dispatch limits `rho`, `Y_e`, and `temperature` to configured EOS bounds, then overwrites
 `press` and `eps`. If the second callback fails, mutation performed by the
-successful first callback is retained. Callers needing immutable reconstructed
+successful first callback is retained; the failing callback can also have
+mutated its input. The [EOS contract](../eos/tabulated-interpolation-and-bounds.md)
+owns those configured bounds and error semantics. Callers needing immutable reconstructed
 states must pass copies.
 
 Characteristic-speed and source-term routines use the same combined callback,
@@ -102,9 +113,10 @@ guarded by `GHL_DISABLE_HDF5` in
 [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c).
 Link visibility is not runtime support: these real kernels call the global
 `ghl_compute_h_and_cs2` dispatch. A no-HDF5 build
-cannot initialize compatible tabulated EOS dispatch, so callers must not invoke
-the tabulated variants there; a hybrid or unset global dispatch can otherwise
-produce the wrong EOS calculation or a null call.
+cannot install GRHayL's built-in table-backed EOS dispatch. A compatible
+custom callback is a separate caller-owned path; retained kernels do not check
+EOS type or provide runtime validation of that integration. An incompatible or
+unset global dispatch can produce the wrong EOS calculation or a null call.
 
 ## Generated-Source Boundary
 
@@ -128,8 +140,8 @@ Python source together when formulas, variables, or output fields change.
 ## Evidence Status
 
 - **Build-configured:** every listed direct symbol is in default and no-HDF5
-  builds. The Ubuntu-Clang `c2p-failure` no-HDF5 variant link-checks the
-  tabulated symbols.
+  builds. The Ubuntu-Clang `c2p-failure` no-HDF5 variant inspects legacy tabulated export symbols
+  with `nm`, without a consumer link or explicit `_checked` name checks.
 - **Direct replay:** every direction in each row is called by the named test;
   runner and compiler workflows configure those executions.
 - **Fixture-generation:** matching data generators call every row/direction,
@@ -143,4 +155,4 @@ Python source together when formulas, variables, or output fields change.
   no committed production-tabulated HLLE check verifies callback mutation. The
   legacy generic compatibility pointer globals have no focused repository test,
   and Core never assigns them.
-- **No-HDF5:** the matrix variant link-checks retained algebraic tabulated symbols.
+- **No-HDF5:** the matrix variant inspects retained legacy tabulated export symbols.

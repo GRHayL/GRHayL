@@ -7,20 +7,20 @@ source, headers, tests, and common edit routes before wider search.
 
 - Purpose: core/chalice layer for shared structs, enums, EOS setup, metric and
   stress-energy helpers, packing/unpacking, error handling, and small utilities.
-- Docs path: `docs/raw/GRHayL_Core.dox`, `docs/raw/derivation.md`,
-  `docs/raw/mainpage.md`.
-- Source path: `GRHayL/GRHayL_Core/`.
-- Primary headers: `GRHayL/include/ghl.h`, `GRHayL/include/ghl_io.h`,
-  `GRHayL/include/ghl_metric_helpers.h`, `GRHayL/include/ghl_debug.h`,
-  `GRHayL/include/ghl_eos_functions.h`,
-  `GRHayL/include/ghl_eos_functions_declaration.h`.
-- Likely tests: `Unit_Tests/unit_test_grhayl_core_test_suite.c`,
-  `Unit_Tests/unit_test_compute_conservs_and_Tmunu.c`, perturbation helpers,
+- Docs path: [docs/raw/GRHayL_Core.dox](../../docs/raw/GRHayL_Core.dox), [docs/raw/derivation.md](../../docs/raw/derivation.md),
+  [docs/raw/mainpage.md](../../docs/raw/mainpage.md).
+- Source path: [GRHayL/GRHayL_Core/](../../GRHayL/GRHayL_Core).
+- Primary headers: [GRHayL/include/ghl.h](../../GRHayL/include/ghl.h), [GRHayL/include/ghl_io.h](../../GRHayL/include/ghl_io.h),
+  [GRHayL/include/ghl_metric_helpers.h](../../GRHayL/include/ghl_metric_helpers.h), [GRHayL/include/ghl_debug.h](../../GRHayL/include/ghl_debug.h),
+  [GRHayL/include/ghl_eos_functions.h](../../GRHayL/include/ghl_eos_functions.h),
+  [GRHayL/include/ghl_eos_functions_declaration.h](../../GRHayL/include/ghl_eos_functions_declaration.h).
+- Likely tests: [Unit_Tests/unit_test_grhayl_core_test_suite.c](../../Unit_Tests/unit_test_grhayl_core_test_suite.c),
+  [Unit_Tests/unit_test_compute_conservs_and_Tmunu.c](../../Unit_Tests/unit_test_compute_conservs_and_Tmunu.c), perturbation helpers,
   and randomization helpers.
 - Common edit routes: struct or enum changes start in `GRHayL/include/ghl.h`;
   EOS function-pointer dispatch touches core initialization plus EOS/Flux_Source
   implementations; metric helper changes need derivation/core doc review.
-- Drift/contract notes: most modules and `implementations/GRHayLib/` consume
+- Drift/contract notes: most modules and [implementations/GRHayLib/](../../implementations/GRHayLib) consume
   core structs and enums, so public layout and initializer behavior are broad
   compatibility contracts.
 
@@ -29,14 +29,14 @@ source, headers, tests, and common edit routes before wider search.
 - Purpose: atmosphere prescriptions for resetting primitive variables to
   atmosphere values.
 - KB routes: [hub](atmosphere.md), [prescription contract](atmosphere/prescription-contract.md).
-- Docs path: `docs/raw/Atmosphere.dox`.
-- Source path: `GRHayL/Atmosphere/`.
-- Primary headers: `GRHayL/include/ghl_atmosphere.h`, `GRHayL/include/ghl.h`.
+- Docs path: [docs/raw/Atmosphere.dox](../../docs/raw/Atmosphere.dox).
+- Source path: [GRHayL/Atmosphere/](../../GRHayL/Atmosphere).
+- Primary headers: [GRHayL/include/ghl_atmosphere.h](../../GRHayL/include/ghl_atmosphere.h), `GRHayL/include/ghl.h`.
 - Likely tests: `Unit_Tests/unit_test_grhayl_core_test_suite.c` directly
   tests constant-atmosphere reset; Con2Prim/EOS limit tests may provide
   indirect coverage.
 - Common edit routes: add prescription source, expose it in
-  `GRHayL/include/ghl_atmosphere.h`, update `GRHayL/Atmosphere/make.code.defn`,
+  `GRHayL/include/ghl_atmosphere.h`, update [GRHayL/Atmosphere/make.code.defn](../../GRHayL/Atmosphere/make.code.defn),
   then update docs.
 - Drift/contract notes: atmosphere values live in `ghl_eos_parameters`; changes
   can affect primitive-limit behavior and downstream setup. Constant atmosphere
@@ -51,16 +51,16 @@ source, headers, tests, and common edit routes before wider search.
   [recovery flow](con2prim/recovery-flow.md), [limits and conversions](con2prim/limits-and-conversions.md),
   [internal numerics and root-finding](con2prim/internal-numerics-and-root-finding.md),
   [tests and fixtures](con2prim/tests-and-fixtures.md).
-- Docs path: `docs/raw/Con2Prim.dox`, with physics background in
+- Docs path: [docs/raw/Con2Prim.dox](../../docs/raw/Con2Prim.dox), with physics background in
   `docs/raw/derivation.md`.
-- Source path: `GRHayL/Con2Prim/`.
-- Primary headers: `GRHayL/include/ghl_con2prim.h`, `GRHayL/include/ghl.h`,
+- Source path: [GRHayL/Con2Prim/](../../GRHayL/Con2Prim).
+- Primary headers: [GRHayL/include/ghl_con2prim.h](../../GRHayL/include/ghl_con2prim.h), `GRHayL/include/ghl.h`,
   EOS headers for hybrid/tabulated method support.
-- Likely tests: `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c`,
-  `Unit_Tests/unit_test_con2prim_tabulated.c`,
-  `Unit_Tests/unit_test_apply_conservative_limits.c`,
-  `Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`,
-  `Unit_Tests/unit_test_hybrid_failure.c`, related data generators; route
+- Likely tests: [Unit_Tests/unit_test_con2prim_multi_method_hybrid.c](../../Unit_Tests/unit_test_con2prim_multi_method_hybrid.c),
+  [Unit_Tests/unit_test_con2prim_tabulated.c](../../Unit_Tests/unit_test_con2prim_tabulated.c),
+  [Unit_Tests/unit_test_apply_conservative_limits.c](../../Unit_Tests/unit_test_apply_conservative_limits.c),
+  [Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c](../../Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c),
+  [Unit_Tests/unit_test_hybrid_failure.c](../../Unit_Tests/unit_test_hybrid_failure.c), related data generators; route
   fixture details through [tests and fixtures](con2prim/tests-and-fixtures.md).
 - Common edit routes: new method means add implementation, expose/select it in
   `GRHayL/include/ghl_con2prim.h` and `ghl_con2prim_id_t`, update method-name
@@ -88,19 +88,20 @@ source, headers, tests, and common edit routes before wider search.
   [tabulated interpolation and bounds](eos/tabulated-interpolation-and-bounds.md),
   [tabulated interpolator catalog](eos/tabulated-interpolator-catalog.md),
   [tests and fixtures](eos/tests-and-fixtures.md).
-- Docs path: `docs/raw/EOS.dox`, plus HDF5 build notes in `README.md`.
-- Source path: `GRHayL/EOS/`.
+- Docs path: [docs/raw/EOS.dox](../../docs/raw/EOS.dox), plus HDF5 build notes in [README.md](../../README.md).
+- Source path: [GRHayL/EOS/](../../GRHayL/EOS).
 - Primary headers: `GRHayL/include/ghl.h`,
   `GRHayL/include/ghl_eos_functions.h`,
   `GRHayL/include/ghl_eos_functions_declaration.h`,
-  `GRHayL/include/ghl_nrpyeos_hybrid.h`,
-  `GRHayL/include/ghl_nrpyeos_tabulated.h`.
-- Likely tests: `Unit_Tests/unit_test_piecewise_polytrope.c`,
-  `Unit_Tests/unit_test_tabulated_eos.c`,
-  `Unit_Tests/test_compute_h_and_cs2.c`,
-  `Unit_Tests/tabulated_eos_unit_test_helpers.c`, `Unit_Tests/sample_table/`.
-- Common edit routes: hybrid changes touch `GRHayL/EOS/Hybrid/`, hybrid header,
-  and piecewise-polytrope tests; tabulated changes touch `GRHayL/EOS/Tabulated/`,
+  [GRHayL/include/ghl_nrpyeos_hybrid.h](../../GRHayL/include/ghl_nrpyeos_hybrid.h),
+  [GRHayL/include/ghl_nrpyeos_tabulated.h](../../GRHayL/include/ghl_nrpyeos_tabulated.h).
+- Likely tests: [Unit_Tests/unit_test_piecewise_polytrope.c](../../Unit_Tests/unit_test_piecewise_polytrope.c),
+  [Unit_Tests/unit_test_tabulated_eos.c](../../Unit_Tests/unit_test_tabulated_eos.c),
+  [Unit_Tests/test_compute_h_and_cs2.c](../../Unit_Tests/test_compute_h_and_cs2.c)
+  (synthetic tabulated-flux callback, not an EOS-table oracle),
+  [Unit_Tests/tabulated_eos_unit_test_helpers.c](../../Unit_Tests/tabulated_eos_unit_test_helpers.c), [Unit_Tests/sample_table/](../../Unit_Tests/sample_table).
+- Common edit routes: hybrid changes touch [GRHayL/EOS/Hybrid/](../../GRHayL/EOS/Hybrid), hybrid header,
+  and piecewise-polytrope tests; tabulated changes touch [GRHayL/EOS/Tabulated/](../../GRHayL/EOS/Tabulated),
   HDF5 build setup, tabulated tests, and Neutrinos/Con2Prim callers.
 - Drift/contract notes: `GHL_DISABLE_HDF5`, exact mode filtering, fresh-object
   table lifecycle, hybrid breakpoint bounds, and function-pointer initialization
@@ -116,17 +117,17 @@ source, headers, tests, and common edit routes before wider search.
   [HLLE flux variants](flux-source/hlle-flux-variant-matrix.md),
   [source terms](flux-source/source-terms-contract.md), and
   [generated NRPy boundary](flux-source/generated-nrpy-boundary.md).
-- Docs path: `docs/raw/Flux_Source.dox`, with equations in
+- Docs path: [docs/raw/Flux_Source.dox](../../docs/raw/Flux_Source.dox), with equations in
   `docs/raw/derivation.md`.
-- Source path: `GRHayL/Flux_Source/`.
-- Primary headers: `GRHayL/include/ghl_flux_source.h`,
+- Source path: [GRHayL/Flux_Source/](../../GRHayL/Flux_Source).
+- Primary headers: [GRHayL/include/ghl_flux_source.h](../../GRHayL/include/ghl_flux_source.h),
   `GRHayL/include/ghl_eos_functions.h`, `GRHayL/include/ghl.h`.
-- Likely tests: `Unit_Tests/unit_test_hybrid_flux.c`,
-  `Unit_Tests/unit_test_tabulated_flux.c`,
-  `Unit_Tests/unit_test_ET_Legacy_flux_source.c`,
-  `Unit_Tests/data_gen/unit_test_data_hybrid_flux.c`,
-  `Unit_Tests/data_gen/unit_test_data_tabulated_flux.c`, and
-  `Unit_Tests/data_gen/unit_test_data_ET_Legacy_flux_source.c`.
+- Likely tests: [Unit_Tests/unit_test_hybrid_flux.c](../../Unit_Tests/unit_test_hybrid_flux.c),
+  [Unit_Tests/unit_test_tabulated_flux.c](../../Unit_Tests/unit_test_tabulated_flux.c),
+  [Unit_Tests/unit_test_ET_Legacy_flux_source.c](../../Unit_Tests/unit_test_ET_Legacy_flux_source.c),
+  [Unit_Tests/data_gen/unit_test_data_hybrid_flux.c](../../Unit_Tests/data_gen/unit_test_data_hybrid_flux.c),
+  [Unit_Tests/data_gen/unit_test_data_tabulated_flux.c](../../Unit_Tests/data_gen/unit_test_data_tabulated_flux.c), and
+  [Unit_Tests/data_gen/unit_test_data_ET_Legacy_flux_source.c](../../Unit_Tests/data_gen/unit_test_data_ET_Legacy_flux_source.c).
 - Common edit routes: change generated equations or C kernels together; update
   EOS-specific flux variants, tests, and Doxygen.
 - Drift/contract notes: flux inputs expect reconstructed face primitives.
@@ -144,20 +145,20 @@ source, headers, tests, and common edit routes before wider search.
   [gauge RHS](induction/gauge-rhs-contract.md),
   [tests and fixtures](induction/tests-and-fixtures.md), and
   [verification workflows](induction/verification-workflows.md).
-- Docs path: `docs/raw/Induction.dox`, with magnetic-field conventions in
+- Docs path: [docs/raw/Induction.dox](../../docs/raw/Induction.dox), with magnetic-field conventions in
   `docs/raw/derivation.md`.
-- Source path: `GRHayL/Induction/`.
-- Primary headers: `GRHayL/include/ghl_induction.h`,
+- Source path: [GRHayL/Induction/](../../GRHayL/Induction).
+- Primary headers: [GRHayL/include/ghl_induction.h](../../GRHayL/include/ghl_induction.h),
   `GRHayL/include/ghl_flux_source.h`, `GRHayL/include/ghl.h`.
-- Likely tests: `Unit_Tests/unit_test_HLL_flux.c`,
-  `Unit_Tests/unit_test_ET_Legacy_HLL_flux.c`,
-  `Unit_Tests/unit_test_induction_ccc_ADM.c`,
-  `Unit_Tests/unit_test_induction_ccc_BSSN.c`,
-  `Unit_Tests/unit_test_induction_vvv_ADM.c`,
-  `Unit_Tests/unit_test_ET_Legacy_induction_gauge_rhs.c`; route fixture
+- Likely tests: [Unit_Tests/unit_test_HLL_flux.c](../../Unit_Tests/unit_test_HLL_flux.c),
+  [Unit_Tests/unit_test_ET_Legacy_HLL_flux.c](../../Unit_Tests/unit_test_ET_Legacy_HLL_flux.c),
+  [Unit_Tests/unit_test_induction_ccc_ADM.c](../../Unit_Tests/unit_test_induction_ccc_ADM.c),
+  [Unit_Tests/unit_test_induction_ccc_BSSN.c](../../Unit_Tests/unit_test_induction_ccc_BSSN.c),
+  [Unit_Tests/unit_test_induction_vvv_ADM.c](../../Unit_Tests/unit_test_induction_vvv_ADM.c),
+  [Unit_Tests/unit_test_ET_Legacy_induction_gauge_rhs.c](../../Unit_Tests/unit_test_ET_Legacy_induction_gauge_rhs.c); route fixture
   details through [tests and fixtures](induction/tests-and-fixtures.md).
 - Common edit routes: interpolation changes start in
-  `GRHayL/Induction/Interpolators/` and `GRHayL/include/ghl_induction.h`;
+  [GRHayL/Induction/Interpolators/](../../GRHayL/Induction/Interpolators) and `GRHayL/include/ghl_induction.h`;
   magnetic flux changes need characteristic-speed checks and HLL tests; use
   [verification workflows](induction/verification-workflows.md) for targeted
   run guidance.
@@ -175,19 +176,19 @@ source, headers, tests, and common edit routes before wider search.
   [implementation flow](neutrinos/implementation-flow.md), and
   [tests and fixtures](neutrinos/tests-and-fixtures.md).
 - Docs path: coverage gap: no dedicated Neutrinos raw Doxygen page exists;
-  `GRHayL/include/ghl_radiation.h` defines the Doxygen group.
-- Source path: `GRHayL/Neutrinos/`.
+  [GRHayL/include/ghl_radiation.h](../../GRHayL/include/ghl_radiation.h) defines the Doxygen group.
+- Source path: [GRHayL/Neutrinos/](../../GRHayL/Neutrinos).
 - Primary headers: `GRHayL/include/ghl_radiation.h`,
-  `GRHayL/include/ghl_nrpyleakage.h`,
+  [GRHayL/include/ghl_nrpyleakage.h](../../GRHayL/include/ghl_nrpyleakage.h),
   `GRHayL/include/ghl_nrpyeos_tabulated.h`.
-- Likely tests: `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`,
-  `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`,
-  `Unit_Tests/unit_test_nrpyleakage_luminosities.c`,
-  `Unit_Tests/unit_test_nrpyleakage_physics.c`,
-  `Unit_Tests/nrpyleakage_main.h`; route fixture details through
+- Likely tests: [Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c](../../Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c),
+  [Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c](../../Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c),
+  [Unit_Tests/unit_test_nrpyleakage_luminosities.c](../../Unit_Tests/unit_test_nrpyleakage_luminosities.c),
+  [Unit_Tests/unit_test_nrpyleakage_physics.c](../../Unit_Tests/unit_test_nrpyleakage_physics.c),
+  [Unit_Tests/nrpyleakage_main.h](../../Unit_Tests/nrpyleakage_main.h); route fixture details through
   [tests and fixtures](neutrinos/tests-and-fixtures.md).
 - Common edit routes: add or change leakage routines in
-  `GRHayL/Neutrinos/NRPyLeakage/`, expose API in leakage/radiation headers,
+  [GRHayL/Neutrinos/NRPyLeakage/](../../GRHayL/Neutrinos/NRPyLeakage), expose API in leakage/radiation headers,
   update tests and downstream header aggregation. Use
   [API and data](neutrinos/api-and-data.md) for public structs, entry points,
   and HDF5/EOS contracts, and [implementation flow](neutrinos/implementation-flow.md)
@@ -199,9 +200,11 @@ source, headers, tests, and common edit routes before wider search.
   test data. HDF5/EOS changes can break Neutrinos even if leakage source is
   untouched. Every fixture-replay result is consumed: optically thin uses
   `ghl_pert_test_fail`; sphere and luminosity use local wrappers around
-  `ghl_pert_test_fail_with_tolerance`. A numerical mismatch fails its executable. Published
-  `GRHayL/TestData` fixtures and implementation-derived CompOSE drift goldens reflect the
-  selected density-derived blocking implementation.
+  `ghl_pert_test_fail_with_tolerance`. A numerical mismatch fails its executable.
+  Current local producers evaluate the selected blocking implementation, and
+  CompOSE goldens are implementation-derived drift references. The producer
+  source does not establish historical downloaded TestData provenance; see
+  [fixture evidence](neutrinos/tests-and-fixtures.md).
 
 ## Radiation
 
@@ -233,7 +236,7 @@ source, headers, tests, and common edit routes before wider search.
   through [rate provider contract](radiation-m1/rate-provider-contract.md) and
   equilibrium/rate meanings through
   [equilibrium and rate semantics](radiation-m1/neutrino-equilibrium-and-rate-semantics.md).
-- Drift/contract notes: Radiation consumes provider-supplied frozen
+- Drift/contract notes: pointwise M1 kernels consume provider-supplied frozen
   `ghl_m1_neutrino_rates` and validates their contract; it is not itself a
   production-rate formula source. Stored THC_M1 comparison values come only
   from retained external fixture data; normal tests never invoke a producer.
@@ -246,20 +249,20 @@ source, headers, tests, and common edit routes before wider search.
   [PLM limiters](reconstruction/plm-limiters.md), [PPM flow](reconstruction/ppm-flow.md),
   [WENOZ contract](reconstruction/wenoz-contract.md), and
   [tests and fixtures](reconstruction/tests-and-fixtures.md).
-- Docs path: `docs/raw/Reconstruction.dox`.
-- Source path: `GRHayL/Reconstruction/`.
-- Primary headers: `GRHayL/include/ghl_reconstruction.h`,
+- Docs path: [docs/raw/Reconstruction.dox](../../docs/raw/Reconstruction.dox).
+- Source path: [GRHayL/Reconstruction/](../../GRHayL/Reconstruction).
+- Primary headers: [GRHayL/include/ghl_reconstruction.h](../../GRHayL/include/ghl_reconstruction.h),
   `GRHayL/include/ghl.h`.
-- Likely tests: `Unit_Tests/unit_test_PLM_reconstruction.c`,
-  `Unit_Tests/unit_test_WENOZ_reconstruction.c`,
-  `Unit_Tests/unit_test_ET_Legacy_reconstruction.c`, reconstruction data
+- Likely tests: [Unit_Tests/unit_test_PLM_reconstruction.c](../../Unit_Tests/unit_test_PLM_reconstruction.c),
+  [Unit_Tests/unit_test_WENOZ_reconstruction.c](../../Unit_Tests/unit_test_WENOZ_reconstruction.c),
+  [Unit_Tests/unit_test_ET_Legacy_reconstruction.c](../../Unit_Tests/unit_test_ET_Legacy_reconstruction.c), reconstruction data
   generators.
-- Common edit routes: PLM changes go through `GRHayL/Reconstruction/PLM/`,
-  PPM through `GRHayL/Reconstruction/PPM/`, WENO-z through
-  `GRHayL/Reconstruction/WENOZ/`; use the method pages for route-specific
+- Common edit routes: PLM changes go through [GRHayL/Reconstruction/PLM/](../../GRHayL/Reconstruction/PLM),
+  PPM through [GRHayL/Reconstruction/PPM/](../../GRHayL/Reconstruction/PPM), WENO-z through
+  [GRHayL/Reconstruction/WENOZ/](../../GRHayL/Reconstruction/WENOZ); use the method pages for route-specific
   source, header, test, and build-list checks.
 - Drift/contract notes: PPM parameters live in `ghl_parameters`; stencil sizes,
   face orientation, and left/right naming are external caller contracts.
-  Coverage gap: no dedicated PPM unit test file is obvious in `Unit_Tests/`.
+  Coverage gap: no dedicated PPM unit test file is obvious in [Unit_Tests/](../../Unit_Tests).
   Built routines have no production source caller in this repo. Generator
   boundary placeholders are serialized but ignored by replay.

@@ -42,6 +42,12 @@ Consequently, `nux` rates and `lum.nux` represent one species, while the matter
 energy source explicitly multiplies the effective `nux` cooling rate by four.
 No heavy-lepton number rate enters the electron-fraction source.
 
+The luminosity fields are pointwise coordinate-volume integrands:
+`W*alpha^2*sqrt(det(gamma))*Q_eff`, with the source-owned geometric conversion.
+The routine accepts no cell volume and performs no spatial sum. A total
+luminosity requires caller integration over coordinate volume; its volume
+element must not include a second `sqrt(gamma)`.
+
 Ground truth:
 
 - [`GRHayL/include/ghl_radiation.h`](../../../GRHayL/include/ghl_radiation.h)
@@ -446,9 +452,12 @@ consistently to code time.
 - Free processes limited to beta capture, pair annihilation, transverse
   plasmon decay, and nucleon-nucleon bremsstrahlung.
 - Opacity limited to the absorption/scattering channels described above.
-- Positive finite temperature and physically consistent EOS composition are
-  caller/EOS obligations; the leakage functions do not independently validate
-  those physics preconditions.
+- The shared blocking implementation
+  [`ghl_nrpyleakage_nucleon_blocking.h`](../../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h)
+  rejects nonpositive or nonfinite density and
+  temperature and invalid free-fraction ranges. Physically consistent EOS
+  composition and the remaining physical prerequisites are still caller/EOS
+  obligations; those focused checks do not validate the complete state.
 - `EnsureFinite` fallbacks in generated expressions are numerical guards, not
   a substitute for a convention-correct EOS or a physical validity check.
 - Path-of-least-resistance update considers six face neighbors. Full optical-

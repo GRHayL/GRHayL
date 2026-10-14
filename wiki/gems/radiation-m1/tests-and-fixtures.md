@@ -72,13 +72,13 @@ show preparation, executable arguments, and temporary-directory cleanup.
 
 ### Evidence vocabulary
 
-The [fresh candidate production record](../../../docs/raw/Radiation_fresh_fixture_production.md)
+The [fresh fixture production record](../../../docs/raw/Radiation_fresh_fixture_production.md)
 describes new THC_M1 runs, receipts, consumed inputs, raw outputs, source
 snapshots, and exporters for every payload. The accepted package is published
 as individual `radiation/*.bin.gz` members in `GRHayL/TestData` and is
-downloaded and replayed by default; the
-[TestData provenance](https://github.com/GRHayL/TestData/blob/main/radiation/PROVENANCE.md)
-describes the published fixture families and binary layout. The imported
+downloaded and replayed by default; the `radiation/PROVENANCE.md` at the pinned
+revision describes the published fixture families, producer, regeneration
+route, and binary layout. The imported
 [TestData revision file](../../../.github/radiation-testdata-ref)
 is the pinned acquisition source for every default runner and action replay.
 An explicitly
@@ -87,7 +87,7 @@ nor the fresh producer run proves host-level evolution or continuum validation.
 
 ## Claim dispositions
 
-These scoped owners combine their existing local checks with the historical
+These scoped owners combine their existing local checks with the published
 package replay:
 
 | Owner | Stored family | Stored claim |
@@ -110,12 +110,12 @@ The provider's generated EOS table is test input. The configured Makefile regist
 
 | Test source | Direct behavior exercised | Inputs and fixture route |
 | --- | --- | --- |
-| [`unit_test_m1_closure_fallback.c`](../../../Unit_Tests/unit_test_m1_closure_fallback.c) | Eulerian Minerbo admissibility fallback: exact symmetry of every published pressure tensor on the fallback as well as the primary path, publication through both the PSD and exact-zero-flux fallback causes, and the documented PSD regime boundary in the aligned, antialigned, and transverse directions. | No stored fixture. The test sweeps flux directions and fluid speeds against a flat metric. |
+| [`unit_test_m1_closure_fallback.c`](../../../Unit_Tests/unit_test_m1_closure_fallback.c) | Eulerian Minerbo admissibility fallback: exact symmetry of published primary and fallback pressure tensors, finite-flux and exact-zero-flux publication, sampled aligned/antialigned primary-path expectations, and transverse covariance admissibility and fallback metadata. | No stored fixture. The flat, unit-energy transverse sweep checks covariance using principal minors and accepts primary or fallback publication; it does not impose a universal fluid-speed cutoff. |
 | [`unit_test_m1_diffusion_flux.c`](../../../Unit_Tests/unit_test_m1_diffusion_flux.c) | `Jthick`, harmonic diffusion coefficient, face-normal proper distance, shared diffusion flux, and the public neutrino diffusion wrapper. It covers active/inactive gates, moving/curved metrics, invalid inputs, overflow rejection, and transactional/no-op behavior. | External `jthick_thcm1.bin` stores the paired `Jthick` inputs/outputs; `--fixture PATH` selects it and the ordinary runner supplies it under `M1_FIXTURE_DIR`. No text copy is tracked in this checkout. The optional Fick helper remains local coverage. |
 | [`unit_test_m1_error_handling.c`](../../../Unit_Tests/unit_test_m1_error_handling.c) | Shared M1 initialization, closure, repair, stress, diagnostics, geometry/matter sources, fixture parsing, invalid-state/error-code mappings, overflow handling, and unchanged-output rejection. | No external fixture. The test owns deterministic boundary cases. |
 | [`unit_test_m1_fd_jacobian.c`](../../../Unit_Tests/unit_test_m1_fd_jacobian.c) | Finite-difference residual/Jacobian construction, public implicit convergence, Newton input and callback validation, admissible projection, retry/backtracking, small-correction no-root and energy-floor rejection, and transactional failure paths. | No stored fixture. The test supplies frozen rates and local states. |
 | [`unit_test_m1_neutrino_rusanov_flux.c`](../../../Unit_Tests/unit_test_m1_neutrino_rusanov_flux.c) | Five-component neutrino Rusanov flux, number-current construction, physical number flux, closure reuse, validation boundaries, seeded paired cases, and stored neutrino/current Rusanov comparisons. | External retained `rusanov_neutrino.bin` and `rusanov_neutrino_current.bin`; `--fixture-dir PATH` selects their directory. |
-| [`unit_test_m1_neutrino_seeded_invariants.c`](../../../Unit_Tests/unit_test_m1_neutrino_seeded_invariants.c) | Pointwise closure, comoving moments, stress-energy, geometry sources, wave speeds, source exchange, species and transactional invariants, plus the retained instantaneous source corpus and covariant stress-energy fixtures. This owner holds the exact-zero and seeded-state cases; binary64 provider arithmetic underflow/overflow rejection belongs to the rate-provider owner below. Local checks cover `ghl_m1_compute_neutrino_explicit_rhs_sources` geometry-only and interaction-enabled composition, optional number output, and unchanged outputs on failure. | `pointwise_closure_moments.bin`, `stress_energy.bin`, and `m1_thcm1_instantaneous_sources.bin`. The retained pointwise, stress-energy, and source corpus formats and record extents are defined by the adapter schemas and the [fixture-family documents](../../../docs/raw/m1_thcm1/README.md), including the named local-policy checks. The explicit RHS checks are local, not retained THC_M1 endpoint comparisons. |
+| [`unit_test_m1_neutrino_seeded_invariants.c`](../../../Unit_Tests/unit_test_m1_neutrino_seeded_invariants.c) | Pointwise closure, comoving moments, stress-energy, geometry sources, wave speeds, source exchange, species and transactional invariants, plus the retained instantaneous source corpus and covariant stress-energy fixtures. This owner holds the exact-zero and seeded-state cases; binary64 provider arithmetic underflow/overflow rejection belongs to the rate-provider owner below. Local checks cover `ghl_m1_compute_neutrino_explicit_rhs_sources` geometry-only and interaction-enabled composition, optional number output, and unchanged outputs on failure. | `pointwise_closure_moments.bin`, `stress_energy.bin`, and `m1_thcm1_instantaneous_sources.bin`. The retained pointwise, stress-energy, and source corpus formats and record extents are defined by the adapter schemas and the [fixture-family documents](../../../docs/raw/m1_thcm1/README.md), including the named fallback-policy classifications (the covariance-rejected reference record and its derived instantaneous-source species records among them). The explicit RHS checks are local, not retained THC_M1 endpoint comparisons. |
 | [`unit_test_m1_neutrino_source_update.c`](../../../Unit_Tests/unit_test_m1_neutrino_source_update.c) | Deterministic property cases for explicit thin updates, frozen-rate source updates, diagnostics, mean-energy policy, pair-source updates, terminal/no-update publication, lepton exchange, and invalid inputs. | No stored fixture. The test creates admissible states and rate bundles locally. |
 | [`unit_test_m1_rate_provider.c`](../../../Unit_Tests/unit_test_m1_rate_provider.c) | Test-local synthetic reference checks plus independent production-provider cache, channel, bounds, physical recovery, diagnostics and raw-kernel checks, including binary64 provider arithmetic underflow/overflow rejection. | `--generated-fixture` creates and removes a deterministic StellarCollapse-compatible HDF5 table whose grid extents the executable defines. An external table path is also accepted by the executable. In no-HDF5 mode the table-backed block is unavailable and test-local reference checks and production disabled-HDF5 transactions remain. |
 | [`unit_test_m1_thcm1_blended_rusanov.c`](../../../Unit_Tests/unit_test_m1_thcm1_blended_rusanov.c) | Canonical pointwise four-point blended transport, variable-volume prepared transport, limiter/sawtooth and opacity branches, metric densitization, policy rejection, and transactional validation. | Constant-volume shards `transport_four_point_d0.bin`, `transport_four_point_d1.bin`, and `transport_four_point_d2.bin`; variable-volume shards `transport_four_point_varying_d0.bin`, `transport_four_point_varying_d1.bin`, `transport_four_point_varying_d2.bin`, and `transport_four_point_varying_controls.bin`. The retained corpus payload sizes are defined by the
@@ -137,14 +137,14 @@ values from current GRHayL outputs.
 ## Fixture inventory
 
 The large retained payload archive is no longer part of this repository. A
-replacement candidate with all pointwise, instantaneous-source, stress-energy,
+replacement set with all pointwise, instantaneous-source, stress-energy,
 Rusanov, constant-volume transport, variable-volume transport, and Jthick
-families has been generated from fresh THC_M1 executions; its accepted gzip
+families has been generated from fresh THC_M1 executions; its gzip
 payloads are published as `radiation/*.bin.gz` members in `GRHayL/TestData`,
 and its producer-evidence
-archive is retained outside the repository. The published fixture families
-and binary layout are described by the
-[TestData provenance](https://github.com/GRHayL/TestData/blob/main/radiation/PROVENANCE.md),
+archive is retained outside the repository. The published fixture families,
+producer, regeneration route, and binary layout are described by
+`radiation/PROVENANCE.md` at the pinned TestData revision,
 and the operation formats and claim boundaries are documented in:
 
 - [Fixture overview](../../../docs/raw/m1_thcm1/README.md)
@@ -153,14 +153,13 @@ and the operation formats and claim boundaries are documented in:
 - [Rusanov](../../../docs/raw/m1_thcm1/RUSANOV.md)
 - [Stress-energy](../../../docs/raw/m1_thcm1/STRESS_ENERGY.md)
 
-A sibling historical copy is not producer evidence. The fresh candidate has
+A sibling historical copy is not producer evidence. The fresh set has
 captured commands, receipts, sidecars, source snapshots, consumed inputs, and
 raw THC_M1 outputs for every family. The CI action and the ordinary runner
 acquire the pinned TestData publication by default; local invocations can
 supply a fixture directory explicitly.
-Local replay alone cannot establish
-admission. Offline exporters are maintenance tools, never normal test
-dependencies.
+Local replay alone is not fresh THC_M1 execution. Offline exporters are
+maintenance tools, never normal test dependencies.
 
 ## Configuration and evidence limits
 

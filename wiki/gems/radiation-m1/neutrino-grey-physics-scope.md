@@ -20,7 +20,9 @@ and
 - State: grey three-species `N/E/F_i` per species.
 - Frozen rates: `ghl_m1_neutrino_rates` consumed by the source kernels.
 - Number source: `eta_N - kappa_a_N * N / Gamma_N`.
-- Charged-current `dYe_matter` exchange.
+- Default charged-current `dYe_matter` exchange, with the opt-in
+  `ghl_m1_neutrino_ye_from_signed_total_number` source option switching
+  `dYe_matter` to signed total-number bookkeeping.
 - Provider channels: charged current, nucleon scattering, pair,
   bremsstrahlung, plasmon.
 
@@ -32,8 +34,12 @@ The scope page constrains what those quantities are allowed to mean.
   expect group-indexed or spectral behavior from this gem.
 - The provider supplies frozen, Kirchhoff-consistent bundles; the Radiation
   kernels do not own production weak-rate physics.
-- `Y_e` bookkeeping follows the charged-current subset. Total radiation-number
-  exchange remains a separate diagnostic and is not folded into `Y_e`.
+- Under the default `ghl_m1_neutrino_ye_from_charged_current` policy,
+  `Y_e` bookkeeping follows the charged-current subset. Total
+  radiation-number exchange remains a separate diagnostic and is not folded
+  into `Y_e`. A host that explicitly opts into the
+  `ghl_m1_neutrino_ye_from_signed_total_number` source option instead derives
+  `dYe_matter` from signed total-number bookkeeping.
 - Any caller claim about a physics result must be bounded to what this page
   marks defensible.
 

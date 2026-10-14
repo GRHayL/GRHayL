@@ -16,10 +16,25 @@ mu_nu_x      = 0.
 ```
 
 The table-backed NRPyLeakage provider receives the EOS chemical-potential
-state and uses the corresponding electron-flavor degeneracy convention to
-compute its physical Fermi equilibrium targets. This is provider-side behavior in
-[`ghl_neutrino_rate_provider.c`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c)
-and [`ghl_m1_nrpyleakage_kernel.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.c),
+state and forms the electron-flavor equilibrium degeneracies directly from the
+EOS-provided chemical potentials,
+
+```text
+eta_nu_e      = (mu_e - muhat) / T
+eta_anti_nu_e = -eta_nu_e
+eta_nu_x      = 0,
+```
+
+using `muhat = mu_n - mu_p` as supplied by the EOS. These degeneracies match
+the retained grey equilibrium-neutrino degeneracies in the
+[leakage EOS chemical-potential convention](../neutrinos/physics-and-eos-contract.md).
+The provider consumes `muhat` directly rather than reconstructing it from
+separately referenced `mu_n` and `mu_p` fields.
+This is provider-side behavior in
+[`ghl_neutrino_rate_provider.c`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c),
+[`ghl_m1_nrpyleakage_kernel.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.c),
+and
+[`ghl_m1_neutrino_rate_backend.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rate_backend.c),
 not a Radiation callback that recomputes chemical equilibrium during a source
 solve.
 
@@ -64,7 +79,10 @@ kappa_tr = kappa_a_E + kappa_s.
 
 The comparisons use the repository's binary64 validation rules; a product that
 underflows to exactly zero is reported diagnostically rather than replaced by
-an arbitrary floor. See
+an arbitrary floor. Public bundle validation and the stricter single-species
+source validation are distinguished in
+[interaction-channel validation](neutrino-interaction-channels.md#validation-identities).
+See
 [`ghl_m1_neutrino_rates.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rates.c).
 
 Number and energy therefore do not share a hidden fixed mean-energy closure.
@@ -95,9 +113,12 @@ and [`ghl_m1_neutrino_number_flux.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1
 
 `eta_N_pair[c]` and `eta_E_pair[c]` are process-resolved emissivities for the
 electron-flavor pair operation. They are not to be added independently to a
-single-species source call. The current validator rejects an electron bundle
-with nonzero pair fields when the partner is unavailable. The joint operation
-uses the two electron states and the partner occupancy; see the
+single-species source call. The private single-species validator
+`ghl_m1_neutrino_validate_single_species_rates` rejects an electron bundle
+with nonzero pair fields, since a single-species source call has no partner;
+the public `ghl_m1_validate_neutrino_rates` accepts the same valid pair data
+for the coupled pair operation. The joint operation uses the two electron
+states and the partner occupancy; see the
 [pair-source leaf](neutrino-pair-source-model.md) and the
 [pair source contract](../../../docs/raw/Radiation_pair_source_model.md).
 

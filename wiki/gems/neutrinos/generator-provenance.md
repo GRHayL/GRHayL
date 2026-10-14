@@ -186,15 +186,12 @@ lists these adapted C files:
   GRHayL struct-based call.
 - [`ghl_nrpyleakage_nucleon_blocking.h`](../../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h)
   is hand-maintained GRHayL code, not output recovered from the ancestral
-  notebooks. Every EOS-dependent routine includes it. It is an installed
-  inline header: `GRHayL/include/make.code.defn` selects it through
-  `#! install_headers`, and the leakage source manifest builds only the C
-  implementations.
+  notebooks. Every EOS-dependent routine includes it by `#include`; the
+  NRPyLeakage manifest lists only `SRCS` and has no `#! INCS` entry.
 - [`ghl_nrpyleakage_rate_helpers.h`](../../../GRHayL/include/ghl_nrpyleakage_rate_helpers.h)
-  is also hand-maintained and installed through the same
-  `#! install_headers` entry. It centralizes corrected bremsstrahlung,
-  diffusion, and heavy-lepton source identities so production and the
-  independent analytic checks use the same production helpers.
+  is also hand-maintained. It centralizes corrected bremsstrahlung, diffusion,
+  and heavy-lepton source identities so production and the independent
+  analytic checks use the same production helpers.
 
 GRHayL adaptations include different public types and argument shapes,
 tabulated-EOS dispatch, HDF5-disabled returns, propagated Fermi/EOS errors,
