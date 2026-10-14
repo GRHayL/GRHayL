@@ -1,4 +1,5 @@
 #include "ghl.h"
+#include "ghl_m1.h"
 #include "ghl_radiation.h"
 
 void ghl_calc_neutrino_densities(

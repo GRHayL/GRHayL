@@ -1,5 +1,7 @@
 #include "ghl_unit_tests.h"
 #include "ghl_radiation.h"
+#include "ghl_m1.h"
+#include <assert.h>
 
 void test_optically_thick_advection();
 void test_optically_thin_advection();
@@ -11,11 +13,14 @@ int main (int argc, char **argv) {
   ghl_error_codes_t initialize_check = ghl_initialize_m1_closure(Minerbo);
   ghl_read_error_codes(initialize_check);
 
-  printf("Run Optically thin test\n");
+  printf("\nRun M1 Closure test\n");
+
+  printf(" - Closure: Optically thin\n");
   test_optically_thin_advection();
 
-  printf("Run Optically thick test\n");
+  printf(" - Closure: Optically thick\n");
   test_optically_thick_advection();
+  printf("'unit_test_m1_compute_radiation_closure' assert passed\n");
   return 0;
 }
 
@@ -106,6 +111,9 @@ void test_optically_thick_advection(){
   test_params.F4       = &F4;
   test_params.P4       = &P4;
   ghl_radiation_rootSolve_closure(&test_params);
+  // printf("test_param.chi = %e\n", test_params.chi);
+  double chi_tol = 1e-6;
+  assert(fabs(test_params.chi - 1.0/3.0) < chi_tol);
 }
 
 // Optically thin advection in Sec. 4.1
@@ -190,4 +198,7 @@ void test_optically_thin_advection(){
   test_params.F4       = &F4;
   test_params.P4       = &P4;
   ghl_radiation_rootSolve_closure(&test_params);
+  // printf("test_param.chi = %e\n", test_params.chi);
+  double chi_tol = 1e-6;
+  assert(fabs(test_params.chi - 1.0) < chi_tol);
 }

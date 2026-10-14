@@ -464,7 +464,9 @@ void explicit_update(
         ghl_m1_powell_params * p,
         double *E_new,
         ghl_radiation_flux_vector *F4_new) {
-    printf("Begin explicit_update\n");
+    // printf("Begin explicit_update\n");
+    // printf("E_star = %f, F4_star = {%f, %f, %f, %f}\n", p->E_star, p->F4_star->D[0], p->F4_star->D[1], p->F4_star->D[2], p->F4_star->D[3]);
+    // printf("rE_source = %f, rF_source = {%f, %f, %f, %f}\n", p->rE_source, p->rF_source->D[0], p->rF_source->D[1], p->rF_source->D[2], p->rF_source->D[3]);
     // double alp = p->metric->lapse;
     // double n4U[4] = {p->metric->lapseinv, 
     //                 -p->metric->betaU[0]*p->metric->lapseinv,
@@ -560,9 +562,11 @@ int ghl_source_update(
   gsl_vector_view xold = gsl_vector_view_array(qold, 4);
   // Non stiff limit, use explicit update
   if(p_powell.cdt * p_powell.kabs < 1 && p_powell.cdt * p_powell.kscat < 1) {
-    printf("Non stiff limit, use explicit update\n");
+    // printf("Non stiff limit, use explicit update\n");
     prepare(&xold.vector, &p_powell);
     explicit_update(&p_powell, E_new, F4_new);
+    // printf("After explicit_update: E_new = %f, F4_new = {%f, %f, %f, %f}\n",
+    //        *E_new, F4_new->D[0], F4_new->D[1], F4_new->D[2], F4_new->D[3]);
 
     double q[4] = { *E_new, F4_new->D[1], F4_new->D[2], F4_new->D[3] };
     gsl_vector_view x = gsl_vector_view_array(q, 4);
@@ -570,6 +574,22 @@ int ghl_source_update(
     return -1;
     // return THC_M1_SOURCE_THIN; // TODO
   }
+
+  // Our scheme cannot capture this dynamics (tau << dt), so we go
+  // directly to the equilibrium
+  if (thc_params->source_thick_limit > 0 &&
+          pow(cdt, 2)*(kabs*(kabs + kscat)) > pow(thc_params->source_thick_limit, 2)) {
+      // If the optical depth is small compared to the time step, we can't capture the dynamics
+      // and we go directly to the equilibrium
+      return -2;
+      // return THC_M1_SOURCE_EQUIL; // TODO
+  }
+ 
+  // Currently THC does not turn this on ever
+  // // This handles the scattering dominated limit
+  // if (source_scat_limit > 0 && cdt*kscat > source_scat_limit) {
+  //     return THC_M1_SOURCE_SCAT;
+  // }
   
   // Initial guess for the solution
   double q[4] = { *E_new, F4_new->D[1], F4_new->D[2], F4_new->D[3] };
@@ -607,12 +627,6 @@ int ghl_source_update(
           printf("Stuck nonlinear solver.\n");
       }
       printf("Trying to save the day... \n");
-      // We are optically thick, suggest to retry with Eddington closure
-      // if (p->closure != Eddington) {
-      //   p->closure = Eddington;
-      //   ierr = ghl_source_update_test(thc_params, p);
-      //   return ierr; // TODO
-      // }
       return -1;
     }
     // TODO: removed error handling for now

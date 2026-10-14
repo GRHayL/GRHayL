@@ -1,4 +1,5 @@
 #include "ghl.h"
+#include "ghl_m1.h"
 #include "ghl_radiation.h"
 
 
@@ -7,8 +8,6 @@
 void get_FU(
   const ghl_ADM_aux_quantities *adm_aux,
   ghl_radiation_flux_vector *F4) {
-
-
   for(int i=0; i<4; i++){
     F4->U[i] = 0; //Be on the safe side and initialize
     for (int j=0; j<4; j++){
@@ -18,7 +17,6 @@ void get_FU(
 
 }
 
-//I put PUD and PUU in the same function. Since we need both, I felt this was more efficient.
 void get_PUD_and_PUU(
     const ghl_ADM_aux_quantities *adm_aux,
     ghl_radiation_pressure_tensor *P4){
@@ -68,8 +66,8 @@ double calc_E_flux(
       const ghl_metric_quantities *metric,
       const double E,
       const ghl_radiation_flux_vector *F4,
-      const int dir) {
-  return metric->lapse * F4->U[dir] - metric->betaU[dir] * E;
+      const int dir4) {
+  return metric->lapse * F4->U[dir4] - metric->betaU[dir4] * E;
 }
 
 // Eq (28) - 3
@@ -78,9 +76,9 @@ double calc_F_flux(
       const ghl_metric_quantities *metric,
       const ghl_radiation_flux_vector *F4,
       const ghl_radiation_pressure_tensor *P4,
-      const int dir,
+      const int dir4,
       const int comp) {
-  return metric->lapse * P4->UD[dir][comp] - metric->betaU[dir] * F4->D[comp];
+  return metric->lapse * P4->UD[dir4][comp] - metric->betaU[dir4] * F4->D[comp];
 }
 
 // Eq (29) - 2

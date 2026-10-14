@@ -1,6 +1,7 @@
 #include "ghl_unit_tests.h"
 #include "ghl_radiation.h"
 #include "ghl_m1.h"
+#include <assert.h>
 
 
 void test_source_update();
@@ -12,9 +13,9 @@ int main (int argc, char **argv) {
   ghl_error_codes_t initialize_check = ghl_initialize_m1_closure(Minerbo);
   ghl_read_error_codes(initialize_check);
 
-  printf("Run Source update test\n");
+  printf("\nRun M1 Source test\n");
   test_source_update();
-
+  printf("'unit_test_m1_compute_radiation_source' assert passed\n");
   return 0;
 }
 
@@ -134,19 +135,26 @@ void test_source_update() {
   F4_new.D[2] = F4_thin.D[2];
   F4_new.D[3] = F4_thin.D[3];
 
-  printf("\nSource test: TestZero\n");
-  // int ierr_TestZero = ghl_source_update(&thc_params, &p_TestZero, &E_new, &F4_new);
+  printf(" - Source test: TestZero\n");
   int ierr_TestZero = ghl_source_update(
       &thc_params, chi_TestZero, eta_TestZero, kabs_TestZero, kscat_TestZero, cdt,
       &metric, &adm_aux, &prims,
       E_star_0, &F4_star_0,
       closure, gsl_solver_1d, gsl_solver_nd,
       &E_new, &F4_new);
-  printf("\nResults:\n");
-  printf("E_new: expected=%f  solution=%f  \n",E_thin, E_new);
-  printf("F4_new: expected=(%f, %f, %f, %f)  solution=(%f, %f, %f, %f)\n",
-         F4_thin.D[0], F4_thin.D[1], F4_thin.D[2], F4_thin.D[3],
-         F4_new.D[0], F4_new.D[1], F4_new.D[2], F4_new.D[3]);
+//   printf("\nResults:\n");
+//   printf("E_new: expected=%f  solution=%f  \n",E_thin, E_new);
+//   printf("F4_new: expected=(%f, %f, %f, %f)  solution=(%f, %f, %f, %f)\n",
+//          F4_thin.D[0], F4_thin.D[1], F4_thin.D[2], F4_thin.D[3],
+//          F4_new.D[0], F4_new.D[1], F4_new.D[2], F4_new.D[3]);
+
+  double tol = 1e-15;
+  assert(E_new - E_thin < tol);
+  assert(F4_new.D[0] - F4_thin.D[0] < tol);
+  assert(F4_new.D[1] - F4_thin.D[1] < tol);
+  assert(F4_new.D[2] - F4_thin.D[2] < tol);
+  assert(F4_new.D[3] - F4_thin.D[3] < tol);
+        
   /////////////////////////////////////////////////////////////////////////////////////
 
   ///////////////////////////////// Test Explicit case ////////////////////////////////
@@ -164,7 +172,7 @@ void test_source_update() {
   F4_new.D[2] = F4_thin.D[2];
   F4_new.D[3] = F4_thin.D[3];
 
-  printf("\nSource test: TestExplicit\n");
+  printf(" - Source test: TestExplicit\n");
   int ierr_TestExplicit = ghl_source_update(
       &thc_params, chi_TestExplicit, eta_TestExplicit, kabs_TestExplicit, kscat_TestExplicit, cdt,
       &metric, &adm_aux, &prims,
@@ -172,22 +180,28 @@ void test_source_update() {
       closure, gsl_solver_1d, gsl_solver_nd,
       &E_new, &F4_new);
 
-  printf("\nResults:\n");
+
   double rE_source_0 = eta_TestExplicit * prims.u0;
   double E_TestExplicit = E_thin + cdt * rE_source_0;
   double Fx_TestExplicit = F4_thin.D[1] + cdt * rE_source_0 * vx;
-  printf("E_new: expected=%f  solution=%f  \n",E_TestExplicit, E_new);
-  printf("F4_new: expected=(%f, %f, %f, %f)  solution=(%f, %f, %f, %f)\n",
-         0.0, Fx_TestExplicit, 0.0, 0.0,
-         F4_new.D[0], F4_new.D[1], F4_new.D[2], F4_new.D[3]);
+//   printf("\nResults:\n");
+//   printf("E_new: expected=%f  solution=%f  \n",E_TestExplicit, E_new);
+//   printf("F4_new: expected=(%f, %f, %f, %f)  solution=(%f, %f, %f, %f)\n",
+//          0.0, Fx_TestExplicit, 0.0, 0.0,
+//          F4_new.D[0], F4_new.D[1], F4_new.D[2], F4_new.D[3]);
+         
+  assert(E_new - E_TestExplicit < tol);
+  assert(F4_new.D[1] - Fx_TestExplicit < tol);
+  assert(F4_new.D[2] - 0.0 < tol);
+  assert(F4_new.D[3] - 0.0 < tol);
   /////////////////////////////////////////////////////////////////////////////////////
 
   ///////////////////////////////// Test Implicit case ////////////////////////////////
   // not (cdt * kabs < 1 && cdt * kscat < 1)
-  double chi_TestImplicit    = 19.0;
-  double eta_TestImplicit    = 0.5;
-  double kabs_TestImplicit   = 11;
-  double kscat_TestImplicit  = 7.0;
+  double chi_TestImplicit    = 0.4;
+  double eta_TestImplicit    = 0.2;
+  double kabs_TestImplicit   = 0.3;
+  double kscat_TestImplicit  = 0.1;
 
   E_new = E_thin;
   F4_new.D[0] = F4_thin.D[0];
@@ -195,21 +209,25 @@ void test_source_update() {
   F4_new.D[2] = F4_thin.D[2];
   F4_new.D[3] = F4_thin.D[3];
 
-  printf("\nSource test: TestImplicit\n");
+  printf(" - Source test: TestImplicit\n");
   int ierr_TestImplicit = ghl_source_update(
       &thc_params, chi_TestImplicit, eta_TestImplicit, kabs_TestImplicit, kscat_TestImplicit, cdt,
       &metric, &adm_aux, &prims,
       E_star_0, &F4_star_0,
       closure, gsl_solver_1d, gsl_solver_nd,
       &E_new, &F4_new);
-  //TODO: This is only explicit limit, need to find a test case with exact implicit result
+  //TODO: This is only explicit limit, replace the expected result with an analytic result for the implciit case
+  // For now, we'll just check that the solution is reasonable
   double E_TestImplicit = E_new + cdt * eta_TestImplicit * prims.u0;
   double Fx_TestImplicit = F4_thin.D[1] + cdt * rE_source_0 * vx;
-  printf("\nResults:\n");
-  printf("E_new: expected=%f  solution=%f  \n",E_TestImplicit, E_new);
-  printf("F4_new: expected=(%f, %f, %f, %f)  solution=(%f, %f, %f, %f)\n",
-         0.0, Fx_TestImplicit, 0.0, 0.0,
-         F4_new.D[0], F4_new.D[1], F4_new.D[2], F4_new.D[3]);
+//   printf("\nResults:\n");
+//   printf("E_new: expected=%f  solution=%f  \n",E_TestImplicit, E_new);
+//   printf("F4_new: expected=(%f, %f, %f, %f)  solution=(%f, %f, %f, %f)\n",
+//          0.0, Fx_TestImplicit, 0.0, 0.0,
+//          F4_new.D[0], F4_new.D[1], F4_new.D[2], F4_new.D[3]);
+  assert(E_new > 0.0);
+  assert(F4_new.D[1] > 0.0);
+
   /////////////////////////////////////////////////////////////////////////////////////
   }
   

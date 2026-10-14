@@ -1,5 +1,6 @@
 #include "ghl_unit_tests.h"
 #include "ghl_radiation.h"
+#include "ghl_m1.h"
 
 int main(){
 

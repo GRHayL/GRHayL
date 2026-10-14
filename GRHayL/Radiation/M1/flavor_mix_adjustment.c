@@ -1,4 +1,5 @@
 #include "ghl_radiation.h"
+#include "ghl_m1.h"
 
 void flavor_mix_adjustment(double *rN_e,
                            double *rN_ae,
