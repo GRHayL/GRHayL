@@ -126,7 +126,36 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_luminosities(
  *
  * Density, temperature, opacity, and optical-depth units match
  * NRPyLeakage_compute_neutrino_opacities(). `R_source` and `Q_source` are
- * geometrized matter source terms. `ghl_success` means no public output
+ * signed scalar matter rates per fluid-frame proper volume and proper time,
+ * in the geometric units defined by `NRPyLeakage_units_*`:
+ * - `R_source` is the atomic mass unit times the effective electron
+ *   antineutrino-minus-neutrino number rate. It sources `rho_b*Y_e` under the
+ *   baryon-density convention `rho_b = m_u*n_b`; positive values raise `Y_e`.
+ *   The baryon-mass factor is already included. A different EOS baryon-mass
+ *   convention requires a consistent adaptation.
+ * - `Q_source` is minus the total effective energy-emission rate: positive
+ *   emission gives a negative `Q_source`. The factor four for the four
+ *   assumed-equal heavy-lepton species is already included.
+ *
+ * Neither scalar includes lapse, metric determinant, Lorentz factor,
+ * velocity, or timestep factors. For the isotropic fluid-frame closure
+ * `G^mu = Q_source*u^mu`, add these leakage terms to the already densitized
+ * Valencia conservative RHS, where `D = rho_b*W`:
+ * - `sqrt(gamma)*D`: zero;
+ * - `sqrt(gamma)*tau`: `alpha*sqrt(gamma)*W*Q_source`;
+ * - `sqrt(gamma)*S_j`: `alpha*sqrt(gamma)*u_j*Q_source`;
+ * - `sqrt(gamma)*D*Y_e`: `alpha*sqrt(gamma)*R_source`.
+ *
+ * Here `gamma = det(gamma_ij)`, `alpha` is the lapse, `beta^i` is the shift,
+ * `W = alpha*u^0`, `u_j = W*v_j`, and `v_j` is the covariant Eulerian
+ * Valencia velocity. GRHayL's `prims.vU[i] = u^i/u^0` is the transport
+ * velocity: the Eulerian velocity is `(prims.vU[i] + beta^i)/alpha`.
+ * Add the signed `Q_source` as written; do not apply another cooling minus
+ * sign, baryon-mass factor, heavy-species factor, or composition `W` factor.
+ * This closure supplies no independent absorption-heating or neutrino
+ * momentum-deposition model.
+ *
+ * `ghl_success` means no public output
  * required final sanitization; internal expression guards can still apply.
  * `ghl_error_used_disabled_hdf5`, EOS errors,
  * Fermi-integral errors, and `ghl_error_nrpyleakage_blocking` return before

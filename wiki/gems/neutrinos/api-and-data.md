@@ -127,8 +127,13 @@ physical meanings of the inputs establish these caller preconditions:
   the inverse-code-length representation paired with code-coordinate path
   lengths. Optical depths are dimensionless sums of neighbor depth plus
   `ds*kappa`.
-- `R_source`, `Q_source`, and luminosities use the source-owned cgs-to-geometric
-  conversion macros. Luminosity additionally contains
+- `R_source` and `Q_source` are signed fluid-frame scalar rates. The mass
+  factor in `R_source` and heavy-species factor in `Q_source` are already
+  included; callers supply conservative, lapse, volume, and velocity factors
+  described in the public declaration and
+  [matter-source contract](physics-and-eos-contract.md#matter-source-signs-and-caller-meaning).
+  Sources and luminosities use the source-owned cgs-to-geometric conversion
+  macros. Luminosity additionally contains
   `W*alpha^2*sqrt(det(gamma_ij))`. Physical inputs require finite positive
   lapse, finite `W >= 1`, and a finite positive-definite spatial metric. A
   nonnegative determinant alone does not establish a physical metric. Each

@@ -364,7 +364,7 @@ its own number optical depth, and heavy-lepton degeneracies are zero.
 
 ## Matter-Source Signs And Caller Meaning
 
-Before unit conversion, current source convention is
+Before baryon-mass and unit conversion, the source convention is
 
 $$
 R_{\rm source}=R_{\bar\nu_e}^{\rm eff}-R_{\nu_e}^{\rm eff},
@@ -380,9 +380,13 @@ Thus positive `R_source` raises the matter electron fraction and negative
 `Q_source`, reducing matter internal energy. The factor four sums the four
 assumed-equal heavy-lepton species.
 
-The generated C routine multiplies the number source by the atomic mass unit
-and its cgs-to-geometric conversion; it applies the separate energy-source
-conversion to `Q_source`. In the repo-local homogeneous, optically thin test
+The C routine multiplies the number source by the atomic mass unit
+and its cgs-to-geometric conversion; it applies the energy-source
+conversion to `Q_source`. The returned scalars are rates per fluid-frame
+proper volume and proper time. `R_source` therefore sources `rho_b*Y_e`
+under the convention $\rho_b=m_u n_b$; the mass factor is already included.
+An EOS with another baryon-mass convention needs a consistent adaptation.
+In the repo-local homogeneous, optically thin test
 the caller uses
 
 $$
@@ -390,10 +394,31 @@ $$
 \frac{d\epsilon}{dt}=\frac{Q_{\rm source}}{\rho}.
 $$
 
-These equations are direct evidence for that test's static homogeneous-fluid
-usage. A GRMHD evolution must still apply its own conservative-variable,
-metric, lapse, and volume factors; do not treat the test RHS as a complete
-general-relativistic update rule.
+These equations describe that test's static homogeneous-fluid usage.
+For the isotropic fluid-frame closure $G^\mu=Q_{\rm source}u^\mu$, the
+leakage additions to the already densitized Valencia conservative RHS are
+
+$$
+\Delta_D=0,\qquad
+\Delta_\tau=\alpha\sqrt{\gamma}\,WQ_{\rm source},\qquad
+\Delta_{S_j}=\alpha\sqrt{\gamma}\,u_jQ_{\rm source},\qquad
+\Delta_{DY_e}=\alpha\sqrt{\gamma}\,R_{\rm source}.
+$$
+
+Here $D=\rho_b W$, $W=\alpha u^0$, and $u_j=Wv_j$ for the covariant
+Eulerian Valencia velocity. GRHayL stores the transport velocity
+`prims.vU[i] = u^i/u^0`; obtain the Eulerian contravariant velocity as
+`(prims.vU[i] + beta^i)/alpha` before lowering its index. The returned
+scalars contain none of these metric or velocity factors and no timestep.
+Use the signed cooling rate as returned, with no further mass, species, or
+composition Lorentz factor. This closure supplies no independent
+absorption-heating or neutrino momentum-deposition model.
+
+The covariant closure and Valencia projections follow
+[Siegel and Metzger, Eqs. (1)-(3), (7), and (19)](https://arxiv.org/abs/1711.00868).
+Their number-rate convention requires a baryon-mass factor; GRHayL's returned
+`R_source` already includes it. The public contract is documented beside
+[`NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms`](../../../GRHayL/include/ghl_nrpyleakage.h).
 
 Ground truth:
 
