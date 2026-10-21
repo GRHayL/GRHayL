@@ -230,6 +230,14 @@ job commands with `.github/actions/*/action.yml`, `.github/run_tests.sh`, and
 actual generated Makefile targets before claiming compile, run, or coverage.
 YAML parsing does not validate embedded shell commands; inspect those separately.
 
+For M1 changes, review the
+[run_m1 action](../../.github/actions/run_m1/action.yml) and each
+workflow's `radiation-m1` job together; only the Ubuntu GCC job in
+[github-actions-Ubuntu-gcc.yml](../../.github/workflows/github-actions-Ubuntu-gcc.yml)
+adds a coverage step, and that step calls the dedicated
+[m1-code-coverage action](../../.github/actions/m1-code-coverage/action.yml),
+not the generic `code-coverage` action used by other jobs.
+
 Run Doxygen only with the unique temporary-output procedure in
 [Generated Boundaries](../generated-boundaries.md). Record `doxygen --version`
 in the task report, not the KB, and compare warnings only with the same

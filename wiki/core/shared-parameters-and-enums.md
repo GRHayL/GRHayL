@@ -56,7 +56,7 @@ and the EOS array bound to EOS pages; the header remains layout authority.
 
 | Public enum | Primary route | Use for |
 | --- | --- | --- |
-| `ghl_error_codes_t` | [errors, IO, debug, utilities](errors-io-debug-utilities.md) | Return-code vocabulary for EOS, Con2Prim, table, HDF5, atmosphere/floor, velocity, allocation, and utility errors. Message text is owned by [`abort_if_error.c`](../../GRHayL/GRHayL_Core/abort_if_error.c). |
+| `ghl_error_codes_t` | [errors, IO, debug, utilities](errors-io-debug-utilities.md), [Radiation M1 contract](../gems/radiation-m1/neutrino-m1-contract.md) | Return-code vocabulary for EOS, Con2Prim, table, HDF5, atmosphere/floor, velocity, allocation, Radiation M1, and utility errors. Message text is owned by [`abort_if_error.c`](../../GRHayL/GRHayL_Core/abort_if_error.c). |
 | `ghl_con2prim_id_t` | [Con2Prim solver matrix](../gems/con2prim/solver-matrix.md) | Solver IDs such as `Noble2D`, `Font1D`, `Palenzuela1D`, `Newman1D`, entropy variants, and `None` backup sentinel. |
 | `ghl_eos_t` | [EOS initialization and dispatch](../gems/eos/initialization-and-dispatch.md) | EOS family selection: simple, hybrid, or tabulated. |
 | `ghl_eos_table_t` | [EOS initialization and dispatch](../gems/eos/initialization-and-dispatch.md) and tabulated EOS pages | Table-family selection, currently including `ghl_eos_table_stellarcollapse` and unknown/type-count sentinels. |
@@ -109,6 +109,17 @@ The initializer returns `void` and performs no enum, pointer, finiteness, or
 range validation. In particular, it reads all three entries of the caller's
 `backup_routine` array and computes `1.0 / max_Lorentz_factor^2` directly.
 Callers own those preconditions; the implementation provides no failure code.
+
+## Radiation Configuration Routes
+
+Radiation configuration is separate from the Core `ghl_parameters` object.
+M1 parameters, species, source-path and composition-policy enums are declared
+in [ghl_m1.h](../../GRHayL/include/ghl_m1.h); provider channel, bounds and recovery
+policies are declared in
+[ghl_neutrino_rate_provider.h](../../GRHayL/include/ghl_neutrino_rate_provider.h).
+Use the [M1 API reference](../gems/radiation-m1/m1-public-api-quick-reference.md)
+and [provider contract](../gems/radiation-m1/rate-provider-contract.md) for their
+initialization and caller-owned lifecycle.
 
 ## `ghl_eos_parameters`
 

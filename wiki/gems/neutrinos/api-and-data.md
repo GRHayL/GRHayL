@@ -38,9 +38,11 @@ Because tests write `ghl_neutrino_luminosities` as a raw struct, field order
 is part of current fixture layout. Opacity/depth fixtures are written as 12
 separate arrays in species-then-slot order rather than raw structs.
 
-`ghl_radiation.h` includes `ghl.h` first, defines the radiation structs, then
-includes `ghl_nrpyleakage.h`; leakage declarations can therefore use the
-radiation types.
+[ghl_radiation.h](../../../GRHayL/include/ghl_radiation.h) includes `ghl.h`,
+`ghl_m1.h`, and `ghl_neutrino_rate_provider.h` before declaring the legacy
+radiation structs, then includes `ghl_nrpyleakage.h`. Aggregate consumers also
+see the M1/provider declarations; their behavior routes through the
+[Radiation M1 hub](../radiation-m1.md).
 
 ## Public NRPyLeakage Calls
 
@@ -54,12 +56,19 @@ radiation types.
 
 The optical-depth path routine returns `void` and writes
 `ghl_neutrino_optical_depths` output; the others return `ghl_error_codes_t`.
+The same header defines the caller-compiled inline
+`ghl_nrpyleakage_normalize_nucleon_fractions`, shared by leakage and the
+[M1 kernel](../../../GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.c).
+It clamps only interpolation-roundoff excursions in `X_n` and `X_p`; larger
+excursions or nonfinite fractions return `ghl_error_nrpyleakage_blocking`
+without publishing its outputs.
 
 ## Portability Boundary
 
 Leakage rate algebra is separable from GRHayL's hydrodynamics, but the current
 C files are not a drop-in standalone library. Every file includes
-`ghl_radiation.h`, which brings in `ghl.h` and `ghl_nrpyleakage.h`. The current
+`ghl_radiation.h`, which brings in Core, M1, provider, and leakage declarations.
+The current
 signatures and bodies therefore depend on:
 
 - `ghl_eos_parameters`, `ghl_neutrino_opacities`,
@@ -186,9 +195,13 @@ output value before branch dispatch. Unsupported keys return
 
 ## Nucleon-Blocking Error Behavior
 
-The EOS-dependent public routines include the source-private
-`NRPyLeakage_nucleon_blocking.h`. Public function signatures and radiation
-structs remain unchanged; the helper is not installed as public API.
+The EOS-dependent public routines include the installed `static inline`
+implementation header
+[GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h](../../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h)
+and its companion
+[GRHayL/include/ghl_nrpyleakage_rate_helpers.h](../../../GRHayL/include/ghl_nrpyleakage_rate_helpers.h)
+by `#include`. Public function signatures and radiation
+structs remain unchanged; these headers do not add separately linked library symbols.
 
 After EOS lookup and density conversion, the helper requires finite positive
 cgs density and temperature. It accepts finite `X_n`, `X_p` in `[0,1]` and
@@ -221,7 +234,7 @@ intermediate fallback or physical validity; only a replacement by the final
 sanitizers produces this particular error.
 
 Ports of any opacity, combined source/opacity, or luminosity entry point must
-carry the private blocking and rate-helper headers or provide equivalent
+carry the shared blocking and rate-helper headers or provide equivalent
 blocking, rate, and error behavior.
 The motivation and equations are in
 [Physics And EOS Contract](physics-and-eos-contract.md).

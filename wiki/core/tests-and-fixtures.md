@@ -36,6 +36,13 @@ fixture contents or information forbidden by the
 
 ### Core fixture generator
 
+[`Unit_Tests/unit_test_coverage_core.c`](../../Unit_Tests/unit_test_coverage_core.c)
+checks upper-index stress-energy against flat-space analytic tensors for a
+moving fluid and a static magnetized fluid. It also checks initializer
+rejection and output preservation, nonfinite tabulated parameters, transition
+pressure overflow, and fatal diagnostics using real child exit/signal status.
+It has no external fixture dependency and runs through the aggregate runner.
+
 - [Unit_Tests/data_gen/unit_test_data_grhayl_core_test_suite.c](../../Unit_Tests/data_gen/unit_test_data_grhayl_core_test_suite.c)
   generates random metric inputs through `ghl_randomize_metric` and writes the
   Core-suite metric fixture.

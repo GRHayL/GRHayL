@@ -8,6 +8,13 @@ inputs:
 runs:
   using: "composite"
   steps:
+    # Radiation is measured by the dedicated M1 upload (flag m1). These jobs
+    # never run Radiation code, so any Radiation lines they upload can only
+    # appear as unhit lines in the merged report. Drop Radiation's gcov
+    # notes/data before gcovr and the Codecov uploader gather them.
+    - run: find . -path '*/Radiation/*' \( -name '*.gcno' -o -name '*.gcda' \) -delete
+      shell: bash
+
     - if: runner.os == 'Linux' && inputs.compiler == 'gcc'
       run: |
         sudo apt-get install gcovr
@@ -30,7 +37,13 @@ runs:
         test -x "$LLVM_COV"
 
         "$LLVM_PROFDATA" merge -sparse default.profraw -o coverage.profdata
-        "$LLVM_COV" export ./build/lib/libghl.so -instr-profile=coverage.profdata -format=lcov > coverage.lcov
+        # The M1 upload reports Radiation, ghl_m1.h and abort_if_error.c (see
+        # the first step and the m1-code-coverage filter). llvm-cov also lists
+        # lines gcov does not treat as executable (error returns, signature and
+        # continuation lines, #define constants), which no job can ever hit, so
+        # keep those files, and the constants header, out of this report.
+        "$LLVM_COV" export ./build/lib/libghl.so -instr-profile=coverage.profdata -format=lcov \
+          -ignore-filename-regex='GRHayL/(Radiation/|include/ghl_m1\.h$|include/ghl_nrpyleakage\.h$|GRHayL_Core/abort_if_error\.c$)' > coverage.lcov
       shell: bash
 
     # Try Intel's codecov tool? Not sure if this is compatible with gcovr

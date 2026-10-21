@@ -796,26 +796,19 @@ static inline ghl_error_codes_t NRPyLeakage_compute_nucleon_blocking(
       double *restrict Y_np,
       double *restrict Y_pn,
       double *restrict eta_n_minus_eta_p) {
-  /*
-   * NRPyEOS evaluates an eight-corner trilinear polynomial in coefficient
-   * form.  Expanding that expression gives 27 signed corner contributions,
-   * each bounded by one for in-cell coordinates and fractions in [0,1].  Its
-   * path has fewer than 64 rounded additions and multiplications, so
-   * 27*gamma_64 is a conservative absolute forward-error bound.  Normalize
-   * only that table/interpolation noise; larger excursions remain errors.
-   * This includes the -8.24e-17 neutron fraction present in SLy4.
-   */
-  const double gamma_64 = 64.0 * DBL_EPSILON / (1.0 - 64.0 * DBL_EPSILON);
-  const double fraction_roundoff = 27.0 * gamma_64;
-  if(!robust_isfinite(rho_cgs) || !(rho_cgs > 0.0) || !robust_isfinite(T) || !(T > 0.0)
-     || !robust_isfinite(X_n) || X_n < -fraction_roundoff
-     || X_n > 1.0 + fraction_roundoff || !robust_isfinite(X_p)
-     || X_p < -fraction_roundoff || X_p > 1.0 + fraction_roundoff) {
+  if(!robust_isfinite(rho_cgs) || !(rho_cgs > 0.0) || !robust_isfinite(T)
+     || !(T > 0.0)) {
     return ghl_error_nrpyleakage_blocking;
   }
 
-  const double physical_X_n = fmin(1.0, fmax(0.0, X_n));
-  const double physical_X_p = fmin(1.0, fmax(0.0, X_p));
+  /* Normalize only interpolation roundoff in the fractions; see
+   * ghl_nrpyleakage_normalize_nucleon_fractions(). */
+  double physical_X_n, physical_X_p;
+  const ghl_error_codes_t fraction_error = ghl_nrpyleakage_normalize_nucleon_fractions(
+        X_n, X_p, &physical_X_n, &physical_X_p);
+  if(fraction_error != ghl_success) {
+    return fraction_error;
+  }
 
   *B_n = *B_p = *Y_np = *Y_pn = *eta_n_minus_eta_p = 0.0;
   if(physical_X_n == 0.0 && physical_X_p == 0.0) {

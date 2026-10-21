@@ -51,7 +51,7 @@ element must not include a second `sqrt(gamma)`.
 Ground truth:
 
 - [`GRHayL/include/ghl_radiation.h`](../../../GRHayL/include/ghl_radiation.h)
-- [`NRPyLeakage_nucleon_blocking.h`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h)
+- [`ghl_nrpyleakage_nucleon_blocking.h`](../../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h)
 - [`NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c)
 - [`NRPyLeakage_compute_neutrino_luminosities.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c)
 
@@ -477,7 +477,9 @@ consistently to code time.
 - Free processes limited to beta capture, pair annihilation, transverse
   plasmon decay, and nucleon-nucleon bremsstrahlung.
 - Opacity limited to the absorption/scattering channels described above.
-- The private blocking helper rejects nonpositive or nonfinite density and
+- The shared blocking implementation
+  [`ghl_nrpyleakage_nucleon_blocking.h`](../../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h)
+  rejects nonpositive or nonfinite density and
   temperature and invalid free-fraction ranges. Physically consistent EOS
   composition and the remaining physical prerequisites are still caller/EOS
   obligations; those focused checks do not validate the complete state.

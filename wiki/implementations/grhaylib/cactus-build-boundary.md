@@ -82,8 +82,17 @@ registry/direct-compile boundary. It lists local `SRCS` as:
 
 It also lists `SUBDIRS` for module paths including `Atmosphere`, `Con2Prim`,
 `Con2Prim/Hybrid`, `Con2Prim/Tabulated`, `EOS/Hybrid`, `EOS/Tabulated`,
-`Flux_Source`, `GRHayL_Core`, `Induction`, `Neutrinos/NRPyLeakage`, and
+`Flux_Source`, `GRHayL_Core`, `Induction`, `Neutrinos/NRPyLeakage`,
+`Radiation`, `Radiation/Neutrinos`, and
 `Reconstruction` variants.
+
+The [Radiation symlink](../../../implementations/GRHayLib/src/Radiation)
+exposes both registered Radiation directories. `GRHayLib.h` includes
+[ghl_radiation.h](../../../GRHayL/include/ghl_radiation.h), which brings in
+the installed M1 and rate-provider declarations. This registers source and
+exposes headers; it does not provide a neutrino evolution driver, source-stage
+schedule, coupled limiter, or matter-recovery route. Those responsibilities
+are described by the [M1 host boundary](../../gems/radiation-m1/host-integration-and-downstream.md).
 
 Static registry parity is a directory-level requirement: tracked symlinks under
 [implementations/GRHayLib/src/](../../../implementations/GRHayLib/src) expose the upstream module directories and

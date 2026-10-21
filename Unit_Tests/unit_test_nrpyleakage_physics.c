@@ -2,8 +2,8 @@
 
 // clang-format off: the private header requires GRHayL's public type setup.
 #include "ghl_unit_tests.h"
-#include "../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h"
-#include "../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h"
+#include "ghl_nrpyleakage_nucleon_blocking.h"
+#include "ghl_nrpyleakage_rate_helpers.h"
 // clang-format on
 
 /**
@@ -920,6 +920,91 @@ static void check_mass_fraction_validation(void) {
   }
 }
 
+/**
+ * Check the nucleon-fraction roundoff envelope and its blocking-evaluator call site.
+ *
+ * Nonfinite fractions and fractions beyond the interpolation-roundoff bound are
+ * rejected with every output unchanged; fractions inside the bound, including the
+ * bound itself, clamp to [0,1]. The evaluator likewise rejects a nonfinite or
+ * nonpositive density or temperature without touching its outputs.
+ */
+static void check_nucleon_fraction_normalization(void) {
+  const double fraction_roundoff
+        = 27.0 * (64.0 * DBL_EPSILON / (1.0 - 64.0 * DBL_EPSILON));
+  const struct {
+    double X_n;
+    double X_p;
+  } rejected[] = {
+    { NAN, 0.5 },
+    { -2.0 * fraction_roundoff, 0.5 },
+    { 1.0 + 2.0 * fraction_roundoff, 0.5 },
+    { 0.5, NAN },
+    { 0.5, -2.0 * fraction_roundoff },
+    { 0.5, 1.0 + 2.0 * fraction_roundoff },
+  };
+  for(size_t i = 0; i < sizeof(rejected) / sizeof(rejected[0]); i++) {
+    double normalized_X_n = 17.0, normalized_X_p = 19.0;
+    if(ghl_nrpyleakage_normalize_nucleon_fractions(
+             rejected[i].X_n, rejected[i].X_p, &normalized_X_n, &normalized_X_p)
+             != ghl_error_nrpyleakage_blocking
+       || normalized_X_n != 17.0 || normalized_X_p != 19.0) {
+      ghl_error("Nucleon-fraction normalization violated its rejection contract\n");
+    }
+
+    double B_n = 1.0, B_p = 2.0, Y_np = 3.0, Y_pn = 4.0, eta_n_minus_eta_p = 5.0;
+    if(NRPyLeakage_compute_nucleon_blocking(
+             1.0e14, 1.0, rejected[i].X_n, rejected[i].X_p, &B_n, &B_p, &Y_np, &Y_pn,
+             &eta_n_minus_eta_p)
+             != ghl_error_nrpyleakage_blocking
+       || B_n != 1.0 || B_p != 2.0 || Y_np != 3.0 || Y_pn != 4.0
+       || eta_n_minus_eta_p != 5.0) {
+      ghl_error("Blocking evaluator did not propagate a rejected nucleon fraction\n");
+    }
+  }
+
+  const struct {
+    double rho_cgs;
+    double T;
+  } invalid_state[] = {
+    { INFINITY, 1.0 },
+    { 0.0, 1.0 },
+    { 1.0e14, INFINITY },
+    { 1.0e14, 0.0 },
+  };
+  for(size_t i = 0; i < sizeof(invalid_state) / sizeof(invalid_state[0]); i++) {
+    double B_n = 1.0, B_p = 2.0, Y_np = 3.0, Y_pn = 4.0, eta_n_minus_eta_p = 5.0;
+    if(NRPyLeakage_compute_nucleon_blocking(
+             invalid_state[i].rho_cgs, invalid_state[i].T, 0.5, 0.5, &B_n, &B_p, &Y_np,
+             &Y_pn, &eta_n_minus_eta_p)
+             != ghl_error_nrpyleakage_blocking
+       || B_n != 1.0 || B_p != 2.0 || Y_np != 3.0 || Y_pn != 4.0
+       || eta_n_minus_eta_p != 5.0) {
+      ghl_error("Blocking evaluator accepted a nonphysical density or temperature\n");
+    }
+  }
+
+  const struct {
+    double X_n;
+    double X_p;
+    double expected_X_n;
+    double expected_X_p;
+  } accepted[] = {
+    { -8.237492054256009e-17, 0.5, 0.0, 0.5 },
+    { -fraction_roundoff, 1.0 + fraction_roundoff, 0.0, 1.0 },
+    { 1.0 + fraction_roundoff, -fraction_roundoff, 1.0, 0.0 },
+  };
+  for(size_t i = 0; i < sizeof(accepted) / sizeof(accepted[0]); i++) {
+    double normalized_X_n = 17.0, normalized_X_p = 19.0;
+    if(ghl_nrpyleakage_normalize_nucleon_fractions(
+             accepted[i].X_n, accepted[i].X_p, &normalized_X_n, &normalized_X_p)
+             != ghl_success
+       || normalized_X_n != accepted[i].expected_X_n
+       || normalized_X_p != accepted[i].expected_X_p) {
+      ghl_error("Nucleon-fraction normalization did not clamp roundoff to [0,1]\n");
+    }
+  }
+}
+
 /** Check neighbor ordering with distinct data and unequal face metrics. */
 static void check_asymmetric_optical_depth_stencil(void) {
   const double dxx[3] = { 1.0, 1.0, 1.0 };
@@ -1279,6 +1364,7 @@ int main(void) {
   check_public_single_species_endpoints();
 #endif
   check_mass_fraction_validation();
+  check_nucleon_fraction_normalization();
   check_asymmetric_optical_depth_stencil();
   check_blocking_state(
         1.0e14, 10.0, 0.5, 0.5, 0.260084127753509933, 0.260084127753509933,

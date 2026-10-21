@@ -77,6 +77,18 @@ component_management:
       name: neutrinos
       paths:
         - GRHayL/Neutrinos/**
+    - component_id: gem_radiation_m1
+      name: radiation_m1
+      # Restrict to the dedicated M1 upload so unrelated zero-hit reports do
+      # not dilute the enforced 100% Radiation component.
+      flag_regexes:
+        - "^m1$"
+      paths:
+        - GRHayL/Radiation/**
+      statuses:
+        - type: project
+          target: 100%
+          threshold: 0%
     - component_id: gem_reconstruction
       name: reconstruction
       paths:

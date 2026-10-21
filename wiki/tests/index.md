@@ -36,6 +36,7 @@ duplicating their tables here:
 - [Induction tests and fixtures](../gems/induction/tests-and-fixtures.md)
 - [Induction verification workflows](../gems/induction/verification-workflows.md)
 - [Neutrinos tests and fixtures](../gems/neutrinos/tests-and-fixtures.md)
+- [Radiation M1 tests and fixtures](../gems/radiation-m1/tests-and-fixtures.md)
 - [Reconstruction tests and fixtures](../gems/reconstruction/tests-and-fixtures.md)
 - [GRHayLib verification and drift](../implementations/grhaylib/verification-and-drift.md)
 

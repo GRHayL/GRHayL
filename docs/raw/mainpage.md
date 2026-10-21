@@ -16,6 +16,7 @@ currently include
 - @ref Flux_Source
 - @ref Induction
 - @ref Neutrinos
+- @ref Radiation
 - @ref Reconstruction
 
 Each gem implements infrastructure-agnostic functions for computing quantities
@@ -101,6 +102,14 @@ the input data by a small test-specific relative factor, commonly of the form
 where \f$ \epsilon \f$ is the perturbation magnitude chosen by each test
 generator. This output serves as error bars for the functions, and the tests
 validate that the computed output falls within this range.
+
+The ordinary `.github/run_tests.sh m1` runner downloads the pinned
+`radiation/*.bin.gz` members from `GRHayL/TestData` at the revision in
+`.github/radiation-testdata-ref` and runs the full stored replay by default.
+Supplying `M1_FIXTURE_DIR` with a raw or gzip package bypasses downloads and
+requests replay of the supplied package; individual executable invocations
+without fixture arguments remain local-only. See the M1 tests and
+fixtures guide in the repository wiki for the exact route and evidence limits.
 
 ## Implementations
 
