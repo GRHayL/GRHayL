@@ -55,11 +55,12 @@ Contract:
 - That simple/hybrid path is a partial update: incoming `BU`, entropy, `Y_e`,
   and temperature remain unchanged.
 - Tabulated EOS path computes metric/magnetic contractions through `ghl_compute_SU_Bsq_Ssq_BdotS`, uses `T_max` as the temperature guess, enforces table bounds on `rho`, `Y_e`, and `eps`, computes `press`, `entropy`, and `temperature` from `eps`, then calls `ghl_limit_utilde_and_compute_v`.
-- Invalid or nonfinite algebraic inputs produce a full atmosphere guess. An EOS
+- Invalid or nonfinite algebraic inputs produce an atmosphere guess that retains
+  finite conservative composition at positive density within EOS bounds. An EOS
   inversion error instead preserves the bounded `rho`, `Y_e`, and `eps` seed,
   keeps `T_max`, supplies finite atmosphere pressure and entropy, and continues
   velocity construction. A later nonfinite or singular derived quantity still
-  replaces that partial seed with the full atmosphere state.
+  replaces that partial seed with the same composition-preserving atmosphere guess.
 - Required tabulated EOS bounds: table-backed `rho`, `Y_e`, and `eps` bounds exposed through `ghl_tabulated_enforce_bounds_rho_Ye_eps`; required temperature bound/guess: `T_max`.
 - Required parameter for tabulated guess: `max_Lorentz_factor` through `ghl_limit_utilde_and_compute_v`.
 - Diagnostics: no diagnostics pointer is accepted. The tabulated path invokes utilde limiting but does not store `speed_limited`.

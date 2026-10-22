@@ -1,9 +1,125 @@
 #include <assert.h>
 #include "ghl_unit_tests.h"
+#include "con2prim_newman_history.h"
 
 static int observed_nn_retries;
 static int observed_nn_main_retry_successes;
 static int observed_backup_successes;
+
+static double final_Noble_enthalpy;
+static ghl_error_codes_t (*Noble_enthalpy_lookup)(
+      const ghl_eos_parameters *, double, double, double,
+      double *, double *, double *, double *);
+
+static ghl_error_codes_t record_Noble_enthalpy(
+      const ghl_eos_parameters *restrict eos,
+      const double rho, const double Y_e, const double h,
+      double *restrict press, double *restrict eps,
+      double *restrict entropy, double *restrict temperature) {
+  final_Noble_enthalpy = h;
+  return Noble_enthalpy_lookup(eos, rho, Y_e, h, press, eps, entropy, temperature);
+}
+
+static void check_thermodynamic_value(
+      const char *name, const double expected, const double actual) {
+  if(!isfinite(actual)
+     || fabs(expected - actual) > 2e-6 * fmax(fabs(expected), 1e-15)) {
+    ghl_error("%s mismatch: expected %.17e, got %.17e\n", name, expected, actual);
+  }
+}
+
+static void check_Noble_and_fixed_temperature_Palenzuela(
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos) {
+  ghl_metric_quantities metric;
+  ghl_initialize_metric(1, 0, 0, 0, 1, 0, 0, 1, 0, 1, &metric);
+  ghl_ADM_aux_quantities metric_aux;
+  ghl_compute_ADM_auxiliaries(&metric, &metric_aux);
+
+  // Interior table state with mild limiting: the retained Z has a physical
+  // enthalpy target inside the table at both Lorentz factors.
+  ghl_primitive_quantities source = {
+    .rho = 1.6192159535484857e-7, .Y_e = 0.1, .temperature = 5.0, .u0 = 1.2
+  };
+  source.vU[0] = sqrt(1.0 - 1.0 / SQR(source.u0));
+  ghl_abort_if_error(ghl_tabulated_compute_P_eps_S_from_T(
+        eos, source.rho, source.Y_e, source.temperature,
+        &source.press, &source.eps, &source.entropy));
+  const double D = source.rho * source.u0;
+  const double Z = (source.rho * (1.0 + source.eps) + source.press) * SQR(source.u0);
+  ghl_conservative_quantities cons;
+  // Analytic unmagnetized Minkowski equations, independent of C2P.
+  ghl_initialize_conservatives(D, Z - source.press - D, Z * source.vU[0], 0, 0,
+                               source.entropy * source.u0, D * source.Y_e, &cons);
+
+  double unlimited_Z = NAN;
+  for(int test = 0; test < 3; ++test) {
+    ghl_parameters test_params = *params;
+    test_params.calc_prim_guess = false;
+    test_params.evolve_temp = test != 2;
+    test_params.con2prim_solver_tolerance = 1e-12;
+    if(test == 1) {
+      test_params.max_Lorentz_factor = 1.1;
+      test_params.inv_sq_max_Lorentz_factor = 1.0 / SQR(1.1);
+    }
+    ghl_primitive_quantities recovered = source;
+    ghl_con2prim_diagnostics diagnostics;
+    ghl_initialize_diagnostics(&diagnostics);
+    const ghl_con2prim_id_t method = test == 2 ? ghl_con2prim_id_Palenzuela1D
+                                              : ghl_con2prim_id_Noble2D;
+    if(test < 2) {
+      final_Noble_enthalpy = NAN;
+      Noble_enthalpy_lookup = ghl_tabulated_compute_P_eps_S_T_from_h;
+      ghl_tabulated_compute_P_eps_S_T_from_h = record_Noble_enthalpy;
+    }
+    const ghl_error_codes_t error = ghl_con2prim_tabulated_select_method(
+          method, &test_params, eos, &metric, &metric_aux, &cons, &recovered,
+          &diagnostics);
+    if(test < 2) ghl_tabulated_compute_P_eps_S_T_from_h = Noble_enthalpy_lookup;
+    ghl_abort_if_error(error);
+    if(diagnostics.which_routine != method || diagnostics.speed_limited != (test == 1)) {
+      ghl_error("Independent tabulated recovery did not exercise intended branch %d\n", test);
+    }
+    const double W = recovered.u0;
+    check_thermodynamic_value("tabulated velocity/W", 1.0 / sqrt(1.0 - SQR(recovered.vU[0])), W);
+    if(test == 1) check_thermodynamic_value("tabulated limited W", 1.1, W);
+    check_thermodynamic_value("tabulated D/W", D / W, recovered.rho);
+    check_thermodynamic_value("tabulated Ye", source.Y_e, recovered.Y_e);
+    if(test == 0) {
+      // S_x = Z v_x independently determines the unlimited solver's Z. The
+      // limited call repeats that solve and changes only finalization.
+      unlimited_Z = cons.SD[0] / recovered.vU[0];
+      check_thermodynamic_value("tabulated energy residual",
+                                cons.tau, unlimited_Z - recovered.press - D);
+    }
+    if(test < 2) {
+      const double expected_h = unlimited_Z / (D * W);
+      // The table interpolates h separately from log(P) and log(eps+shift),
+      // so recombining returned P/eps need not reproduce the inversion input.
+      // Capture the actual target without replacing the real EOS lookup.
+      if(!isfinite(final_Noble_enthalpy)
+         || fabs(final_Noble_enthalpy - expected_h) > 1e-10 * fabs(expected_h)) {
+        ghl_error("Noble final enthalpy target mismatch: expected %.17e, got %.17e\n",
+                  expected_h, final_Noble_enthalpy);
+      }
+    }
+    double press, eps, entropy;
+    ghl_abort_if_error(ghl_tabulated_compute_P_eps_S_from_T(
+          eos, recovered.rho, recovered.Y_e, recovered.temperature, &press, &eps, &entropy));
+    check_thermodynamic_value("tabulated EOS pressure", press, recovered.press);
+    check_thermodynamic_value("tabulated EOS energy", eps, recovered.eps);
+    if(test == 2) {
+      check_thermodynamic_value("tabulated recovered pressure", source.press, recovered.press);
+      check_thermodynamic_value("tabulated recovered energy", source.eps, recovered.eps);
+      check_thermodynamic_value("tabulated recovered velocity", source.vU[0], recovered.vU[0]);
+      check_thermodynamic_value("tabulated recovered temperature", source.temperature,
+                                recovered.temperature);
+    }
+    if(test == 2 && recovered.temperature != source.temperature) {
+      ghl_error("Fixed-temperature Palenzuela changed the prescribed temperature\n");
+    }
+  }
+}
 
 void generate_test_data(
     const ghl_parameters *restrict params,
@@ -23,7 +139,7 @@ void generate_test_data(
       ghl_info("  Generating %s data for test %s\n", perturb_string, vars_string);
       char filename[256];
       sprintf(filename, "con2prim_tabulated_%s_%s_%s.bin", routine, vars_string, perturb_string);
-      FILE *fp = fopen(filename, "wb");
+      FILE *fp = fopen_with_check(filename, "wb");
 
       // Write number of points to file
       fwrite(&npoints, sizeof(int), 1, fp);
@@ -198,9 +314,9 @@ void run_unit_test(
     ghl_info("  Running test %s\n", vars_string);
     char filename[256];
     sprintf(filename, "con2prim_tabulated_%s_%s_unperturbed.bin", routine, vars_string);
-    FILE *fp_unpert = fopen(filename, "rb");
+    FILE *fp_unpert = fopen_with_check(filename, "rb");
     sprintf(filename, "con2prim_tabulated_%s_%s_perturbed.bin", routine, vars_string);
-    FILE *fp_pert = fopen(filename, "rb");
+    FILE *fp_pert = fopen_with_check(filename, "rb");
 
     int n1, n2;
     if(fread(&n1, sizeof(int), 1, fp_unpert) != 1) {
@@ -548,6 +664,8 @@ int main(int argc, char **argv) {
   eos.root_finding_precision=1e-10;
 
   if( test_key ) {
+    test_Newman_history_bounds();
+    check_Noble_and_fixed_temperature_Palenzuela(&params, &eos);
     check_failed_wrappers_leave_routine_unset(&params, &eos);
     for(int nn_guess_enabled = 0; nn_guess_enabled <= 1; nn_guess_enabled++) {
       observed_nn_retries = 0;

@@ -22,10 +22,10 @@ That header aggregates GRHayL module headers and exposes the global pointers
 `GRHayLib_terminate` frees them, including `ghl_tabulated_free_memory` for
 tabulated EOS state.
 
-That ownership statement describes the normal initialized path. Allocation is
-unchecked, the schedule can skip initialization when `ID_converter_ILGRMHD` is
-active while still scheduling termination, and no alternate owner is present
-in this checkout. Use the runtime contract before assuming globals are valid.
+Allocations are checked. The schedule can skip initialization when
+`ID_converter_ILGRMHD` is active while still scheduling termination; termination
+then leaves external state to its owner. The alternate initializer is absent
+from this checkout. Use the runtime contract before assuming globals are valid.
 
 The implementation README says GRHayLib provides core library features and
 initializes the GRHayL parameter and EOS structs used through the simulation.

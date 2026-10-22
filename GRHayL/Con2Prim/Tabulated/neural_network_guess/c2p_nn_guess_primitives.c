@@ -6,7 +6,8 @@
  * A present model must already be validated. With usable finite contractions
  * and candidate it takes the existing NN path; a missing model or unusable
  * numerical state/candidate returns the atmosphere initial guess. The fallback
- * preserves initialized finite magnetic components and supplies zero Eulerian
+ * preserves initialized finite magnetic components and usable conservative
+ * composition within EOS bounds, and supplies zero Eulerian
  * velocity; it is not a successful primitive recovery. Arguments must be
  * non-NULL, and parameters, EOS atmosphere values, and metric lapse/shift must
  * already satisfy their public contracts. Arbitrarily corrupted EOS or model

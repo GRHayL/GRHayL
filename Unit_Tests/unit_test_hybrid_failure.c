@@ -116,6 +116,218 @@ static void test_utilde_speed_limit_monotonicity(void) {
   }
 }
 
+// Evaluate the hybrid pressure directly from its thermodynamic definition,
+// independently of the Noble residual and its analytic derivatives.
+static double hybrid_pressure_at_Z_vsq(
+      const ghl_eos_parameters *restrict eos,
+      const double Z, const double vsq, const double D) {
+  const double rho = D * sqrt(1.0 - vsq);
+  const double cold_rho = fmin(eos->rho_max, fmax(eos->rho_min, rho));
+  int j = 0;
+  while(j + 1 < eos->neos && cold_rho >= eos->rho_ppoly[j]) j++;
+  const double Pcold = eos->K_ppoly[j] * pow(cold_rho, eos->Gamma_ppoly[j]);
+  const double ecold = Pcold / (cold_rho * (eos->Gamma_ppoly[j] - 1.0))
+                      + eos->eps_integ_const[j];
+  return (Pcold + (eos->Gamma_th - 1.0)
+          * (Z * (1.0 - vsq) - rho * (1.0 + ecold))) / eos->Gamma_th;
+}
+
+static void test_Noble_hybrid_derivatives(void) {
+  const double breaks[] = { 1.0 };
+  const double gammas[] = { 2.0, 2.5 };
+  ghl_eos_parameters eos = { 0 };
+  ghl_initialize_hybrid_eos_functions_and_params(
+        0.1, 0.1, 3.0, 2, breaks, gammas, 0.7, 1.6, &eos);
+
+  // Interior points in both pieces, both clamped regions, then one-sided
+  // derivatives at the density clamps and the piece boundary.
+  const double densities[] = { 0.4, 1.5, 0.05, 5.0, 0.1, 3.0, 1.0 };
+  const double Z = 30.0, vsq = 0.36, delta = 1e-6;
+  for(int i = 0; i < 7; ++i) {
+    const double D = densities[i] / sqrt(1.0 - vsq);
+    double pressure, dPdvsq, dPdZ;
+    ghl_compute_func_auxiliaries(&eos, Z, vsq, D, &pressure, &dPdvsq, &dPdZ);
+    check_close("Noble pressure", hybrid_pressure_at_Z_vsq(&eos, Z, vsq, D),
+                pressure, 1e-13);
+    // The solver takes the interior derivative at clamps, and the upper
+    // density piece at a transition; increasing vsq decreases density.
+    const double lo = i == 5 ? vsq : vsq - delta;
+    const double hi = (i == 4 || i == 6) ? vsq : vsq + delta;
+    const double fd_v = (hybrid_pressure_at_Z_vsq(&eos, Z, hi, D)
+                         - hybrid_pressure_at_Z_vsq(&eos, Z, lo, D)) / (hi - lo);
+    const double fd_Z = (hybrid_pressure_at_Z_vsq(&eos, Z + delta, vsq, D)
+                         - hybrid_pressure_at_Z_vsq(&eos, Z - delta, vsq, D))
+                        / (2.0 * delta);
+    check_close("Noble dP/dvsq", fd_v, dPdvsq, 2e-6);
+    check_close("Noble dP/dZ", fd_Z, dPdZ, 2e-8);
+  }
+}
+
+static int newton_evaluations;
+
+static void quadratic_residual(
+      const ghl_eos_parameters *restrict eos,
+      harm_aux_vars_struct *restrict harm_aux, const double invalid,
+      const double x[], double dx[], double *restrict f, double *restrict df) {
+  (void)eos;
+  (void)harm_aux;
+  newton_evaluations++;
+  const double residual = x[0] * x[0] - 2.0;
+  dx[0] = invalid == 3.0 ? NAN : -residual / (2.0 * x[0]);
+  *f = invalid == 1.0 ? NAN : 0.5 * residual * residual;
+  *df = invalid == 2.0 ? NAN : -residual * residual;
+}
+
+static void test_Noble_newton_budgets(void) {
+  ghl_eos_parameters eos = { 0 };
+  harm_aux_vars_struct aux = { .n_iter = 100, .max_iterations = 12,
+                               .solver_tolerance = 1e-12 };
+  int expected_iterations = 0;
+  for(int attempt = 0; attempt < 2; ++attempt) {
+    double x[] = { 8.0 };
+    const int before = aux.n_iter;
+    newton_evaluations = 0;
+    ghl_abort_if_error(ghl_general_newton_raphson(
+          &eos, &aux, 1, 0.0, x, ghl_validate_1D_entropy, quadratic_residual));
+    check_close("Newton analytic root", sqrt(2.0), x[0], 1e-12);
+    const int iterations = aux.n_iter - before;
+    if(iterations < 2 || iterations > aux.max_iterations
+       || iterations * 2 != newton_evaluations
+       || (attempt && iterations != expected_iterations)) {
+      ghl_error("Newton invocations did not receive independent iteration budgets\n");
+    }
+    expected_iterations = iterations;
+  }
+
+  double x[] = { 8.0 };
+  aux.max_iterations = 1;
+  int before = aux.n_iter;
+  if(ghl_general_newton_raphson(
+           &eos, &aux, 1, 0.0, x, ghl_validate_1D_entropy, quadratic_residual)
+     != ghl_error_c2p_max_iter || aux.n_iter != before + 1) {
+    ghl_error("Newton exhaustion status/count mismatch\n");
+  }
+  aux.max_iterations = 12;
+  x[0] = 8.0;
+  before = aux.n_iter;
+  ghl_abort_if_error(ghl_general_newton_raphson(
+        &eos, &aux, 1, 0.0, x, ghl_validate_1D_entropy, quadratic_residual));
+  if(aux.n_iter - before != expected_iterations) {
+    ghl_error("Newton retry inherited the exhausted iteration counter\n");
+  }
+
+  for(int invalid = 1; invalid <= 4; ++invalid) {
+    x[0] = invalid == 4 ? NAN : 8.0;
+    newton_evaluations = 0;
+    const ghl_error_codes_t error = ghl_general_newton_raphson(
+          &eos, &aux, 1, invalid, x, ghl_validate_1D_entropy, quadratic_residual);
+    if(error != ghl_error_c2p_singular || newton_evaluations > 2) {
+      ghl_error("Newton did not promptly reject nonfinite case %d\n", invalid);
+    }
+  }
+
+  // An outer residual must not consume the density left by exhausted inner
+  // retries. With Gamma=2 this inner equation is linear and its root is 1/2.6.
+  eos.neos = 1;
+  eos.Gamma_ppoly[0] = eos.Gamma_th = 2.0;
+  aux.D = 1.0;
+  aux.W_times_S = 0.2;
+  aux.Qtsq = 9.0 * (1.0 - SQR(1.0 / 2.6));
+  aux.n_iter = 7;
+  aux.max_iterations = 1;
+  x[0] = 3.0;
+  double dx[1] = { NAN }, f = NAN, df = NAN;
+  ghl_func_Z(&eos, &aux, 0.8, x, dx, &f, &df);
+  if(aux.error != ghl_error_c2p_max_iter || aux.n_iter != 7 + 11) {
+    ghl_error("Noble outer residual accepted exhausted density retries\n");
+  }
+  aux.max_iterations = 12;
+  before = aux.n_iter;
+  ghl_func_Z(&eos, &aux, 0.8, x, dx, &f, &df);
+  if(aux.error != ghl_success || aux.n_iter != before + 2
+     || !isfinite(dx[0]) || !isfinite(df)) {
+    ghl_error("Nested density solve did not accumulate its iteration count\n");
+  }
+  check_close("Noble nested analytic residual", 0.0, f, 1e-12);
+}
+
+static void test_Noble_EOS_domains(void) {
+  const ghl_con2prim_id_t backups[] = {
+    ghl_con2prim_id_Noble2D, ghl_con2prim_id_None, ghl_con2prim_id_None
+  };
+  ghl_parameters params;
+  ghl_initialize_params(ghl_con2prim_id_Noble1D_entropy, backups,
+                        true, false, false, 1e100, 10.0, 0.0, &params);
+  params.con2prim_solver_tolerance = 1e-12;
+  ghl_metric_quantities metric;
+  ghl_initialize_metric(1, 0, 0, 0, 1, 0, 0, 1, 0, 1, &metric);
+  ghl_ADM_aux_quantities metric_aux;
+  ghl_compute_ADM_auxiliaries(&metric, &metric_aux);
+
+  const double breaks[] = { 1.0 };
+  const double gammas[] = { 2.0, 2.5 };
+  for(int regime = 0; regime < 3; ++regime) {
+    ghl_eos_parameters eos = { 0 };
+    ghl_initialize_hybrid_eos_functions_and_params(
+          1e-8, 1e-8, 1e6, regime == 2 ? 2 : 1, breaks, gammas,
+          0.7, regime == 0 ? 2.0 : 1.6, &eos);
+    for(int piece = 0; piece < (regime == 2 ? 2 : 1); ++piece) {
+      const double rho = piece ? 1.5 : 0.5;
+      double pcold, ecold;
+      ghl_hybrid_compute_P_cold_and_eps_cold(&eos, rho, &pcold, &ecold);
+      const double press = 1.3 * pcold;
+      const double eps = ecold + (press - pcold) / ((eos.Gamma_th - 1.0) * rho);
+      const double W = 1.0 / sqrt(1.0 - 0.2 * 0.2);
+      const double Z = (rho * (1.0 + eps) + press) * W * W;
+      ghl_primitive_quantities source;
+      ghl_initialize_primitives(rho, press, eps, 0.2, 0, 0, 0, 0, 0,
+            ghl_hybrid_compute_entropy_function(&eos, rho, press), 0.1, 0, &source);
+      source.u0 = W;
+      // Unmagnetized Minkowski conservative equations provide the oracle.
+      ghl_conservative_quantities cons;
+      ghl_initialize_conservatives(rho * W, Z - press - rho * W,
+                                   0.2 * Z, 0, 0, source.entropy * W, 0, &cons);
+      const ghl_con2prim_id_t methods[] = {
+        ghl_con2prim_id_Noble1D, ghl_con2prim_id_Noble2D,
+        ghl_con2prim_id_Noble1D_entropy
+      };
+      for(int m = 0; m < 3; ++m) {
+        ghl_primitive_quantities recovered = source;
+        recovered.press *= 0.9;
+        recovered.eps *= 0.9;
+        ghl_con2prim_diagnostics diagnostics;
+        ghl_initialize_diagnostics(&diagnostics);
+        const ghl_error_codes_t error = ghl_con2prim_hybrid_select_method(
+              methods[m], &params, &eos, &metric, &metric_aux, &cons,
+              &recovered, &diagnostics);
+        if(m == 2 && regime != 0) {
+          if(error != ghl_error_invalid_eos_type
+             || diagnostics.which_routine != ghl_con2prim_id_None) {
+            ghl_error("Noble1D_entropy accepted unsupported EOS metadata\n");
+          }
+          recovered = source;
+          ghl_initialize_diagnostics(&diagnostics);
+          ghl_abort_if_error(ghl_con2prim_hybrid_multi_method(
+                &params, &eos, &metric, &metric_aux, &cons, &recovered, &diagnostics));
+          if(diagnostics.which_routine != backups[0] || !diagnostics.backup[0]) {
+            ghl_error("Unsupported entropy EOS did not reach its energy backup\n");
+          }
+        }
+        else {
+          ghl_abort_if_error(error);
+          if(diagnostics.which_routine != methods[m] || diagnostics.n_iter < 1) {
+            ghl_error("Noble roundtrip diagnostics mismatch\n");
+          }
+        }
+        check_close("Noble EOS rho", rho, recovered.rho, 2e-10);
+        check_close("Noble EOS pressure", press, recovered.press, 2e-10);
+        check_close("Noble EOS eps", eps, recovered.eps, 2e-10);
+        check_close("Noble EOS velocity", 0.2, recovered.vU[0], 2e-10);
+      }
+    }
+  }
+}
+
 static void test_Font1D_roundtrips(void) {
   const ghl_con2prim_id_t None = ghl_con2prim_id_None;
   const ghl_con2prim_id_t backups[3] = { None, None, None };
@@ -799,5 +1011,16 @@ int main(int argc, char **argv) {
   test_Noble_finalizer_speed_limit();
   test_utilde_speed_limit_monotonicity();
   test_Noble1D_entropy2();
+  test_Noble_hybrid_derivatives();
+  test_Noble_newton_budgets();
+  test_Noble_EOS_domains();
+
+  free(expected_errors); free(lapse); free(betax);
+  free(betay); free(betaz); free(gxx);
+  free(gxy); free(gxz); free(gyy);
+  free(gyz); free(gzz); free(Bx);
+  free(By); free(Bz); free(rho_star);
+  free(tau); free(S_x); free(S_y);
+  free(S_z);
   return 0;
 }

@@ -684,5 +684,28 @@ int main(int argc, char **argv) {
          " enforce_primitive_limits_and_compute_u0_output.bin. We should try to make this a symlink or something.\n");
   ignore = system("cp enforce_primitive_limits_and_compute_u0_output.bin compute_conservs_and_Tmunu_input.bin");
 
+  free(lapse); free(betax); free(betay);
+  free(betaz); free(gxx); free(gxy);
+  free(gxz); free(gyy); free(gyz);
+  free(gzz); free(Ttt); free(Ttx);
+  free(Tty); free(Ttz); free(Txx);
+  free(Txy); free(Txz); free(Tyy);
+  free(Tyz); free(Tzz); free(rho_b);
+  free(press); free(eps); free(vx);
+  free(vy); free(vz); free(Bx);
+  free(By); free(Bz); free(entropy);
+  free(rho_star); free(tau); free(S_x);
+  free(S_y); free(S_z); free(ent_star);
+  free(rho_b_orig); free(press_orig); free(eps_orig);
+  free(vx_orig); free(vy_orig); free(vz_orig);
+  free(ent_orig); free(rho_star_orig); free(tau_orig);
+  free(S_x_orig); free(S_y_orig); free(S_z_orig);
+  free(ent_star_orig); free(rho_b_pert); free(press_pert);
+  free(eps_pert); free(vx_pert); free(vy_pert);
+  free(vz_pert); free(Bx_pert); free(By_pert);
+  free(Bz_pert); free(ent_pert); free(rho_star_pert);
+  free(tau_pert); free(S_x_pert); free(S_y_pert);
+  free(S_z_pert); free(ent_star_pert); free(u0);
+  free(c2p_check);
   return 0;
 }

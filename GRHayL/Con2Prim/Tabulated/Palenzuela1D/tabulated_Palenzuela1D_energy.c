@@ -1,25 +1,25 @@
 #include "../../utils_Palenzuela1D.h"
 
-/*
- * Function   : compute_rho_P_eps_T_W_energy
- * Author     : Leo Werneck
+/**
+ * @ingroup c2p_internal
+ * @brief Evaluate tabulated thermodynamics and W for the energy residual.
+ * @author Leo Werneck
  *
- * This function is used to compute rho, P, eps, T, and W from x and the input
- * conservative variables, using the specific internal energy to recover the
- * temperature.
+ * When temperature is evolved, uses specific internal energy to invert the EOS for
+ * temperature. Otherwise evaluates the EOS at the supplied temperature.
+ * The incoming primitive electron fraction is bounded, not reconstructed.
+ * Records the EOS evaluation status in fparams->eos_error.
  *
- * Parameters : x       - Current guess for the root of f(x).
- *            : fparams - Parameters used to evaluate f(x) (see palenzuela.h).
- *            : rho_ptr - Stores the result for rho.
- *            : P_ptr   - Stores the result for P.
- *            : eps_ptr - Stores the result for eps.
- *            : T_ptr   - Stores the result for T.
- *            : W_ptr   - Stores the result for W.
+ * @param[in] x Trial value of hW
+ * @param[in] params Recovery parameters supplying the Lorentz-factor cap
+ * @param[in] eos Tabulated EOS parameters
+ * @param[in] cons_undens Undensitized conservatives
+ * @param[in,out] fparams Normalized contractions and callback state from roots.h
+ * @param[in,out] prims Primitive state receiving rho, pressure, and internal energy
+ * @param[out] W_ptr Limited Lorentz factor
  *
- * Returns    : Nothing.
- *
- * References : [1] Palenzuela et al. (2015) arXiv:1505.01607
- *            : [2] Siegel et al. (2018) arXiv:1712.07538
+ * See Palenzuela et al. (2015), arXiv:1505.01607, and Siegel et al. (2018),
+ * arXiv:1712.07538.
  */
 static void
 compute_rho_P_eps_T_W_energy(
@@ -63,14 +63,8 @@ compute_rho_P_eps_T_W_energy(
   *W_ptr   = W;
 }
 
-/*
- * Function : ghl_tabulated_Palenzuela1D_energy
- * Author   : Leo Werneck
- *
- * This is a wrapper function around the ghl_tabulated_Palenzuela1D that performs
- * a primitive recovery using the Palenzuela et al. scheme using the specific
- * energy to recover the temperature. See file ghl_tabulated_Palenzuela1D.c for
- * further details.
+/* ghl_tabulated_Palenzuela1D_energy selects the energy callback for
+ * ghl_tabulated_Palenzuela1D. See ghl_con2prim.h for the public calling contract.
  */
 ghl_error_codes_t ghl_tabulated_Palenzuela1D_energy(
       const ghl_parameters *restrict params,

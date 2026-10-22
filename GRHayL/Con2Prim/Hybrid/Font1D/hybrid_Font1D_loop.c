@@ -11,7 +11,8 @@
  *
  * @param[in] eos pointer to ghl_eos_parameters struct
  *
- * @param[in] maxits maximum number of iterations
+ * @param[in] maxits maximum outer iterations and maximum density iterations
+ *                   within each outer iteration
  *
  * @param[in] tol maximum allowed error for convergence
  *
@@ -25,7 +26,7 @@
  *
  * @param[in] B2 magnetic quantity \f$ B^2 \f$
  *
- * @param[in] cons pointer to ghl_conservative_quantities struct containing
+ * @param[in] cons_undens pointer to ghl_conservative_quantities struct containing
  *                 the input conservative variables; its density component is
  *                 denoted \f$ D \f$ and its momentum components
  *                 are denoted \f$ S_i \f$ below
@@ -47,29 +48,38 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
       const double sdots,
       const double BdotS2,
       const double B2,
-      const ghl_conservative_quantities *restrict cons,
+      const ghl_conservative_quantities *restrict cons_undens,
       const double rhob_in,
       double *restrict rhob_out_ptr,
       int *restrict n_iter) {
-  bool Fontcheck=true;
+  bool Fontcheck = true;
 
   int itcount = 0, j0, j1;
   double W0, Sf20, rhob0, rhob1, h, P_cold, eps_cold;
-  double W   = W_in;
+  double W = W_in;
   double Sf2 = Sf2_in;
-  double rhob_out=0;
+  double rhob_out = rhob_in;
+  *rhob_out_ptr = rhob_in;
+  if(!isfinite(cons_undens->rho) || cons_undens->rho <= 0.0) {
+    return ghl_error_neg_rho;
+  }
+  if(!isfinite(rhob_in) || rhob_in <= 0.0 || !isfinite(W) || !isfinite(Sf2) || Sf2 < 0.0
+     || !isfinite(tol) || tol <= 0.0) {
+    return ghl_error_c2p_singular;
+  }
 
   while(Fontcheck && itcount < maxits) {
-  /**
-   * # Function Step-by-Step
-   *
-   * This function iterates for maxits iterations or converging to within
-   * tolerance of a solution.
-   */
+    /**
+     * # Function Step-by-Step
+     *
+     * This function iterates for maxits iterations or converging to within
+     * tolerance of a solution.
+     */
 
     itcount++;
-    W0    = W;
-    Sf20  = Sf2;
+    (*n_iter)++;
+    W0 = W;
+    Sf20 = Sf2;
     rhob1 = rhob_in;
 
     /**
@@ -100,22 +110,34 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
      * \f]
      *
      * where \f$ \rho_0 \f$ is the value from the previous iteration and \f$ t \f$
-     * is the tolerance.
+     * is the tolerance. Each subloop is limited to maxits updates; invalid
+     * density or enthalpy returns a recoverable error.
      */
-    j1 = ghl_hybrid_find_polytropic_index(eos,rhob1);
+    j1 = ghl_hybrid_find_polytropic_index(eos, rhob1);
 
+    int density_iterations = 0;
     do {
+      if(density_iterations++ >= maxits) {
+        return ghl_error_c2p_max_iter;
+      }
       rhob0 = rhob1;
-      j0    = j1;
+      j0 = j1;
 
       ghl_hybrid_compute_P_cold_and_eps_cold(eos, rhob0, &P_cold, &eps_cold);
-      h = 1.0 + eps_cold + P_cold/rhob0;
+      h = 1.0 + eps_cold + P_cold / rhob0;
+      if(!isfinite(h) || h <= 0.0) {
+        return ghl_error_c2p_singular;
+      }
 
-      rhob1 = cons->rho / sqrt(1.0 + Sf20 / SQR(cons->rho * h));
+      rhob1 = cons_undens->rho / sqrt(1.0 + Sf20 / SQR(cons_undens->rho * h));
+      if(!isfinite(rhob1) || rhob1 <= 0.0) {
+        return ghl_error_c2p_singular;
+      }
+      *rhob_out_ptr = rhob1;
 
-      j1 = ghl_hybrid_find_polytropic_index(eos,rhob1);
+      j1 = ghl_hybrid_find_polytropic_index(eos, rhob1);
 
-    }  while(fabs(rhob1-rhob0) > rhob1*tol || j1 != j0);
+    } while(fabs(rhob1 - rhob0) > fabs(rhob1) * tol || j1 != j0);
 
     rhob_out = rhob1;
 
@@ -150,16 +172,23 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
      * previous and current iterations, respectively.
      */
     ghl_hybrid_compute_P_cold_and_eps_cold(eos, rhob_out, &P_cold, &eps_cold);
-    h = 1.0 + eps_cold + P_cold/rhob_out;
+    h = 1.0 + eps_cold + P_cold / rhob_out;
+    if(!isfinite(h) || h <= 0.0) {
+      return ghl_error_c2p_singular;
+    }
 
-    W = sqrt(Sf20 + SQR(cons->rho * h));
-    Sf2 = (SQR(W)*sdots + BdotS2*(B2 + 2.0*W))/SQR(W+B2);
+    W = sqrt(Sf20 + SQR(cons_undens->rho * h));
+    Sf2 = (SQR(W) * sdots + BdotS2 * (B2 + 2.0 * W)) / SQR(W + B2);
+    if(!isfinite(W) || !isfinite(Sf2) || Sf2 < 0.0) {
+      return ghl_error_c2p_singular;
+    }
 
-    if (fabs(W-W0) < W*tol && fabs(Sf20-Sf2) < Sf2*tol) Fontcheck=false;
+    if(fabs(W - W0) < W * tol && fabs(Sf20 - Sf2) < Sf2 * tol) {
+      Fontcheck = false;
+    }
   }
 
-  *n_iter += itcount;
-  if(Fontcheck || itcount >= maxits) {
+  if(Fontcheck) {
     *rhob_out_ptr = rhob_out;
     return ghl_error_c2p_max_iter;
   }

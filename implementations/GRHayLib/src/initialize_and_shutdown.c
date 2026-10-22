@@ -9,7 +9,10 @@
 ghl_parameters *ghl_params;
 ghl_eos_parameters *ghl_eos;
 
-static int parse_C2P_routine_keyword(const char *restrict routine_name);
+/* A skipped initializer leaves allocation and cleanup to the external owner. */
+static bool grhaylib_owns_state = false;
+
+static ghl_con2prim_id_t parse_C2P_routine_keyword(const char *restrict routine_name);
 static int parse_eos_table_type_keyword(const char *restrict table_type);
 
 void GRHayLib_paramcheck() {
@@ -84,17 +87,20 @@ void GRHayLib_paramcheck() {
         CCTK_VERROR("Parameter Gamma_ppoly_in[%d] must be set in the parameter file and be non-negative.", neos-1);
     }
 
-    if(CCTK_EQUALS(con2prim_routine, "Noble1D_entropy2")
+    if((CCTK_EQUALS(con2prim_routine, "Noble1D_entropy")
+        || CCTK_EQUALS(con2prim_routine, "Noble1D_entropy2"))
        && (neos != 1 || Gamma_th != Gamma_ppoly_in[0])) {
-      CCTK_ERROR("Noble1D_entropy2 requires neos=1 and Gamma_th=Gamma_ppoly_in[0].");
+      CCTK_VERROR("%s requires neos=1 and Gamma_th=Gamma_ppoly_in[0].",
+                  con2prim_routine);
     }
     for(int i = 0; i < 3; i++) {
-      if(CCTK_EQUALS(con2prim_backup_routines[i], "Noble1D_entropy2")
+      if((CCTK_EQUALS(con2prim_backup_routines[i], "Noble1D_entropy")
+          || CCTK_EQUALS(con2prim_backup_routines[i], "Noble1D_entropy2"))
          && (neos != 1 || Gamma_th != Gamma_ppoly_in[0])) {
         CCTK_VERROR(
-              "con2prim_backup_routines[%d] = Noble1D_entropy2 requires "
+              "con2prim_backup_routines[%d] = %s requires "
               "neos=1 and Gamma_th=Gamma_ppoly_in[0].",
-              i);
+              i, con2prim_backup_routines[i]);
       }
     }
 
@@ -184,11 +190,20 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
 
   DECLARE_CCTK_PARAMETERS;
 
-  ghl_params = (ghl_parameters *)malloc(sizeof(ghl_parameters));
-  ghl_eos = (ghl_eos_parameters *)malloc(sizeof(ghl_eos_parameters));
+  ghl_params = (ghl_parameters *)calloc(1, sizeof(*ghl_params));
+  ghl_eos = (ghl_eos_parameters *)calloc(1, sizeof(*ghl_eos));
+  if(ghl_params == NULL || ghl_eos == NULL) {
+    free(ghl_eos);
+    free(ghl_params);
+    ghl_eos = NULL;
+    ghl_params = NULL;
+    grhaylib_owns_state = false;
+    CCTK_ERROR("GRHayLib could not allocate the parameter and EOS structs.");
+    return;
+  }
 
-  const int main = parse_C2P_routine_keyword(con2prim_routine);
-  int backups[3];
+  const ghl_con2prim_id_t main = parse_C2P_routine_keyword(con2prim_routine);
+  ghl_con2prim_id_t backups[3];
   for(int i=0; i<3; i++)
     backups[i] = parse_C2P_routine_keyword(con2prim_backup_routines[i]);
 
@@ -211,9 +226,6 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
       ghl_params->ppm_shock_k0      = ppm_shock_k0;
 
   if (CCTK_EQUALS(EOS_type, "Simple")) {
-    const ghl_con2prim_id_t Font1D = ghl_con2prim_id_Font1D;
-    if(main == Font1D || backups[0] == Font1D || backups[1] == Font1D || backups[2] == Font1D)
-      CCTK_VERROR("Error: Font1D routine is incompatible with ideal fluid EOS. Please choose a different Con2Prim routine.");
     ghl_con2prim_multi_method = ghl_con2prim_hybrid_multi_method;
     ghl_abort_if_error(ghl_initialize_simple_eos_functions_and_params(
           rho_b_atm, rho_b_min, rho_b_max,
@@ -249,10 +261,15 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
     CCTK_VERROR("GRHayLib parameter EOS_type has an unsupported type. Please check"
                 " the list of parameter options in the param.ccl.");
   }
+
+  grhaylib_owns_state = true;
 }
 
 void GRHayLib_terminate(CCTK_ARGUMENTS) {
-  if(ghl_eos->eos_type == ghl_eos_tabulated) {
+  if(!grhaylib_owns_state)
+    return;
+
+  if(ghl_eos != NULL && ghl_eos->eos_type == ghl_eos_tabulated) {
     ghl_tabulated_free_memory(ghl_eos);
   }
   free(ghl_eos);
@@ -260,9 +277,10 @@ void GRHayLib_terminate(CCTK_ARGUMENTS) {
 
   ghl_eos = NULL;
   ghl_params = NULL;
+  grhaylib_owns_state = false;
 }
 
-int parse_C2P_routine_keyword(const char *restrict routine_name) {
+static ghl_con2prim_id_t parse_C2P_routine_keyword(const char *restrict routine_name) {
   if (CCTK_EQUALS(routine_name, "None")) {
     return ghl_con2prim_id_None;
   } else if (CCTK_EQUALS(routine_name, "Noble2D")) {
@@ -284,7 +302,7 @@ int parse_C2P_routine_keyword(const char *restrict routine_name) {
   } else if (CCTK_EQUALS(routine_name, "Newman1D_entropy")) {
     return ghl_con2prim_id_Newman1D_entropy;
   }
-  return -100;
+  return (ghl_con2prim_id_t)-100;
 }
 
 static int parse_eos_table_type_keyword(const char *restrict table_type) {

@@ -245,4 +245,13 @@ int main(int argc, char **argv) {
   fwrite(S_z,      sizeof(double), arraylength, input);
 
   fclose(input);
+
+  free(gxx); free(gxy); free(gxz);
+  free(gyy); free(gyz); free(gzz);
+  free(lapse); free(betax); free(betay);
+  free(betaz); free(rho_b); free(press);
+  free(vx); free(vy); free(vz);
+  free(Bx); free(By); free(Bz);
+  free(rho_star); free(tau); free(S_x);
+  free(S_y); free(S_z);
 }

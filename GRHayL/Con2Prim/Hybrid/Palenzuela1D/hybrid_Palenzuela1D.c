@@ -1,18 +1,18 @@
 #include "../../utils_Palenzuela1D.h"
 
-/*
- * Function : froot_hybrid
- * Author   : Leo Werneck
+/**
+ * @ingroup c2p_internal
+ * @brief Evaluate the Palenzuela residual x - hW for the selected EOS callback.
+ * @author Leo Werneck
  *
- * Computes Eq. (33) of Siegel et al., 2018 (arXiv: 1712.07538). The function
- * arguments follow the standards set by the roots.h file.
- *
- * Parameters : x        - The point at which f(x) is evaluated.
- *            : fparams  - Pointer to parameter structed containing auxiliary
- *                         variables needed by this function (see definition
- *                         above).
- *
- * Returns    : Nothing.
+ * Implements Eq. (33) of Siegel et al. (2018), arXiv:1712.07538.
+ * @param[in] x Trial value of hW
+ * @param[in] params Recovery and velocity-limit parameters
+ * @param[in] eos EOS parameters
+ * @param[in] cons_undens Undensitized conservatives
+ * @param[in,out] fparams Normalized contractions and thermodynamic callback
+ * @param[in,out] prims Primitive state evaluated at x
+ * @return Residual x - (1 + eps + P/rho) W
  */
 static inline double
 froot(
@@ -31,25 +31,22 @@ froot(
   return x - (1.0 + prims->eps + prims->press/prims->rho)*W;
 }
 
-/* Function    : ghl_tabulated_Palenzuela1D
- * Author      : Leo Werneck
+/**
+ * @ingroup c2p_internal
+ * @brief Recover hybrid primitives with a Palenzuela thermodynamic callback.
+ * @author Leo Werneck
  *
- * Performs a primitive recovery using the Palenzuela et al. scheme.
+ * @param[in] compute_rho_P_eps_W Internal energy/entropy callback for trial x
+ * @param[in] params Recovery and velocity-limit parameters
+ * @param[in] eos EOS parameters
+ * @param[in] metric_adm ADM metric
+ * @param[in] cons_undens Undensitized conservatives
+ * @param[in,out] prims Supplies magnetic fields and receives recovered primitives
+ * @param[in,out] diagnostics Initialized recovery diagnostics
+ * @return ghl_success on recovery; otherwise a root-finding or EOS error.
  *
- * Parameters  : compute_rho_P_eps_W - Function pointer provided by the user
- *             : grhyal_params       - GRHayL parameters struct
- *             : eos                 - EOS parameters struct
- *             : metric              - ghl_metric_quantities struct containing local
- *                                     metric data (gamma_{ij}, g_{mu nu}, etc).
- *             : cons_undens         - ghl_conservative_quantities struct containing
- *                                     local undensitized conservative quantities.
- *             : prims               - ghl_primitive_quantities struct containing
- *                                     local hydrodynamic quantities. Stores the
- *                                     result if the root-finding succeeds.
- *             : diagnostics         - Pointer to con2prim diagnostics struct.
- *
- * References  : [1] Palenzuela et al. (2015) arXiv:1505.01607
- *             : [2] Siegel et al. (2018) arXiv:1712.07538
+ * See Palenzuela et al. (2015), arXiv:1505.01607, and Siegel et al. (2018),
+ * arXiv:1712.07538. This private callback interface is not an installed API.
  */
 ghl_error_codes_t ghl_hybrid_Palenzuela1D(
       void compute_rho_P_eps_W(

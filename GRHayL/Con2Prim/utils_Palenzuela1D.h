@@ -4,19 +4,20 @@
 #include "ghl_con2prim.h"
 #include "roots.h"
 
-/*
- * Function   : compute_rho_W_from_x_and_conservatives
- * Author     : Leo Werneck
+/**
+ * @ingroup c2p_internal
+ * @brief Compute rest-mass density and Lorentz factor from a Palenzuela iterate.
+ * @author Leo Werneck
  *
  * Computes rho and W from x and the conservative variables using Eq. (42)
  * of https://arxiv.org/pdf/1712.07538.pdf and rho = D/W.
  *
- * Parameters : x        - Pointer to fparams_struct.
- *            : fparams  - Array containing v_{i}.
- *            : rho_ptr  - Stores the output of rho.
- *            : W_ptr    - Stores the output of W.
- *
- * Returns    : Nothing.
+ * @param[in] x Trial value of h W
+ * @param[in] params Parameters supplying the maximum Lorentz factor
+ * @param[in] cons_undens Undensitized conservatives supplying D = rho W
+ * @param[in] fparams Normalized contractions r, s, and t from roots.h
+ * @param[out] rho_ptr Rest-mass density D/W
+ * @param[out] W_ptr Lorentz factor, limited to [1, max_Lorentz_factor]
  */
 static inline void
 compute_rho_W_from_x_and_conservatives(

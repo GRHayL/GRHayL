@@ -1,20 +1,21 @@
 #include "ghl.h"
 
-/*
- * Function : compute_BU_SU_Bsq_Ssq_BdotS
- * Author   : Leo Werneck
+/**
+ * @ingroup c2p_internal
+ * @brief Compute momentum and magnetic contractions for primitive recovery.
+ * @author Leo Werneck
  *
- * Compute S^{i}, B^2, S^2, B.S = B^{i}S_{i}.
+ * If S_i gamma^ij S_j > (tau + D)^2, rescale a local copy of S_i to give
+ * S^2 = 0.9999 (tau + D)^2. SU, Ssq, and BdotS all use that local momentum;
+ * cons_undens is unchanged. Magnetic fields use GRHayL's stored convention.
  *
- * Parameters : metric       - Metric quantities
- *            : cons_undens  - Undensitized conservatives
- *            : prims        - Input primitives (for B^{i})
- *            : SU           - Stores S^{i}.
- *            : Bsq          - Stores B^2.
- *            : Ssq          - Stores S^2.
- *            : BdotS        - Stores B.S = B^{i}S_{i}.
- *
- * Returns    : Nothing.
+ * @param[in] metric_adm ADM metric, including inverse spatial metric
+ * @param[in] cons_undens Undensitized conservatives (D, tau, S_i)
+ * @param[in] prims Primitives supplying the contravariant magnetic field
+ * @param[out] SU Array of three raised, locally limited momentum components
+ * @param[out] Bsq Magnetic norm B^i gamma_ij B^j
+ * @param[out] Ssq Norm of the locally limited momentum
+ * @param[out] BdotS Contraction B^i S_i using the locally limited momentum
  */
 void ghl_compute_SU_Bsq_Ssq_BdotS(
       const ghl_metric_quantities *restrict metric_adm,

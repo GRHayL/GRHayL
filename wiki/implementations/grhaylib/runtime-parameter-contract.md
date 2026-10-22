@@ -38,25 +38,28 @@ Con2Prim/EOS compatibility, and entropy-gated methods.
 6. Copies PPM Cactus parameters into `ghl_params`.
 7. Initializes EOS parameters and EOS-dependent dispatch for `EOS_type`.
 
-Both allocations use unchecked `malloc`, not zero-initializing allocation.
-There is no GRHayLib-local rollback path if setup later errors. Core tabulated
+Allocations use checked `calloc`; allocation failure frees any partial storage,
+clears the globals, and reports a Cactus error. Later fatal setup errors have no
+GRHayLib-local rollback path. Core tabulated
 initialization accepts fresh uninitialized storage and publishes an empty tagged
 aggregate after failure; see the [tabulated table contract](../../gems/eos/tabulated-table-contract.md).
 Treat successful initialization as a precondition for consumers.
 
-`GRHayLib_terminate` owns shutdown:
+`GRHayLib_terminate` returns without touching externally owned state when the
+local initializer did not complete. For locally owned state:
 
-1. If `ghl_eos->eos_type == ghl_eos_tabulated`, call
+1. If `ghl_eos` is non-null and `ghl_eos->eos_type == ghl_eos_tabulated`, call
    `ghl_tabulated_free_memory(ghl_eos)` before freeing EOS storage.
 2. Free `ghl_eos`.
 3. Free `ghl_params`.
-4. Set both globals to `NULL`.
+4. Set both globals to `NULL` and clear local ownership.
 
 No other owner is visible for these global allocations in GRHayLib source.
 The schedule skips `GRHayLib_initialize` when `ID_converter_ILGRMHD` is active,
 but still schedules `GRHayLib_terminate`; this repository does not contain that
-thorn or prove who initializes these globals on the skipped path. Safe ownership
-there needs downstream confirmation before runtime claims.
+thorn or prove who initializes these globals on the skipped path. The external
+initializer owns cleanup there; validating its consumers still needs downstream
+runtime evidence.
 
 ## `ghl_initialize_params` Map
 
@@ -239,7 +242,8 @@ entropy-required diagnostic family.
 Entropy methods require `evolve_entropy`. `GRHayLib_paramcheck` rejects
 `Noble1D_entropy`, `Noble1D_entropy2`, `Palenzuela1D_entropy`, and
 `Newman1D_entropy` as main or backup choices when `evolve_entropy` is false.
-`Noble1D_entropy2` is available for Simple EOS and equivalent one-piece Hybrid
+`Noble1D_entropy` and `Noble1D_entropy2` are available for Simple EOS and
+equivalent one-piece Hybrid
 metadata with `Gamma_th == Gamma_ppoly_in[0]`; parameter checks reject other
 Hybrid metadata and tabulated EOS for both main and backup selections.
 
@@ -283,12 +287,12 @@ source changes:
 
 - `schedule.ccl` conditionally skips initialization for
   `ID_converter_ILGRMHD` but always schedules termination. Local files do not
-  establish alternate allocation ownership or a safe terminate precondition.
+  contain the external initializer. Termination frees only locally owned state.
 - Simple/hybrid Core EOS initialization sets `Y_e_atm` and `T_atm` to zero
   placeholders before the built constant-atmosphere routine can copy them.
-- `GRHayLib_terminate` calls tabulated cleanup only after successful state is
-  assumed; neither global-pointer null checks nor partial-initialization guards
-  are present.
+- `GRHayLib_terminate` checks local ownership and pointer presence before
+  tabulated cleanup; external initialization and later fatal setup failures
+  still require downstream lifecycle verification.
 
 ## Local Ground Truth
 

@@ -141,32 +141,4 @@ static inline int nn__predict_y01_clamped_or_nan(
   return 1;
 }
 
-static inline float nn__decode_linear_output(
-      const ghl_c2p_nn_model *restrict model,
-      size_t output_idx,
-      float y01) {
-  const float lo = model->out_lo[output_idx];
-  const float hi = model->out_hi[output_idx];
-  const float inv = model->out_invrng[output_idx];
-  if(!isfinite(lo) || !isfinite(hi) || !isfinite(inv) || !(inv > 0.0f) || !(hi > lo)) {
-    return (float)NAN;
-  }
-  return lo + y01 / inv;
-}
-
-static inline float nn__decode_output(
-      const ghl_c2p_nn_model *restrict model,
-      size_t output_idx,
-      float y01) {
-  const int kind = model->out_kind[output_idx];
-  if(kind == GHL_NN_C2P_OUT_LINEAR) {
-    return nn__decode_linear_output(model, output_idx, y01);
-  }
-  if(kind == GHL_NN_C2P_OUT_LOG_LINEAR) {
-    const float logv = nn__decode_linear_output(model, output_idx, y01);
-    return isfinite(logv) ? expf(logv) : (float)NAN;
-  }
-  return (float)NAN;
-}
-
 #endif // GHL_NN_C2P_H

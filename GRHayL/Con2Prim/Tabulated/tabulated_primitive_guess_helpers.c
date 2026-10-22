@@ -4,9 +4,16 @@
 static void set_tabulated_atmosphere_guess(
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict metric_adm,
+      const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims) {
 
   ghl_set_prims_to_constant_atm(eos, prims);
+  // A failed initial guess must not replace usable conserved composition.
+  if(isfinite(cons_undens->rho) && cons_undens->rho > 0.0) {
+    const double Y_e = cons_undens->Y_e / cons_undens->rho;
+    if(isfinite(Y_e))
+      prims->Y_e = ghl_clamp(Y_e, eos->Y_e_min, eos->Y_e_max);
+  }
   prims->vU[0] = -metric_adm->betaU[0];
   prims->vU[1] = -metric_adm->betaU[1];
   prims->vU[2] = -metric_adm->betaU[2];
@@ -43,7 +50,7 @@ void ghl_tabulated_primitive_guess_from_x(
      || !isfinite(aux->q) || !isfinite(aux->r) || !isfinite(aux->s) || !isfinite(aux->t)
      || !isfinite(aux->B_squared) || !isfinite(aux->BdotS) || !isfinite(aux->SU[0])
      || !isfinite(aux->SU[1]) || !isfinite(aux->SU[2])) {
-    set_tabulated_atmosphere_guess(eos, metric_adm, prims);
+    set_tabulated_atmosphere_guess(eos, metric_adm, cons_undens, prims);
     return;
   }
 
@@ -57,12 +64,12 @@ void ghl_tabulated_primitive_guess_from_x(
   const double numerator = x_squared * r + (2.0 * x + s) * t * t;
   const double denominator = x_squared * x_plus_s * x_plus_s;
   if(!isfinite(numerator) || !isfinite(denominator) || denominator == 0.0) {
-    set_tabulated_atmosphere_guess(eos, metric_adm, prims);
+    set_tabulated_atmosphere_guess(eos, metric_adm, cons_undens, prims);
     return;
   }
   double Wminus2 = 1.0 - numerator / denominator;
   if(!isfinite(Wminus2)) {
-    set_tabulated_atmosphere_guess(eos, metric_adm, prims);
+    set_tabulated_atmosphere_guess(eos, metric_adm, cons_undens, prims);
     return;
   }
   Wminus2 = ghl_clamp(Wminus2, params->inv_sq_max_Lorentz_factor, 1.0);
@@ -76,13 +83,13 @@ void ghl_tabulated_primitive_guess_from_x(
              + W * (1.0 + q - s + t * t / (2.0 * x * x) + s / (2.0 * W * W));
 
   if(!isfinite(prims->Y_e) || !isfinite(prims->eps)) {
-    set_tabulated_atmosphere_guess(eos, metric_adm, prims);
+    set_tabulated_atmosphere_guess(eos, metric_adm, cons_undens, prims);
     return;
   }
 
   if(ghl_tabulated_enforce_bounds_rho_Ye_eps == NULL
      || ghl_tabulated_compute_P_S_T_from_eps == NULL) {
-    set_tabulated_atmosphere_guess(eos, metric_adm, prims);
+    set_tabulated_atmosphere_guess(eos, metric_adm, cons_undens, prims);
     return;
   }
 
@@ -108,7 +115,7 @@ void ghl_tabulated_primitive_guess_from_x(
      || !isfinite(prims->press) || !isfinite(prims->entropy)
      || !isfinite(prims->temperature) || !isfinite(z) || z == 0.0
      || !isfinite(velocity_denominator) || velocity_denominator == 0.0) {
-    set_tabulated_atmosphere_guess(eos, metric_adm, prims);
+    set_tabulated_atmosphere_guess(eos, metric_adm, cons_undens, prims);
     return;
   }
   double utildeU[3] = {
@@ -117,12 +124,12 @@ void ghl_tabulated_primitive_guess_from_x(
     W * (aux->SU[2] + aux->BdotS * prims->BU[2] / z) / velocity_denominator,
   };
   if(!isfinite(utildeU[0]) || !isfinite(utildeU[1]) || !isfinite(utildeU[2])) {
-    set_tabulated_atmosphere_guess(eos, metric_adm, prims);
+    set_tabulated_atmosphere_guess(eos, metric_adm, cons_undens, prims);
     return;
   }
   ghl_limit_utilde_and_compute_v(params, metric_adm, utildeU, prims);
   if(!isfinite(prims->u0) || !isfinite(prims->vU[0]) || !isfinite(prims->vU[1])
      || !isfinite(prims->vU[2])) {
-    set_tabulated_atmosphere_guess(eos, metric_adm, prims);
+    set_tabulated_atmosphere_guess(eos, metric_adm, cons_undens, prims);
   }
 }

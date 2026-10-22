@@ -17,7 +17,7 @@ where applicable.
 | `None` | Enum and `"None"` name exist; no solver declaration or definition. | No dispatch/build entry; first `None` backup stops retries. | Not in Doxygen solver tables; tests use it as no-backup sentinel. | Allowed only for backup keyword; parser maps it. | Sentinel only, not solver. |
 | `Noble2D` | Enum/name plus hybrid and tabulated declarations and definitions exist. | Both selector cases and both manifest entries exist. | Both Doxygen tables list it. Hybrid selected-method, hybrid failure/backup-attempt, and tabulated tests exercise it. | Main/backup keywords and parser accept it; family checks allow it for simple, hybrid, and tabulated EOS. | Hybrid/simple supported; tabulated supported when HDF5 enabled. |
 | `Noble1D` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only. | Hybrid Doxygen table and hybrid selected-method test list it. | Main/backup keywords and parser accept it; tabulated parameter check rejects it. | Hybrid/simple supported. |
-| `Noble1D_entropy` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only. | Hybrid Doxygen table and hybrid selected-method test list it. | Main/backup keywords and parser accept it; tabulated check rejects it and GRHayLib requires `evolve_entropy`. | Hybrid/simple supported with valid entropy conservative input; Core dispatch does not gate on `params->evolve_entropy`. |
+| `Noble1D_entropy` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only. | Hybrid Doxygen table and hybrid selected-method test list it. | Main/backup keywords and parser accept it; GRHayLib requires `evolve_entropy` and rejects incompatible hybrid metadata and tabulated EOS. | Supported only for a one-piece constant-Gamma EOS with `Gamma_th == Gamma_ppoly[0]` and valid entropy conservative input; incompatible metadata returns `ghl_error_invalid_eos_type`. Core dispatch does not gate on `params->evolve_entropy`. |
 | `Noble1D_entropy2` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only; the manifest includes the density residual and wrapper. | Hybrid Doxygen table lists it. The hard-coded hybrid test covers compatible Simple/Hybrid recovery and rejects incompatible hybrid metadata. | Main/backup keywords and parser accept it; GRHayLib requires entropy and rejects incompatible hybrid metadata. | Supported only for a one-piece constant-Gamma EOS with `Gamma_th == Gamma_ppoly[0]`. Direct recovery returns a positive unclamped root; the standard post-recovery limiter owns configured density bounds. |
 | `Font1D` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only. | Hybrid Doxygen table and hybrid selected-method test list it. `unit_test_hybrid_failure.c` independently checks curved zero-momentum, magnetized, and below-EOS-density round trips. | Main/backup keywords and parser accept it; simple and tabulated checks reject it. | Hybrid supported; cold pressure/energy use bounded EOS density, but `P/rho` in the enthalpy closure uses the recovered conservation-owned density; raw Doxygen says simple excludes it. |
 | `Palenzuela1D` | Enum/name plus hybrid/tabulated energy declarations and definitions exist. | Both selector/build paths exist. | Both Doxygen tables and hybrid/tabulated tests list it. | Main/backup keywords and parser accept it for all EOS families. | Hybrid/simple supported; tabulated supported when HDF5 enabled. |
@@ -65,7 +65,8 @@ Selection fields live in `GRHayL/include/ghl.h` and are initialized by
   velocity limiting and related recovery helpers.
 - `con2prim_max_iterations` and `con2prim_solver_tolerance`: defaulted in
   `initialize_params.c`; consumed by Noble initialization paths. Current
-  Palenzuela and Newman paths use local hard-coded iteration/tolerance values.
+  Font, Palenzuela, and Newman paths use local hard-coded iteration/tolerance
+  values. Font bounds both its outer iteration and each inner density solve.
 
 Tabulated EOS also carries `root_finding_precision` in `ghl_eos_parameters`
 (`GRHayL/include/ghl.h`) and initializes it in [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c);
@@ -117,11 +118,12 @@ initialized by [GRHayL/Con2Prim/initialize_diagnostics.c](../../../GRHayL/Con2Pr
 - `backup[3]`: initialized false; multi-method drivers set slot `n` true before
   trying `params->backup_routine[n]`.
 - `n_iter`: initialized to zero; solver-specific interpretation requires successful
-  recovery and the [Palenzuela early-return caveat](internal-numerics-and-root-finding.md#brent-and-root-helper-route). Font1D resets it at entry and accumulates outer
+  recovery; see [root-finder diagnostics](internal-numerics-and-root-finding.md#brent-and-root-helper-route). Font1D resets it at entry and accumulates outer
   `W`/fluid-momentum iterations across retries, including zero for its shortcut;
   its inner density loop is not counted. Newman records the final attempted
-  helper's local `step`, not an aggregate across retries. Other solvers use
-  local counters (`harm_aux.n_iter` or `rparams.n_iters`).
+  helper's local `step`, not an aggregate across retries. Noble accumulates
+  attempted Newton iterations, including nested solves and retries; each
+  invocation has its own budget. Palenzuela reports its final Brent call.
 
 ## Ground Truth
 

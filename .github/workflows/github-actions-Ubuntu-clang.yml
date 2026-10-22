@@ -317,26 +317,27 @@ jobs:
           python3 -m pip install pyghl==0.4.0
       - name: Copy test data to working directory
         run: |
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_rho_vs_T_unperturbed.bin
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_Pmag_vs_Wm1_unperturbed.bin
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_rho_vs_T_perturbed.bin
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_Pmag_vs_Wm1_perturbed.bin
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_rho_vs_T_unperturbed.bin
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_Pmag_vs_Wm1_unperturbed.bin
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_rho_vs_T_perturbed.bin
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_Pmag_vs_Wm1_perturbed.bin
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_rho_vs_T_unperturbed.bin
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_Pmag_vs_Wm1_unperturbed.bin
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_rho_vs_T_perturbed.bin
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_Pmag_vs_Wm1_perturbed.bin
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_rho_vs_T_unperturbed.bin
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_Pmag_vs_Wm1_unperturbed.bin
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_rho_vs_T_perturbed.bin
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_Pmag_vs_Wm1_perturbed.bin
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Noble2D_rho_vs_T_unperturbed.bin
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Noble2D_Pmag_vs_Wm1_unperturbed.bin
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Noble2D_rho_vs_T_perturbed.bin
-          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Noble2D_Pmag_vs_Wm1_perturbed.bin
+          con2prim_testdata_ref=$(cat .github/con2prim-testdata-ref)
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Palenzuela1D_rho_vs_T_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Palenzuela1D_Pmag_vs_Wm1_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Palenzuela1D_rho_vs_T_perturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Palenzuela1D_Pmag_vs_Wm1_perturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Palenzuela1D_entropy_rho_vs_T_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Palenzuela1D_entropy_Pmag_vs_Wm1_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Palenzuela1D_entropy_rho_vs_T_perturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Palenzuela1D_entropy_Pmag_vs_Wm1_perturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Newman1D_rho_vs_T_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Newman1D_Pmag_vs_Wm1_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Newman1D_rho_vs_T_perturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Newman1D_Pmag_vs_Wm1_perturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Newman1D_entropy_rho_vs_T_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Newman1D_entropy_Pmag_vs_Wm1_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Newman1D_entropy_rho_vs_T_perturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Newman1D_entropy_Pmag_vs_Wm1_perturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Noble2D_rho_vs_T_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Noble2D_Pmag_vs_Wm1_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Noble2D_rho_vs_T_perturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}/con2prim/con2prim_tabulated_Noble2D_Pmag_vs_Wm1_perturbed.bin
           curl -f --retry 5 -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
           pyghl append SLy4_3335_rho391_temp163_ye66.h5
       - name: Run unit test for tabulated EOS Con2Prim routines

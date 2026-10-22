@@ -69,7 +69,9 @@ static void ghl_guess_primitives_hybrid_simple(
  * The normal algebraic path starts the table inversion from
  * \f$ T = T_\mathrm{max} \f$. Invalid conservative inputs or an unusable
  * algebraic candidate instead return the initialized EOS atmosphere, including
- * \f$ T = T_\mathrm{atm} \f$. Incoming magnetic components are preserved.
+ * \f$ T = T_\mathrm{atm} \f$. Finite conservative composition at positive
+ * density is retained within EOS bounds, including on this fallback path.
+ * Incoming magnetic components are preserved.
  *
  * @param[in] params pointer to ghl_parameters struct
  *

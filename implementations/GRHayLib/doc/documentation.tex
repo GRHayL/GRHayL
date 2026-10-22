@@ -51,11 +51,23 @@ structs. The instances are named \texttt{ghl\_params} and \texttt{ghl\_eos},
 and the pointers to these structs are provided by the GRHayLib.h
 header.
 
+When \texttt{ID\_converter\_ILGRMHD} is active, the schedule skips
+\texttt{GRHayLib\_initialize}. The external initializer is then responsible
+for setting up these pointers and the EOS function pointers, and for releasing
+its allocations. \texttt{GRHayLib\_terminate} only releases state after
+\texttt{GRHayLib\_initialize} has completed successfully. If local initialization
+was skipped, termination leaves the pointers unchanged, including when they
+are unset. Normal shutdown releases tabulated EOS memory before freeing and
+clearing the global pointers; repeated termination is harmless.
+Local initialization zeroes the allocated storage and checks both allocations.
+If either allocation fails, it frees any allocated storage, clears the pointers,
+and reports a fatal Cactus error before returning.
+
 \section{Equation of State}
 
 One of the more complicated part of GRMHD simulations is properly
 setting up the equation of state (EOS), especially for tabulated EOS.
-\grhayl{} provides both hybrid and tabulated EOS, and this information
+\grhayl{} provides simple, hybrid, and tabulated EOS, and this information
 is passed to the library functions through \texttt{ghl\_eos}. \glib's
 parameters control the initialization of this struct, so the user does
 not need to set any of the struct's values unless they plan to manually
@@ -68,6 +80,14 @@ We will refer to these as collectively limit parameters. For the limit
 parameters a given EOS uses, the atmosphere parameter is required. The other
 parameters either have defaults or are ignored if unset.
 
+\subsection{Simple EOS}
+
+The simple (ideal-fluid) EOS requires \texttt{Gamma}, \texttt{rho\_b\_atm},
+and \texttt{P\_atm}. \texttt{Gamma} must be finite and greater than one.
+The optional density and pressure bounds are \texttt{rho\_b\_min},
+\texttt{rho\_b\_max}, \texttt{P\_min}, and \texttt{P\_max}. Unset lower
+bounds default to zero and unset upper bounds to 1e300.
+
 \subsection{Hybrid EOS}
 
 The hybrid EOS requires several parameters to function properly.
@@ -77,7 +97,7 @@ of rho\_b are set by \texttt{rho\_ppoly\_in}, and the associated Gamma
 values are stored in \texttt{Gamma\_ppoly\_in}. Note that for neos=1,
 only a single Gamma is necessary. Additionally, the parameter \texttt{k\_ppoly0}
 sets the polytropic constant for the first piece of the piecewise polytrope.
-The rest of the constanst are computed automatically.
+The rest of the constants are computed automatically.
 
 In addition to the polytropic setup above, the value of the thermal Gamma
 \texttt{Gamma\_th} must be set.
@@ -94,13 +114,15 @@ the path to the EOS table, given by the \texttt{EOS\_tablepath} parameter.
 functions through \texttt{ghl\_eos}.
 
 The tabulated EOS uses all the limit parameters (rho\_b, Y\_e, and T).
-If unset, the mimima and maxima are set to table bounds.
+If unset, the minima and maxima are set to table bounds.
+The parameters \texttt{Y\_e\_min} and \texttt{Y\_e\_max} bound the electron
+fraction; \texttt{Y\_e\_atm} sets its atmospheric value.
 
 \section{Conservative-to-Primitive Routines}
 
 \grhayl{} provides a selection of con2prim routines along with automated
 backup methods. \texttt{ghl\_params} passes the information from the
-thorn parameters texttt{con2prim\_routine} and texttt{con2prim\_backup\_routines}
+thorn parameters \texttt{con2prim\_routine} and \texttt{con2prim\_backup\_routines}
 to the library's multi-method functions. Of course, any of the routines
 can be called manually with logic dictated by the user. However, we
 provide functions for automatically calling the selected routine,
@@ -115,13 +137,33 @@ the core con2prim functions. Since the individual con2prim routines
 and the multi-method functions have identical argument lists, swapping
 routines is straightforward and requires little work from the user.
 
+The solver options are \texttt{Noble2D}, \texttt{Noble1D},
+\texttt{Noble1D\_entropy}, \texttt{Noble1D\_entropy2}, \texttt{Font1D},
+\texttt{Palenzuela1D}, \texttt{Palenzuela1D\_entropy}, \texttt{Newman1D},
+and \texttt{Newman1D\_entropy}. \texttt{None} ends the backup list.
+\texttt{Font1D} requires a Hybrid EOS, while the Newman methods require a
+Tabulated EOS. \texttt{Noble1D} and both Noble entropy methods require a
+Simple or Hybrid EOS. Both \texttt{Noble1D\_entropy} and
+\texttt{Noble1D\_entropy2} additionally require \texttt{neos=1} and
+\texttt{Gamma\_th=Gamma\_ppoly\_in[0]} for Hybrid EOS. All entropy methods
+require \texttt{evolve\_entropy="yes"}. These restrictions apply to the
+primary routine and every backup slot.
+
 These routines are iterative solvers, so they require an initial guess.
-\igm{} used always used default guess, which is also provided in \grhayl.
+\igm{} used a default guess, which is also provided in \grhayl.
 The \texttt{calc\_primitive\_guess} parameter automatically sets the
 guess to this default in the multi-method function, so set this to
 "no" to use a user-defined guess. Manual use of the con2prim
 routines require the user to either provide a guess or use the
 ghl\_guess\_primitives() function.
+
+For Tabulated EOS, \texttt{enable\_backup\_nn\_primitive\_guess="yes"}
+enables retries with a neural-network primitive guess after a selected
+Con2Prim routine fails. The main routine is retried before advancing to
+the backups, and failed backups can also be retried with this guess.
+This option defaults to "no" and requires an embedded neural-network model
+in the EOS table. It is independent of \texttt{calc\_primitive\_guess},
+does not select a separate solver, and has no effect for Simple or Hybrid EOS.
 
 \section{Changing parameters during a run}
 

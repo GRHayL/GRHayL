@@ -106,6 +106,9 @@ typedef enum {
   ghl_eos_table_types,
 } ghl_eos_table_t;
 
+/** @ingroup c2p_guess
+ * Neural-network model defined in ghl_con2prim.h; owned by its EOS after loading.
+ */
 typedef struct ghl_c2p_nn_model ghl_c2p_nn_model;
 
 /*
@@ -124,7 +127,11 @@ typedef struct ghl_parameters {
   double Lorenz_damping_factor;
 
   // Con2Prim parameters
+  /** Iteration budget for each Noble Newton solve. Font, Palenzuela, and
+   *  Newman use their own local iteration settings. */
   int con2prim_max_iterations;
+  /** Noble Newton convergence tolerance. Font, Palenzuela, and Newman use
+   *  their own local tolerances. */
   double con2prim_solver_tolerance;
 
   // PPM parameters
@@ -191,12 +198,17 @@ typedef struct ghl_extrinsic_curvature {
   double K[3][3];
 } ghl_extrinsic_curvature;
 
-/*
- * Struct        : ghl_stress_energy
- * Description   : stores pointwise information about the stress energy tensor
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_stress_energy
-*/
+/**
+ * @brief Stores the independent components of a symmetric stress-energy tensor.
+ *
+ * GRHayL tensor writers populate only T4[mu][nu] with mu <= nu, leaving the
+ * lower triangle untouched. Read a component using T4[min(mu,nu)][max(mu,nu)],
+ * or unpack the independent components with ghl_return_stress_energy().
+ * The producing routine determines whether the components are covariant or
+ * contravariant. Copy the upper triangle by symmetry if a full array is needed.
+ */
 typedef struct ghl_stress_energy {
+  /** Upper-triangular tensor storage; lower-triangular entries are not set. */
   double T4[4][4];
 } ghl_stress_energy;
 
@@ -302,6 +314,8 @@ typedef struct ghl_eos_parameters {
   double *lp_of_lr, *le_of_lr, *Ye_of_lr, *lh_of_lr;
 
   bool enable_neural_net_c2p;
+  /** Owned NN model, or NULL; successful loaders replace and free the old
+   *  model, and tabulated EOS cleanup frees the attached model. */
   ghl_c2p_nn_model *restrict c2p_nn;
   //------------------------------------------------
 } ghl_eos_parameters;
@@ -545,12 +559,22 @@ ghl_error_codes_t ghl_limit_v_and_compute_u0(
       ghl_primitive_quantities *restrict prims,
       bool *restrict speed_limited);
 
+/**
+ * @brief Compute covariant stress-energy components from initialized primitives.
+ * Writes only Tmunu->T4[mu][nu] for mu <= nu; the lower triangle is untouched.
+ * Use the symmetric access convention documented in ghl_stress_energy.
+ */
 void ghl_compute_TDNmunu(
       const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_primitive_quantities *restrict prims,
       ghl_stress_energy *restrict Tmunu);
 
+/**
+ * @brief Compute contravariant stress-energy components from initialized primitives.
+ * Writes only Tmunu->T4[mu][nu] for mu <= nu; the lower triangle is untouched.
+ * Use the symmetric access convention documented in ghl_stress_energy.
+ */
 void ghl_compute_TUPmunu(
       const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,

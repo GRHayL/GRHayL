@@ -26,11 +26,12 @@
 ***********************************************************************************/
 
 /**
- * @ingroup Con2Prim
+ * @ingroup hyb_c2p
  * @brief Solves for the primitive variables using the Noble1D method
  *
- * @todo
- * Needs inline descriptions; internal functions also need documentation.
+ * @details Solves the energy equation for Z, deriving the squared velocity
+ * from the momentum equation. Pressure derivatives use the bounded hybrid
+ * cold EOS. Invalid Newton steps return a recoverable failure.
  *
  * @param[in] params pointer to ghl_parameters struct
  *
@@ -69,38 +70,43 @@ ghl_error_codes_t ghl_hybrid_Noble1D(
 
   // Calculate Z:
   ghl_error_codes_t error = ghl_initialize_Noble(
-        params, eos, metric_adm, metric_aux, cons_undens,
-        prims, &harm_aux, &gnr_out[0]);
-  if(error)
+        params, eos, metric_adm, metric_aux, cons_undens, prims, &harm_aux, &gnr_out[0]);
+  if(error) {
     return error;
+  }
 
   // To be consistent with entropy variants, unused argument 0.0 is needed
-  const ghl_error_codes_t retval = ghl_general_newton_raphson(eos, &harm_aux, 1, 0.0, gnr_out, ghl_validate_1D, ghl_func_1D);
+  const ghl_error_codes_t retval = ghl_general_newton_raphson(
+        eos, &harm_aux, 1, 0.0, gnr_out, ghl_validate_1D, ghl_func_1D);
 
   const double Z = gnr_out[0];
 
   /* Problem with solver, so return denoting error before doing anything further */
   if(retval != 0) {
     return retval;
-  } else if(Z <= 0. || Z > 1e20) {
+  }
+  else if(Z <= 0. || Z > 1e20) {
     return ghl_error_invalid_Z;
   }
 
   // Calculate v^2:
   double vsq = ghl_vsq_calc(&harm_aux, Z);
   if(vsq >= 1.0) {
-    vsq = 1.-2.e-16;
-  } else if(vsq < 0.0) {
-    if(vsq > -1e-15)  {
+    vsq = 1. - 2.e-16;
+  }
+  else if(vsq < 0.0) {
+    if(vsq > -1e-15) {
       vsq = 0.0;
-    } else {
-      //v should be real!
+    }
+    else {
+      // v should be real!
       return ghl_error_neg_vsq;
     }
   }
 
   // Recover the primitive variables from the scalars and conserved variables:
-  diagnostics->speed_limited = ghl_finalize_Noble(params, eos, metric_adm, metric_aux, cons_undens, &harm_aux, Z, vsq, prims);
+  diagnostics->speed_limited = ghl_finalize_Noble(
+        params, eos, metric_adm, metric_aux, cons_undens, &harm_aux, Z, vsq, prims);
   if(!ghl_Noble_pressure_is_valid(prims->press)) {
     return ghl_error_neg_pressure;
   }
