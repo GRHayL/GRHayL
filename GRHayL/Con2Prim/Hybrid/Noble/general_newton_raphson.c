@@ -77,8 +77,13 @@ ghl_error_codes_t ghl_general_newton_raphson(
       if(!isfinite(x[id])) {
         return ghl_error_c2p_singular;
       }
+      // Only hybrid Noble2D's bounded v^2 uses the applied step. Z, density,
+      // and tabulated recovery need the raw correction: validation can hide a
+      // large Newton update behind a small absolute residual.
+      const double abs_dx
+            = fabs((funcd == ghl_func_2D && id == 1) ? x[id] - x_old[id] : dx[id]);
       const double x_scale = fabs(x[id]);
-      const double errx_id = (x_scale == 0.0) ? fabs(dx[id]) : fabs(dx[id]) / x_scale;
+      const double errx_id = (x_scale == 0.0) ? abs_dx : abs_dx / x_scale;
       errx = fmax(errx, errx_id);
     }
     funcd(eos, harm_aux, indep_var_in, x, dx_resid, &f, &df);

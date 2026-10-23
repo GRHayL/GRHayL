@@ -132,9 +132,8 @@ fixture contents or information forbidden by the
   source-tree test header and is not in the configured install-header set.
 - Some non-inline declarations are implemented by helper files under
   [Unit_Tests/](../../Unit_Tests/), including interpolation helpers,
-  perturbation comparators, randomizers, and `get_table_quantity`. The declared
-  binary read/write family and `ghl_initial_random_data` have no visible
-  definitions. None of these test helpers appears in the Core/gem library
+  perturbation comparators, randomizers, and `get_table_quantity`.
+  None of these test helpers appears in the Core/gem library
   source manifests; tests link only the helper sources selected by the test build.
 
 ### Perturbation helpers

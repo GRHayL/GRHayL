@@ -77,7 +77,10 @@ typedef struct roots_params {
  * @param[in,out] a first number
  * @param[in,out] b second number
  */
-static inline void swap(double *restrict a, double *restrict b) {
+static inline void
+swap(
+    double *restrict a,
+    double *restrict b) {
 
   const double c = *a;
   *a = *b;
@@ -92,7 +95,11 @@ static inline void swap(double *restrict a, double *restrict b) {
  *
  * @returns +1 if x > 0, -1 if x < 0, and 0 if x == 0
  */
-static inline int sign(const double x) { return (x > 0) - (x < 0); }
+static inline int
+sign(const double x) {
+
+  return (x>0) - (x<0);
+}
 
 /*
  * Function prototypes

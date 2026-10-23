@@ -26,6 +26,8 @@ static ghl_error_codes_t Newman_history_pressure(
 }
 
 // Call after initializing tabulated EOS function pointers; no table is needed.
+// This reaches AtP[maxsteps]; detecting an undersized history array requires
+// ASan/UBSan. The status and call-count checks alone do not detect that overflow.
 static void test_Newman_history_bounds(void) {
   const ghl_parameters params = {
     .max_Lorentz_factor = 2.0,
@@ -85,7 +87,8 @@ static void test_Newman_history_bounds(void) {
   ghl_tabulated_compute_P_T_from_eps = saved_energy;
   ghl_tabulated_compute_P_T_from_S = saved_entropy;
   for(int variant = 0; variant < 2; ++variant) {
-    // Failure-path n_iter is unspecified; 600 calls prove both full attempts.
+    // maxsteps=300 in each Newman helper, plus one T_min retry: 2*300 calls.
+    // This checks that attempt schedule; failure-path n_iter is unspecified.
     if(errors[variant] != ghl_error_c2p_max_iter || calls[variant] != 600) {
       ghl_error(
             "Newman %s history: expected max-iteration error and "

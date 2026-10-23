@@ -89,17 +89,13 @@ ghl_error_codes_t ghl_hybrid_Noble1D(
     return ghl_error_invalid_Z;
   }
 
-  // Calculate v^2:
+  // The successful 1D validator already requires this v^2 to be finite and < 1.
   double vsq = ghl_vsq_calc(&harm_aux, Z);
-  if(vsq >= 1.0) {
-    vsq = 1. - 2.e-16;
-  }
-  else if(vsq < 0.0) {
-    if(vsq > -1e-15) {
+  if(vsq < 0.0) {
+    if(vsq > -1e-15)  {
       vsq = 0.0;
-    }
-    else {
-      // v should be real!
+    } else {
+      //v should be real!
       return ghl_error_neg_vsq;
     }
   }

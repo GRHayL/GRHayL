@@ -128,10 +128,7 @@ static ghl_error_codes_t tabulated_initialize_Noble(
       double *restrict Z_ptr,
       double *restrict vsq_ptr) {
 
-  if(!isfinite(cons_undens->rho) || cons_undens->rho <= 0.0) {
-    return ghl_error_neg_rho;
-  }
-
+  // Shared initialization validates conservative density before using it.
   ghl_error_codes_t error = ghl_initialize_Noble(
         params, eos, metric_adm, metric_aux, cons_undens, prims, harm_aux, Z_ptr);
   if(error) {
@@ -154,7 +151,9 @@ static ghl_error_codes_t tabulated_initialize_Noble(
   double rho = cons_undens->rho / W;
   double Y_e = cons_undens->Y_e / cons_undens->rho;
   double T = prims->temperature;
-  if(!isfinite(rho) || !isfinite(Y_e) || !isfinite(T)) {
+  // Shared initialization made D finite; the bounded velocity gives W >= 1,
+  // so D/W may underflow but cannot become nonfinite.
+  if(!isfinite(Y_e) || !isfinite(T)) {
     return ghl_error_table_bisection;
   }
   ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &rho, &Y_e, &T);
@@ -375,6 +374,8 @@ static ghl_error_codes_t tabulated_finalize_Noble(
  * After speed limiting, thermodynamics use the final Lorentz factor. Density,
  * composition, and enthalpy obey the EOS bounds; temperature also obeys the
  * runtime bounds. Invalid numerical states return errors for caller fallback.
+ * Nonfinite velocity or temperature guesses are rejected before bounding:
+ * the shared clamp would otherwise silently replace NaN with a finite bound.
  *
  * @param[in] params recovery settings
  * @param[in] eos initialized tabulated EOS
@@ -408,24 +409,15 @@ ghl_error_codes_t ghl_tabulated_Noble2D(
 
   const ghl_error_codes_t retval = ghl_general_newton_raphson(
         eos, &harm_aux, 2, 0.0, gnr_out, ghl_validate_2D, tabulated_func_2D);
-  const double Z = gnr_out[0];
-
   if(retval != ghl_success) {
     return retval;
   }
-  if(!isfinite(Z) || Z <= 0.0 || Z > 1e20) {
-    return ghl_error_invalid_Z;
-  }
 
-  double vsq = gnr_out[1];
-  if(!isfinite(vsq)) {
-    return ghl_error_invalid_utsq;
-  }
-  if(vsq >= 1.0) {
-    vsq = 1.0 - 2.e-16;
-  }
-  else if(vsq < 0.0) {
-    return ghl_error_neg_vsq;
+  // The final residual evaluation already checked finite Z > 0 and 0 <= vsq < 1.
+  const double Z = gnr_out[0];
+  const double vsq = gnr_out[1];
+  if(Z > 1e20) {
+    return ghl_error_invalid_Z;
   }
 
   error = tabulated_finalize_Noble(

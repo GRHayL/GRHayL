@@ -66,7 +66,8 @@ Selection fields live in `GRHayL/include/ghl.h` and are initialized by
 - `con2prim_max_iterations` and `con2prim_solver_tolerance`: defaulted in
   `initialize_params.c`; consumed by Noble initialization paths. Current
   Font, Palenzuela, and Newman paths use local hard-coded iteration/tolerance
-  values. Font bounds both its outer iteration and each inner density solve.
+  values. Font bounds its outer iteration and detects exact cycles in each
+  inner density solve; see [internal numerics](internal-numerics-and-root-finding.md#font-and-newman-routes).
 
 Tabulated EOS also carries `root_finding_precision` in `ghl_eos_parameters`
 (`GRHayL/include/ghl.h`) and initializes it in [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c);

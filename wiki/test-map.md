@@ -82,6 +82,13 @@ available. Route that checklist through
 | [Unit_Tests/unit_test_tabulated_eos_compose.c](../Unit_Tests/unit_test_tabulated_eos_compose.c) | `tools/compose/`, tabulated EOS, Con2Prim, Flux_Source, and NRPyLeakage runtimes | Reads every node/all 19 fields independently; checks loader units/order, enthalpy, relativistic sound speed, midpoint interpolation, `eps/P/S/h` inverses from distinct valid initial guesses, and six-output order/ranges; requires no-fallback Palenzuela recovery; compares characteristic speed, HLLE/entropy fluxes, and source terms with analytic goldens; contains implementation-derived combined-leakage regression goldens for the analytic and regularized SRO-141 inputs; and checks cleanup. These goldens detect code drift; the separate external qualification supplies the physics comparison. Python failure and branch coverage live under [Unit_Tests/compose/](../Unit_Tests/compose). | CLI regularized StellarCollapse table path; focused Ubuntu GCC CI builds an asymmetric synthetic table, while full table 141 is an external manual drift-replay input. | HDF5-only; converter output must pass with runtime sound-speed cleaning disabled. |
 | [Unit_Tests/unit_test_tabulated_flux.c](../Unit_Tests/unit_test_tabulated_flux.c) | `GRHayL/Flux_Source/tabulated*`, `GRHayL/EOS/Tabulated/` | HLLE fluxes for tabulated EOS, with entropy and three directions; see [Flux_Source tests and fixtures](gems/flux-source/tests-and-fixtures.md). | `LS220_234r_136t_50y_analmu_20091212_SVNr26.h5`, `tabulated_flux_{input,output,output_pert}.bin`. | HDF5-only; EOS table downloaded by `run_tests.sh`. |
 
+The Newman pressure-history exercise in
+[Unit_Tests/con2prim_newman_history.h](../Unit_Tests/con2prim_newman_history.h)
+drives recovery through the final permitted iteration. Detecting an out-of-bounds
+history write requires running the existing tabulated test with a bounds
+sanitizer; its ordinary error-code and callback-count checks alone do not
+establish memory safety. See the [Con2Prim test contract](gems/con2prim/tests-and-fixtures.md).
+
 ## Data Generators
 
 | Data generator | Likely source area | Behavior covered | Fixture dependencies | Notes/gaps |

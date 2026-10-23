@@ -11,8 +11,7 @@
  *
  * @param[in] eos pointer to ghl_eos_parameters struct
  *
- * @param[in] maxits maximum outer iterations and maximum density iterations
- *                   within each outer iteration
+ * @param[in] maxits maximum outer iterations
  *
  * @param[in] tol maximum allowed error for convergence
  *
@@ -33,7 +32,7 @@
  *
  * @param[in] rhob_in initial guess for the density \f$ \rho \f$
  *
- * @param[out] rhob_out_ptr returned density value
+ * @param[out] rhob_out_ptr last completed density solve, or rhob_in if none
  *
  * @param[in,out] n_iter initialized accumulator for outer iterations executed
  *
@@ -110,16 +109,22 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
      * \f]
      *
      * where \f$ \rho_0 \f$ is the value from the previous iteration and \f$ t \f$
-     * is the tolerance. Each subloop is limited to maxits updates; invalid
-     * density or enthalpy returns a recoverable error.
+     * is the tolerance. Invalid density or enthalpy and nonconvergent cycles
+     * return recoverable errors. At a fixed point, the derivative of this map
+     * is (1 - (rho/D)^2) rho h'(rho)/h(rho), which can approach unity. Reusing
+     * the outer iteration budget would reject slowly converging density solves.
      */
     j1 = ghl_hybrid_find_polytropic_index(eos, rhob1);
 
-    int density_iterations = 0;
-    do {
-      if(density_iterations++ >= maxits) {
-        return ghl_error_c2p_max_iter;
-      }
+    // Brent's cycle detection uses a checkpoint at geometrically spaced
+    // iterations. With Sf20 fixed, repeating a density repeats the entire
+    // inner state; no additional EOS evaluations or approximate comparisons
+    // are needed. Check convergence first so a fixed point is accepted.
+    // Positive finite binary64 densities have fewer than 2^63 states, so
+    // repetition is detected before the unsigned counters can wrap.
+    double cycle_rhob = rhob1;
+    unsigned long long cycle_length = 0, cycle_period = 1;
+    while(true) {
       rhob0 = rhob1;
       j0 = j1;
 
@@ -133,13 +138,39 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
       if(!isfinite(rhob1) || rhob1 <= 0.0) {
         return ghl_error_c2p_singular;
       }
-      *rhob_out_ptr = rhob1;
-
       j1 = ghl_hybrid_find_polytropic_index(eos, rhob1);
 
-    } while(fabs(rhob1 - rhob0) > fabs(rhob1) * tol || j1 != j0);
+      if(fabs(rhob1 - rhob0) <= rhob1 * tol && j1 == j0) {
+        break;
+      }
+
+      // Within either clamped EOS branch h = a + P/rho, with constant
+      // a = 1 + eps_cold and P. For a, P >= 0, the logarithmic derivative
+      // of the density map lies in [-1, 0]. Near -1 the map is almost
+      // reciprocal and an oscillation can drift for arbitrarily many steps.
+      // Geometric damping preserves its fixed point and puts that derivative
+      // in [0, 1/2]. Both endpoints must be in the same clamped branch, so
+      // the damped iterate stays there. Test the undamped residual above.
+      if(P_cold >= 0.0 && eps_cold >= -1.0
+         && ((rhob0 < eos->rho_min && rhob1 < eos->rho_min)
+             || (rhob0 > eos->rho_max && rhob1 > eos->rho_max))) {
+        rhob1 = sqrt(rhob0) * sqrt(rhob1);
+        j1 = ghl_hybrid_find_polytropic_index(eos, rhob1);
+      }
+
+      if(rhob1 == cycle_rhob) {
+        return ghl_error_c2p_max_iter;
+      }
+      if(++cycle_length == cycle_period) {
+        cycle_rhob = rhob1;
+        cycle_length = 0;
+        cycle_period *= 2;
+      }
+    }
 
     rhob_out = rhob1;
+    // A retry may inherit only a completed density solve, never a cycle member.
+    *rhob_out_ptr = rhob_out;
 
     /**
      * Once we find a sufficiently converged density, we compute the new

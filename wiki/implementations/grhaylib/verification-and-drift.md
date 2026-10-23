@@ -96,10 +96,12 @@ Einstein Toolkit.
 - PPM fields: `param.ccl` exposes flattening and shock parameters that overwrite
   `ghl_initialize_params` defaults after initialization.
 - Lifecycle: `GRHayLib_initialize` allocates global `ghl_params` and `ghl_eos`;
-  allocation failure releases partial storage. After successful local setup,
-  `GRHayLib_terminate` frees tabulated memory first when needed, then frees
-  both globals and clears them. It leaves externally initialized state to its
-  owner when local initialization was skipped.
+  allocation failure releases partial storage. `GRHayLib_terminate` checks
+  `ghl_eos` before inspecting its type, frees tabulated memory when needed,
+  then frees and clears both globals, including state supplied by the
+  compatibility initializer. Non-null pointers must refer to live heap
+  allocations with valid EOS state and dispatch; see the
+  [runtime lifecycle](runtime-parameter-contract.md#runtime-lifecycle).
 - Cactus schedule timing: initialization is scheduled at `CCTK_WRAGH` unless
   `ID_converter_ILGRMHD` is active; termination is scheduled at
   `CCTK_TERMINATE`. Global-pointer consumers depend on this timing.

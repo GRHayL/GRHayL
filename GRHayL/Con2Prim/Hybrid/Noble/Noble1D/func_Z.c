@@ -36,12 +36,9 @@ void ghl_func_Z(
     harm_aux->error = error;
     return;
   }
-  // Set rho to the NR output
+  // The nested solve validates with fabs and rejects rho == 0 through its
+  // nonfinite Jacobian, so successful output is finite and strictly positive.
   rho = x_rho[0];
-  if(!isfinite(rho) || rho <= 0.0) {
-    harm_aux->error = ghl_error_c2p_singular;
-    return;
-  }
 
   // Auxiliary variable declarations
   // Gamma

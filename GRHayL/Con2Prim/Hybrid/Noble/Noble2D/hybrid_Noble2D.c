@@ -91,15 +91,9 @@ ghl_error_codes_t ghl_hybrid_Noble2D(
     return ghl_error_invalid_Z;
   }
 
-  // Calculate v^2:
-  double vsq = gnr_out[1];
-  if(vsq >= 1.0) {
-    vsq = 1. - 2.e-16;
-  }
-  else if(vsq < 0.0) {
-    // v should be real!
-    return ghl_error_neg_vsq;
-  }
+  // Validation bounds v^2 to [0,1]; the final residual rejects the singular
+  // derivative at exactly 1, so successful recovery already has 0 <= v^2 < 1.
+  const double vsq = gnr_out[1];
 
   // Recover the primitive variables from the scalars and conserved variables:
   diagnostics->speed_limited = ghl_finalize_Noble(

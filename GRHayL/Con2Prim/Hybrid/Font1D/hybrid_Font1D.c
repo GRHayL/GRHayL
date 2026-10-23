@@ -25,9 +25,10 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
  * the text preceding Eq. 84. This method serves as a backup for very low
  * densities where other hybrid Con2Prim routines might recover a negative
  * pressure. Font1D assumes that \f$ P=P_\mathrm{cold} \f$ and solves for
- * \f$ \rho \f$ using a bounded iterative method. It requires positive
- * conservative density and finite momentum components; invalid intermediate
- * states or exhausted iteration budgets return recoverable errors.
+ * \f$ \rho \f$ using an iterative method with an outer iteration budget and
+ * inner density cycle detection. It requires positive conservative density
+ * and finite momentum components; invalid intermediate states, nonconvergent
+ * density cycles, or an exhausted outer budget return recoverable errors.
  * The return value gives information on the success or failure of the
  * recovery attempt. The public Con2Prim dispatchers pass the local
  * `cons_undens` struct to this routine. In the formulas below,
@@ -119,10 +120,11 @@ ghl_error_codes_t ghl_hybrid_Font1D(
     /**
      * Now we apply core @ref ghl_hybrid_Font1D_loop method with several
      * attempts. As this method is intended as a final resort backup, it tries
-     * 5 times, with the max iterations scaling from 300 to 500 and the
+     * 5 times, with the max outer iterations scaling from 300 to 500 and the
      * tolerance cutoff from \f$ 10^{-15} \f$ to \f$ 2.56 \times 10^{-13} \f$.
-     * Each attempt also inherits the converged result from the previous attempt
-     * to improve the likelihood of success.
+     * Each attempt also inherits the last completed inner density solve from
+     * the previous attempt to improve the likelihood of success. An unfinished
+     * density iteration does not replace the retry's initial guess.
      *
      * We also compute several initial guess quantities outside the loop so
      * we can reuse the values.

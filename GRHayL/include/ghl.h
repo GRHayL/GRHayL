@@ -201,14 +201,17 @@ typedef struct ghl_extrinsic_curvature {
 /**
  * @brief Stores the independent components of a symmetric stress-energy tensor.
  *
- * GRHayL tensor writers populate only T4[mu][nu] with mu <= nu, leaving the
- * lower triangle untouched. Read a component using T4[min(mu,nu)][max(mu,nu)],
+ * ghl_initialize_stress_energy() fills the full symmetric matrix from the
+ * supplied independent components. The compute routines ghl_compute_TDNmunu(),
+ * ghl_compute_TUPmunu(), and ghl_compute_conservs_and_Tmunu() populate only
+ * T4[mu][nu] with mu <= nu, leaving the lower triangle untouched.
+ * Read computed components using T4[min(mu,nu)][max(mu,nu)],
  * or unpack the independent components with ghl_return_stress_energy().
  * The producing routine determines whether the components are covariant or
  * contravariant. Copy the upper triangle by symmetry if a full array is needed.
  */
 typedef struct ghl_stress_energy {
-  /** Upper-triangular tensor storage; lower-triangular entries are not set. */
+  /** Tensor storage; compute routines update only the upper triangle. */
   double T4[4][4];
 } ghl_stress_energy;
 

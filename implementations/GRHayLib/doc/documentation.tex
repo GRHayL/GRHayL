@@ -52,13 +52,14 @@ and the pointers to these structs are provided by the GRHayLib.h
 header.
 
 When \texttt{ID\_converter\_ILGRMHD} is active, the schedule skips
-\texttt{GRHayLib\_initialize}. The external initializer is then responsible
-for setting up these pointers and the EOS function pointers, and for releasing
-its allocations. \texttt{GRHayLib\_terminate} only releases state after
-\texttt{GRHayLib\_initialize} has completed successfully. If local initialization
-was skipped, termination leaves the pointers unchanged, including when they
-are unset. Normal shutdown releases tabulated EOS memory before freeing and
-clearing the global pointers; repeated termination is harmless.
+\texttt{GRHayLib\_initialize}; the IllinoisGRMHD compatibility initializer
+allocates these globals and sets up the hybrid EOS and its function pointers
+instead. \texttt{GRHayLib\_terminate} remains scheduled and releases the
+shared globals for either initialization path. It checks that
+\texttt{ghl\_eos} is non-null before inspecting its EOS type, releases
+tabulated EOS memory when applicable, then frees and clears both global
+pointers. Unset globals and repeated termination are harmless. Non-null
+globals must refer to live heap allocations with valid EOS state and dispatch.
 Local initialization zeroes the allocated storage and checks both allocations.
 If either allocation fails, it frees any allocated storage, clears the pointers,
 and reports a fatal Cactus error before returning.

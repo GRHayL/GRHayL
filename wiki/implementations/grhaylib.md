@@ -24,8 +24,10 @@ tabulated EOS state.
 
 Allocations are checked. The schedule can skip initialization when
 `ID_converter_ILGRMHD` is active while still scheduling termination; termination
-then leaves external state to its owner. The alternate initializer is absent
-from this checkout. Use the runtime contract before assuming globals are valid.
+releases the shared globals for either initialization path and handles null
+pointers. The alternate initializer is absent from this checkout; the
+[runtime contract](grhaylib/runtime-parameter-contract.md#runtime-lifecycle)
+links its downstream source and describes the cleanup preconditions.
 
 The implementation README says GRHayLib provides core library features and
 initializes the GRHayL parameter and EOS structs used through the simulation.

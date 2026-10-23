@@ -13,10 +13,6 @@ static ghl_error_codes_t ghl_newman_energy(
       const double tol_x,
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
-  if(!isfinite(cons_undens->rho) || cons_undens->rho <= 0.0) {
-    return ghl_error_neg_rho;
-  }
-
   // Set basic quantities from input
   double invD = 1.0 / cons_undens->rho;
   double xye = cons_undens->Y_e * invD;

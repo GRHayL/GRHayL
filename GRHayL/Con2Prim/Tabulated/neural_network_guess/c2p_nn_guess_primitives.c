@@ -1,6 +1,7 @@
 #include "ghl_c2p_nn.h"
 
 /**
+ * @ingroup c2p_guess
  * @brief Build a tabulated primitive initial guess from a neural network.
  *
  * A present model must already be validated. With usable finite contractions

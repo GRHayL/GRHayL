@@ -498,6 +498,8 @@ static void test_public_primitive_guess_helper(void) {
   ghl_tabulated_primitive_guess_from_x(&params, &eos, &metric, &cons, &aux, 1.0, &prims);
   check_atmosphere_guess(&eos, &metric, BU, 0.2, &prims);
 
+  // Keep eps finite so nonfinite EOS output triggers the fallback.
+  aux.q = 0.0;
   ghl_tabulated_compute_P_S_T_from_eps = fake_compute_P_S_T_nonfinite;
   ghl_tabulated_primitive_guess_from_x(&params, &eos, &metric, &cons, &aux, 2.0, &prims);
   check_atmosphere_guess(&eos, &metric, BU, 0.2, &prims);
@@ -575,6 +577,9 @@ static void test_disabled_direct_tabulated_solvers(void) {
         "disabled direct solver mutated primitives");
   CHECK(diagnostics_equal(&diagnostics, &diagnostics_before),
         "disabled direct solver mutated diagnostics");
+
+  CHECK_ERROR(ghl_c2p_nn_load_from_eos_hdf5("unused.h5", &eos),
+              ghl_error_used_disabled_hdf5);
 }
 #endif
 

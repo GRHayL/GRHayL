@@ -1,7 +1,7 @@
 #include "ghl_con2prim.h"
 
 /**
- * @ingroup Con2Prim
+ * @ingroup c2p_guess
  * @brief Computes an initial guess for the @ref Con2Prim solvers
  *
  * @details
@@ -57,7 +57,7 @@ static void ghl_guess_primitives_hybrid_simple(
 }
 
 /**
- * @ingroup Con2Prim
+ * @ingroup c2p_guess
  * @brief Computes an initial guess for the @ref Con2Prim solvers
  *
  * @details
@@ -109,7 +109,7 @@ static void ghl_guess_primitives_tabulated(
 }
 
 /**
- * @ingroup Con2Prim
+ * @ingroup c2p_guess
  * @brief Computes an initial guess for the @ref Con2Prim solvers
  *
  * @param[in] params pointer to ghl_parameters struct

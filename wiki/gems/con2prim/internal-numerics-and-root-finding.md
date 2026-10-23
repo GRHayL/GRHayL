@@ -91,7 +91,9 @@ Core Noble helper files are built from
 - [`initialize_Noble.c`](../../../GRHayL/Con2Prim/Hybrid/Noble/initialize_Noble.c)
   sets `harm_aux.n_iter`, copies `params->con2prim_max_iterations` and
   `params->con2prim_solver_tolerance`, forms HARM-style contractions, and
-  produces scalar guesses for ordinary and entropy Noble paths. The entropy2
+  produces scalar guesses for ordinary and entropy Noble paths. Ordinary
+  Noble initialization rejects nonfinite or nonpositive conserved density
+  with `ghl_error_neg_rho`. The entropy2
   wrapper admits finite seed norms through the configured
   `max_Lorentz_factor`; the older entropy wrapper retains its historical seed
   ceiling.
@@ -101,6 +103,13 @@ Core Noble helper files are built from
   `harm_aux->n_iter`, and returns success,
   `ghl_error_c2p_singular`, `ghl_error_c2p_max_iter`, or a callback error.
   Failed nested density solves propagate before their output is consumed.
+  Convergence measures each proposed correction relative to the updated
+  component's magnitude (absolute when it is zero). Hybrid Noble2D's bounded
+  squared-velocity coordinate instead uses the actual update after validation,
+  `x - x_old`. Other coordinates and tabulated recovery retain the proposed
+  correction: validation can hide a large step despite a small absolute
+  residual. The largest component measure and the recomputed residual
+  objective `|f|` must both meet `solver_tolerance`.
 - [`validate_x.c`](../../../GRHayL/Con2Prim/Hybrid/Noble/validate_x.c)
   contains `ghl_validate_1D`, `ghl_validate_1D_entropy`, and
   `ghl_validate_2D` constraints for Newton updates.
@@ -201,9 +210,20 @@ uses that pressure divided by the recovered density; replacing that denominator
 with the bounded density would break conservative closure below `rho_min`. It resets
 `diagnostics->n_iter` at entry and accumulates outer `W`/fluid-momentum
 iterations across retries; inner density fixed-point iterations are not
-counted. Each inner density solve has the same local iteration limit as its
-outer solve and rejects nonpositive/nonfinite density or enthalpy. The wrapper
-requires finite positive conservative density before the shortcut. The shortcut reports zero only when the conservative momentum norm
+counted. The outer solve has a local iteration budget. Each inner density
+solve rejects nonpositive/nonfinite density or enthalpy and uses Brent's exact
+cycle detection with geometrically spaced checkpoints, separately from the
+Brent root finder used by Palenzuela. Convergence is checked before a repeated
+density is rejected, so a fixed point succeeds; a nonconvergent cycle
+returns `ghl_error_c2p_max_iter`. There is no
+short inner budget tied to the outer limit, so slowly converging density
+iterations can continue. Only a completed inner solve updates the density
+seed available to a retry; an unfinished cycle cannot replace it. When successive
+densities occupy the same EOS-clamped branch and the cold pressure and
+`1 + eps_cold` are nonnegative, geometric damping suppresses nearly reciprocal
+oscillations without changing the fixed point. Convergence still uses the
+undamped density residual. The wrapper requires finite positive conservative
+density before the shortcut. The shortcut reports zero only when the conservative momentum norm
 satisfies `S_i gamma^ij S_j < 1e-300`.
 
 [`GRHayL/Con2Prim/Tabulated/Newman1D/`](../../../GRHayL/Con2Prim/Tabulated/Newman1D/)

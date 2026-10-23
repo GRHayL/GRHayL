@@ -96,6 +96,13 @@ The direct [free helper](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess
 
 [GRHayL/Con2Prim/Tabulated/make.code.defn](../../../GRHayL/Con2Prim/Tabulated/make.code.defn) includes `neural_network_guess`, and [GRHayL/Con2Prim/Tabulated/neural_network_guess/make.code.defn](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/make.code.defn) lists the NN free, guess, loader, and validation sources.
 
+The NN manifest also registers its private inline header with
+`#! INCS = ghl_c2p_nn.h`. [scripts/parser](../../../scripts/parser) reads this
+registration into the header dependencies used by [configure](../../../configure),
+so changing the header rebuilds dependent objects. Installation uses the separate
+`install_headers` manifest entries; this registration does not install the
+private header.
+
 When HDF5 is disabled, [GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_load_from_eos_hdf5.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_load_from_eos_hdf5.c) compiles loader stubs returning `ghl_error_used_disabled_hdf5`. [configure](../../../configure) defines `GHL_DISABLE_HDF5`; the exact retained and excluded source/test surface is owned by [Build and CI](../../build-and-ci.md).
 Pure inference with an independently valid in-memory model does not itself use
 HDF5; this retained low-level surface is not standalone tabulated recovery.

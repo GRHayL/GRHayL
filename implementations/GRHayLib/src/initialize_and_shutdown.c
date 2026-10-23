@@ -9,9 +9,6 @@
 ghl_parameters *ghl_params;
 ghl_eos_parameters *ghl_eos;
 
-/* A skipped initializer leaves allocation and cleanup to the external owner. */
-static bool grhaylib_owns_state = false;
-
 static ghl_con2prim_id_t parse_C2P_routine_keyword(const char *restrict routine_name);
 static int parse_eos_table_type_keyword(const char *restrict table_type);
 
@@ -197,7 +194,6 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
     free(ghl_params);
     ghl_eos = NULL;
     ghl_params = NULL;
-    grhaylib_owns_state = false;
     CCTK_ERROR("GRHayLib could not allocate the parameter and EOS structs.");
     return;
   }
@@ -261,14 +257,10 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
     CCTK_VERROR("GRHayLib parameter EOS_type has an unsupported type. Please check"
                 " the list of parameter options in the param.ccl.");
   }
-
-  grhaylib_owns_state = true;
 }
 
 void GRHayLib_terminate(CCTK_ARGUMENTS) {
-  if(!grhaylib_owns_state)
-    return;
-
+  /* Also release globals supplied by IllinoisGRMHD's compatibility initializer. */
   if(ghl_eos != NULL && ghl_eos->eos_type == ghl_eos_tabulated) {
     ghl_tabulated_free_memory(ghl_eos);
   }
@@ -277,7 +269,6 @@ void GRHayLib_terminate(CCTK_ARGUMENTS) {
 
   ghl_eos = NULL;
   ghl_params = NULL;
-  grhaylib_owns_state = false;
 }
 
 static ghl_con2prim_id_t parse_C2P_routine_keyword(const char *restrict routine_name) {
