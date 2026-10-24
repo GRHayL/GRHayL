@@ -1,7 +1,7 @@
 #include "../../../utils_Noble.h"
 
 /**
- * @ingroup Con2Prim
+ * @ingroup hyb_c2p
  * @brief Solves for primitive variables with the density-based entropy
  *        variant of the Noble1D method.
  *

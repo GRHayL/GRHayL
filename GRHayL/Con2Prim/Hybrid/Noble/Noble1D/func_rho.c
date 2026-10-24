@@ -30,29 +30,33 @@ void ghl_func_rho(
       double *restrict f,
       double *restrict df) {
 
-  // Set rho and W
+  // Set rho and W (HARM's W here denotes the enthalpy variable Z).
   const double rho = x[0];
-  const double W   = W_in;
+  const double W = W_in;
 
   // Auxiliary variable declarations
   // Gamma
-  const double Gamma = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos,rho)];
+  const double Gamma = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos, rho)];
   // Gamma-1
   const double Gm1 = Gamma - 1.0;
   // rho^(Gamma-1)
-  const double t40 = pow(rho,Gm1);
+  const double t40 = pow(rho, Gm1);
   // rho^(Gamma-2)
-  const double t14 = t40/rho;
+  const double t14 = t40 / rho;
   // Gamma/(Gamma-1) * W * S
-  const double s100 = Gamma/Gm1 * harm_aux->W_times_S;
+  const double s100 = Gamma / Gm1 * harm_aux->W_times_S;
   // D * Gamma * W * S
   const double s200 = harm_aux->D * Gamma * harm_aux->W_times_S;
 
   // Compute the residual and the needed Jacobian component
-  const double resid  = (rho*W+(-t40*s100-harm_aux->D)*harm_aux->D);
-  const double jac = -t14*s200 + W;
+  const double resid = (rho * W + (-t40 * s100 - harm_aux->D) * harm_aux->D);
+  const double jac = -t14 * s200 + W;
+  if(!isfinite(jac) || jac == 0.0) {
+    harm_aux->error = ghl_error_c2p_singular;
+    return;
+  }
   // Set dx (NR step), f, and df (see function description above)
-  dx[0] = - resid/jac;
-  *df   = - resid*resid;
-  *f    = - 0.5*(*df);
+  dx[0] = -resid / jac;
+  *df = -resid * resid;
+  *f = -0.5 * (*df);
 }

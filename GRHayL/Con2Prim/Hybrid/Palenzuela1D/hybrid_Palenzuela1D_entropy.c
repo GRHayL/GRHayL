@@ -1,24 +1,23 @@
 #include "../../utils_Palenzuela1D.h"
 
-/*
- * Function   : compute_rho_P_eps_W_entropy
- * Author     : Leo Werneck
+/**
+ * @ingroup c2p_internal
+ * @brief Evaluate hybrid thermodynamics and W for the entropy residual.
+ * @author Leo Werneck
  *
- * This function is used to compute rho, P, eps, and W from x and the input
- * conservative variables, using the specific internal energy to recover the
- * temperature.
+ * Derives pressure from conservative entropy, floors it at the cold pressure,
+ * and evaluates specific internal energy from the hybrid EOS.
  *
- * Parameters : x       - Current guess for the root of f(x).
- *            : fparams - Parameters used to evaluate f(x) (see palenzuela.h).
- *            : rho_ptr - Stores the result for rho.
- *            : P_ptr   - Stores the result for P.
- *            : eps_ptr - Stores the result for eps.
- *            : W_ptr   - Stores the result for W.
+ * @param[in] x Trial value of hW
+ * @param[in] params Recovery parameters supplying the Lorentz-factor cap
+ * @param[in] eos Hybrid EOS parameters
+ * @param[in] cons_undens Undensitized conservatives
+ * @param[in,out] fparams Normalized contractions and callback state from roots.h
+ * @param[in,out] prims Primitive state receiving rho, pressure, and internal energy
+ * @param[out] W_ptr Limited Lorentz factor
  *
- * Returns    : Nothing.
- *
- * References : [1] Palenzuela et al. (2015) arXiv:1505.01607
- *            : [2] Siegel et al. (2018) arXiv:1712.07538
+ * See Palenzuela et al. (2015), arXiv:1505.01607, and Siegel et al. (2018),
+ * arXiv:1712.07538. Entropy formulation: Werneck et al. (2023), arXiv:2208.14487.
  */
 static void
 compute_rho_P_eps_W_entropy(
@@ -39,7 +38,7 @@ compute_rho_P_eps_W_entropy(
   const double Gamma = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos, prims->rho)];
   prims->press       = prims->entropy * pow(prims->rho, Gamma - 1.0);
 
-  // Step 3: Compute the pressure
+  // Step 3: Enforce the cold-pressure floor and compute specific internal energy
   double P_cold, eps_cold;
   ghl_hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
   // Don't let P be less than P_cold
@@ -51,13 +50,8 @@ compute_rho_P_eps_W_entropy(
   *W_ptr   = W;
 }
 
-/*
- * Function : ghl_hybrid_Palenzuela1D_energy
- * Author   : Leo Werneck
- *
- * This is a wrapper function around the ghl_hybrid_Palenzuela1D that performs
- * a primitive recovery using the Palenzuela et al. scheme using the specific
- * energy. See file ghl_hybrid_Palenzuela1D.c for further details.
+/* ghl_hybrid_Palenzuela1D_entropy selects the entropy callback for
+ * ghl_hybrid_Palenzuela1D. See ghl_con2prim.h for the public calling contract.
  */
 ghl_error_codes_t ghl_hybrid_Palenzuela1D_entropy(
       const ghl_parameters *restrict params,

@@ -1,5 +1,5 @@
-#ifndef __HARM_U2P_UTIL__C__
-#define __HARM_U2P_UTIL__C__
+#ifndef GHL_CON2PRIM_UTILS_NOBLE_H
+#define GHL_CON2PRIM_UTILS_NOBLE_H
 
 #include "ghl_con2prim.h"
 
@@ -14,7 +14,9 @@
  * @details
  * This struct bundles frequently reused contractions, solver settings, and
  * iteration state so the internal residual and validation routines can share
- * a compact argument list.
+ * a compact argument list. This is a private solver type, not an installed API.
+ * Each Newton invocation has its own iteration budget; n_iter accumulates
+ * attempted iterations across outer solves, nested solves, and retries.
  */
 typedef struct harm_auxiliary_vars {
   double QU[4];
@@ -24,6 +26,7 @@ typedef struct harm_auxiliary_vars {
   int n_iter;
   int max_iterations;
   double solver_tolerance;
+  ghl_error_codes_t error; /**< Residual callback failure for the active solve. */
 } harm_aux_vars_struct;
 
 /** Return whether a finalized Noble pressure can be reported as successful. */
@@ -33,10 +36,6 @@ static inline bool ghl_Noble_pressure_is_valid(const double press) {
   }
   return press > 0.0;
 }
-
-/**************************************************
-  The following functions assume a Gamma-law EOS:
-***************************************************/
 
 /**
  * @ingroup c2p_internal
@@ -58,45 +57,36 @@ static inline void ghl_compute_func_auxiliaries(
 
   // Compute W^{-2} = 1 - v^{2} and W^{-1}
   const double inv_Wsq = 1.0 - vsq;
-  const double inv_W   = sqrt(inv_Wsq);
-  const double W = 1.0/inv_W;
+  const double inv_W = sqrt(inv_Wsq);
+  const double W = 1.0 / inv_W;
 
   // Compute rho_b = D / W
-  const double rho_b = D*inv_W;
+  const double rho_b = D * inv_W;
 
   // Compute P_cold and eps_cold
   double P_cold, eps_cold;
-  ghl_hybrid_compute_P_cold_and_eps_cold(eos,rho_b, &P_cold, &eps_cold);
+  ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho_b, &P_cold, &eps_cold);
 
   // Set up some intermediate quantities
-  const double Gth_m1          = eos->Gamma_th - 1.0;
-  const double eps_p1          = eps_cold + 1.0;
-  const double Gth_m1_Z_invWsq = Gth_m1*Z*inv_Wsq;
-  const double Gth_m1_rho_eps  = Gth_m1*rho_b*eps_p1;
+  const double Gth_m1 = eos->Gamma_th - 1.0;
+  const double eps_p1 = eps_cold + 1.0;
+  const double Gth_m1_Z_invWsq = Gth_m1 * Z * inv_Wsq;
+  const double Gth_m1_rho_eps = Gth_m1 * rho_b * eps_p1;
 
   // Compute P = P_{cold} + P_{th}
-  *pressure = (P_cold + Gth_m1_Z_invWsq - Gth_m1_rho_eps)/eos->Gamma_th;
+  *pressure = (P_cold + Gth_m1_Z_invWsq - Gth_m1_rho_eps) / eos->Gamma_th;
 
-  // Set basic polytropic quantities
-  const double Gamma_ppoly = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos, rho_b)];
-
-  // Note that for the following derivatives, we divide by W^2 to simplify the expressions
-
-  /* Now we implement the derivative of P_cold with respect to v^{2}, given by
-   *  -------------------------------------------------
-   * | dP_cold/dvsq = W^{2 + Gamma_{poly}/2} P_{cold} |
-   * | dP_cold/dvsq/W^2 = W^{Gamma_{poly}/2} P_{cold} |
-   *  -------------------------------------------------
-   */
-  const double dPcold_dvsq_Wsq = P_cold * pow(W, 0.5*Gamma_ppoly);
-
-  /* Now we implement the derivative of eps_cold with respect to v^{2}, given by
-   *  -----------------------------------------------------------------------------
-   * | deps_cold/dvsq = (dP_cold/dvsq + W^{2} P_cold/2) * W/(D*(Gamma_ppoly-1))   |
-   * | deps_cold/dvsq/W^2 = (dP_cold/dvsq/W^2 + P_cold/2) / (W*D*(Gamma_ppoly-1)) |
-   *  -----------------------------------------------------------------------------
-   */
-  const double depscold_dvsq_Wsq = ( dPcold_dvsq_Wsq + 0.5*P_cold ) / (rho_b*(Gamma_ppoly-1.0));
+  // At fixed D, drho/dvsq = -rho*W^2/2. Scale the cold derivatives by W^2.
+  // Outside the EOS density bounds the cold helper is constant. At a bound
+  // use the interior derivative; at a piece boundary use the selected piece.
+  double dPcold_dvsq_Wsq = 0.0;
+  double depscold_dvsq_Wsq = 0.0;
+  if(rho_b >= eos->rho_min && rho_b <= eos->rho_max) {
+    const double Gamma_ppoly
+          = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos, rho_b)];
+    dPcold_dvsq_Wsq = -0.5 * Gamma_ppoly * P_cold;
+    depscold_dvsq_Wsq = -0.5 * P_cold / rho_b;
+  }
 
   /* Now we implement the derivative of p_hybrid with respect to v^{2}, given by
    *  --------------------------------------------------------------------------
@@ -110,9 +100,12 @@ static inline void ghl_compute_func_auxiliaries(
    * |                                           - rho * deps_cold/dvsq/W^2) ) |
    *  --------------------------------------------------------------------------
    */
-  *dPdvsq = W*W*(dPcold_dvsq_Wsq - Gth_m1_Z_invWsq + Gth_m1_rho_eps/2.0 - Gth_m1*rho_b*depscold_dvsq_Wsq)/eos->Gamma_th;
+  *dPdvsq = W * W
+            * (dPcold_dvsq_Wsq - Gth_m1_Z_invWsq + Gth_m1_rho_eps / 2.0
+               - Gth_m1 * rho_b * depscold_dvsq_Wsq)
+            / eos->Gamma_th;
 
-  *dPdZ = Gth_m1*inv_Wsq/eos->Gamma_th;
+  *dPdZ = Gth_m1 * inv_Wsq / eos->Gamma_th;
 }
 
 /*
@@ -132,7 +125,8 @@ static inline void ghl_compute_func_auxiliaries(
  * \f[
  * P = \frac{1}{\Gamma_\mathrm{th}}\left[P_\mathrm{cold}
  *                                       + \left( \Gamma_\mathrm{th} - 1 \right)
- *                                         \left( w - \rho \left(1 + \epsilon_\mathrm{cold}\right) \right) \right]
+ *                                         \left( w - \rho \left(1 +
+ * \epsilon_\mathrm{cold}\right) \right) \right]
  * \f]
  *
  * @param[in] eos pointer to ghl_eos_parameters struct
@@ -149,9 +143,11 @@ static inline double ghl_pressure_rho0_w(
       const double w) {
 
   double P_cold, eps_cold;
-  ghl_hybrid_compute_P_cold_and_eps_cold(eos,rho0, &P_cold, &eps_cold);
+  ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho0, &P_cold, &eps_cold);
 
-  return( (P_cold + (eos->Gamma_th-1.0)*( w - rho0*(1.0 + eps_cold) ) )/eos->Gamma_th );
+  return (
+        (P_cold + (eos->Gamma_th - 1.0) * (w - rho0 * (1.0 + eps_cold)))
+        / eos->Gamma_th);
 }
 
 /****************************************************************************
@@ -169,13 +165,14 @@ static inline double ghl_pressure_rho0_w(
  * This helper evaluates the closed-form expression for the squared transport
  * velocity used by the Noble-style Con2Prim residual equations.
  */
-static inline double ghl_vsq_calc(
-      const harm_aux_vars_struct *restrict harm_aux,
-      const double Z) {
-  const double Zsq = Z*Z ;
+static inline double
+ghl_vsq_calc(const harm_aux_vars_struct *restrict harm_aux, const double Z) {
+  const double Zsq = Z * Z;
   const double Xsq = (harm_aux->Bsq + Z) * (harm_aux->Bsq + Z);
 
-  return(  ( Zsq * harm_aux->Qtsq  + harm_aux->QdotBsq * (harm_aux->Bsq + 2.*Z)) / (Zsq*Xsq) );
+  return (
+        (Zsq * harm_aux->Qtsq + harm_aux->QdotBsq * (harm_aux->Bsq + 2. * Z))
+        / (Zsq * Xsq));
 }
 
 ghl_error_codes_t ghl_general_newton_raphson(
@@ -186,15 +183,15 @@ ghl_error_codes_t ghl_general_newton_raphson(
       double x[],
       void (*validate_x)(
             const harm_aux_vars_struct *restrict harm_aux,
-            const double [],
-            const double [],
-            double []),
+            const double[],
+            const double[],
+            double[]),
       void (*funcd)(
             const ghl_eos_parameters *restrict,
             harm_aux_vars_struct *restrict,
             const double,
-            const double [],
-            double [],
+            const double[],
+            double[],
             double *restrict,
             double *restrict));
 

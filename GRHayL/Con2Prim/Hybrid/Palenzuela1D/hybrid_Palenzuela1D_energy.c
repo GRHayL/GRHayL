@@ -1,24 +1,23 @@
 #include "../../utils_Palenzuela1D.h"
 
-/*
- * Function   : compute_rho_P_eps_W_energy
- * Author     : Leo Werneck
+/**
+ * @ingroup c2p_internal
+ * @brief Evaluate hybrid thermodynamics and W for the energy residual.
+ * @author Leo Werneck
  *
- * This function is used to compute rho, P, eps, and W from x and the input
- * conservative variables, using the specific internal energy to recover the
- * temperature.
+ * Derives specific internal energy from conservative energy, floors it at the
+ * cold value, and evaluates hybrid pressure.
  *
- * Parameters : x       - Current guess for the root of f(x).
- *            : fparams - Parameters used to evaluate f(x) (see palenzuela.h).
- *            : rho_ptr - Stores the result for rho.
- *            : P_ptr   - Stores the result for P.
- *            : eps_ptr - Stores the result for eps.
- *            : W_ptr   - Stores the result for W.
+ * @param[in] x Trial value of hW
+ * @param[in] params Recovery parameters supplying the Lorentz-factor cap
+ * @param[in] eos Hybrid EOS parameters
+ * @param[in] cons_undens Undensitized conservatives
+ * @param[in,out] fparams Normalized contractions and callback state from roots.h
+ * @param[in,out] prims Primitive state receiving rho, pressure, and internal energy
+ * @param[out] W_ptr Limited Lorentz factor
  *
- * Returns    : Nothing.
- *
- * References : [1] Palenzuela et al. (2015) arXiv:1505.01607
- *            : [2] Siegel et al. (2018) arXiv:1712.07538
+ * See Palenzuela et al. (2015), arXiv:1505.01607, and Siegel et al. (2018),
+ * arXiv:1712.07538.
  */
 static void
 compute_rho_P_eps_W_energy(
@@ -53,13 +52,8 @@ compute_rho_P_eps_W_energy(
   *W_ptr   = W;
 }
 
-/*
- * Function : ghl_hybrid_Palenzuela1D_energy
- * Author   : Leo Werneck
- *
- * This is a wrapper function around the ghl_hybrid_Palenzuela1D that performs
- * a primitive recovery using the Palenzuela et al. scheme using the specific
- * energy. See file ghl_hybrid_Palenzuela1D.c for further details.
+/* ghl_hybrid_Palenzuela1D_energy selects the energy callback for
+ * ghl_hybrid_Palenzuela1D. See ghl_con2prim.h for the public calling contract.
  */
 ghl_error_codes_t ghl_hybrid_Palenzuela1D_energy(
       const ghl_parameters *restrict params,

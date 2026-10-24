@@ -1,6 +1,7 @@
-# Schedule for thorn IllinoisGRMHD
+# Schedule for thorn GRHayLib
 
 # Needed for a single release to preserve IllinoisGRMHD backward compatibility
+# IllinoisGRMHD supplies compatibility initialization when this is skipped.
 if( !CCTK_IsThornActive("ID_converter_ILGRMHD") ) {
   schedule GRHayLib_initialize at CCTK_WRAGH
   {
@@ -9,6 +10,7 @@ if( !CCTK_IsThornActive("ID_converter_ILGRMHD") ) {
   } "Set up the GRHayL structs and read the table for tabulated EOS."
 }
 
+# Keep cleanup scheduled for globals supplied by either initialization path.
 schedule GRHayLib_terminate AT CCTK_TERMINATE
 {
   LANG: C

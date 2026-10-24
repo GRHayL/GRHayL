@@ -2,8 +2,8 @@
 #define ROOTS_H_
 
 #include "ghl.h"
-#include <stdio.h>
 #include <float.h>
+#include <stdio.h>
 
 #ifndef DBL_EPSILON
 #define DBL_EPSILON 2.220446049250313e-16
@@ -38,22 +38,22 @@ typedef struct fparams_struct {
   ghl_error_codes_t eos_error;
   /** Function pointer provided by the surrounding functions */
   void (*compute_rho_P_eps_T_W)(
-      const double x,
-      const ghl_parameters *restrict params,
-      const ghl_eos_parameters *restrict eos,
-      const ghl_conservative_quantities *restrict cons_undens,
-      struct fparams_struct *restrict fparams,
-      ghl_primitive_quantities *restrict prims,
-      double *restrict W_ptr);
+        const double x,
+        const ghl_parameters *restrict params,
+        const ghl_eos_parameters *restrict eos,
+        const ghl_conservative_quantities *restrict cons_undens,
+        struct fparams_struct *restrict fparams,
+        ghl_primitive_quantities *restrict prims,
+        double *restrict W_ptr);
   /** Function pointer provided by surrounding functions */
   void (*compute_rho_P_eps_W)(
-      const double x,
-      const ghl_parameters *restrict params,
-      const ghl_eos_parameters *restrict eos,
-      const ghl_conservative_quantities *restrict cons_undens,
-      struct fparams_struct *restrict fparams,
-      ghl_primitive_quantities *restrict prims,
-      double *restrict W_ptr);
+        const double x,
+        const ghl_parameters *restrict params,
+        const ghl_eos_parameters *restrict eos,
+        const ghl_conservative_quantities *restrict cons_undens,
+        struct fparams_struct *restrict fparams,
+        ghl_primitive_quantities *restrict prims,
+        double *restrict W_ptr);
 } fparams_struct;
 
 /**
@@ -69,29 +69,6 @@ typedef struct roots_params {
   unsigned n_iters, max_iters;
   double a, b, root, residual, tol;
 } roots_params;
-
-/**
- * @ingroup c2p_internal
- * @brief Prints information about the root-finding process.
- *
- * @param[in] r pointer to roots_params
- *
- */
-static inline void
-roots_info(const roots_params *restrict r) {
-
-  // Step 1: Print basic message to the user
-  fprintf(stderr, "(roots) Root-finding information:\n");
-  fprintf(stderr, "(roots)   %16s : %s\n", "Routine", r->routine_name);
-  fprintf(stderr, "(roots)   %16s : [%c%21.15e, %c%21.15e]\n",
-         "Initial interval",
-         r->a >= 0 ? '+' : '-', fabs(r->a),
-         r->b >= 0 ? '+' : '-', fabs(r->b));
-  fprintf(stderr, "(roots)   %16s : ", "Status");
-  fprintf(stderr, "(roots)   %16s : %d\n", "Iterations", r->n_iters);
-  fprintf(stderr, "(roots)   %16s : %.15e\n", "Root", r->root);
-  fprintf(stderr, "(roots)   %16s : %.15e\n", "Residual", r->residual);
-}
 
 /**
  * @ingroup c2p_internal
