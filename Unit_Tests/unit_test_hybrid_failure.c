@@ -291,6 +291,14 @@ static void test_Noble_density_status(void) {
                            &prims, &aux, &Z) != ghl_error_neg_rho) {
       ghl_error("Noble initialization did not report invalid density case %zu\n", i);
     }
+    // The solver must return that status before starting the Newton iteration.
+    ghl_primitive_quantities recovered = prims;
+    ghl_con2prim_diagnostics diagnostics;
+    ghl_initialize_diagnostics(&diagnostics);
+    if(ghl_hybrid_Noble1D(&params, &eos, &metric, &metric_aux, &cons, &recovered,
+                          &diagnostics) != ghl_error_neg_rho) {
+      ghl_error("Noble1D did not propagate invalid density case %zu\n", i);
+    }
   }
 }
 
@@ -309,8 +317,11 @@ static void test_Noble_singular_residuals(void) {
     { "1D light-speed Jacobian", ghl_func_1D, 1.0, 0.0 },
     { "2D light-speed Jacobian", ghl_func_2D, 1.0, 0.0 },
     { "density zero Jacobian", ghl_func_rho, 0.0, 0.5 },
+    { "density nonfinite Jacobian", ghl_func_rho, 0.0, INFINITY },
     { "momentum zero Jacobian", ghl_func_rho2, 1.0, 0.0 },
-    { "outer zero Jacobian", ghl_func_Z, 1.0, 0.0 }
+    { "outer zero Jacobian", ghl_func_Z, 1.0, 0.0 },
+    // The density solve succeeds, then the outer Jacobian is nonfinite.
+    { "outer nonfinite Jacobian", ghl_func_Z, NAN, 0.0 }
   };
   for(size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); ++i) {
     harm_aux_vars_struct aux = {
@@ -784,6 +795,15 @@ static void Font_invalid_enthalpy_EOS(
   *eps = -1.0;
 }
 
+static void Font_nonfinite_enthalpy_EOS(
+      const ghl_eos_parameters *eos, double rho, double *press, double *eps) {
+  (void)eos; (void)rho;
+  // An overflowing cold pressure gives h = +inf, which would let the density
+  // update ignore S^2 and move to D.
+  *press = INFINITY;
+  *eps = 0.0;
+}
+
 static void Font_invalid_final_enthalpy_EOS(
       const ghl_eos_parameters *eos, double rho, double *press, double *eps) {
   (void)eos;
@@ -929,6 +949,14 @@ static void test_Font1D_convergence_and_failures(void) {
   ghl_hybrid_compute_P_cold_and_eps_cold = saved_EOS;
   if(enthalpy_error != ghl_error_c2p_singular) {
     ghl_error("Font accepted zero enthalpy\n");
+  }
+  // The rejected update would otherwise publish rho = D = 4 as a retry seed.
+  ghl_hybrid_compute_P_cold_and_eps_cold = Font_nonfinite_enthalpy_EOS;
+  const ghl_error_codes_t nonfinite_enthalpy_error = ghl_hybrid_Font1D_loop(
+        &eos, 3, 1e-15, 1, 9, 9, 0, 0, &cons, 1, &rho_out, &n_iter);
+  ghl_hybrid_compute_P_cold_and_eps_cold = saved_EOS;
+  if(nonfinite_enthalpy_error != ghl_error_c2p_singular || rho_out != 1.0) {
+    ghl_error("Font accepted nonfinite enthalpy or published its density\n");
   }
   cons.rho = 2.0;
   ghl_hybrid_compute_P_cold_and_eps_cold = Font_invalid_final_enthalpy_EOS;

@@ -33,9 +33,7 @@ helpers. Their status and call-count assertions check iteration exhaustion;
 detecting an undersized history array requires ASan/UBSan instrumentation of
 the solver. An ordinary run is not an out-of-bounds-write check. The expected
 `600` EOS calls depend on each helper's `maxsteps = 300` and the public wrapper's
-single `T_min` retry. The [runner](../../../.github/run_tests.sh),
-[workflows](../../../.github/workflows/), and [configure](../../../configure)
-do not enable sanitizer instrumentation.
+single `T_min` retry.
 
 The fixed-temperature Palenzuela check in
 [unit_test_con2prim_tabulated.c](../../../Unit_Tests/unit_test_con2prim_tabulated.c)
