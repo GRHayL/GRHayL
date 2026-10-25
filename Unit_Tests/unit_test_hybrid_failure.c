@@ -122,7 +122,9 @@ static void test_utilde_speed_limit_monotonicity(void) {
 // independently of the Noble residual and its analytic derivatives.
 static double hybrid_pressure_at_Z_vsq(
       const ghl_eos_parameters *restrict eos,
-      const double Z, const double vsq, const double D) {
+      const double Z,
+      const double vsq,
+      const double D) {
   const double rho = D * sqrt(1.0 - vsq);
   const double cold_rho = fmin(eos->rho_max, fmax(eos->rho_min, rho));
   int j = 0;
@@ -130,10 +132,10 @@ static double hybrid_pressure_at_Z_vsq(
     j++;
   }
   const double Pcold = eos->K_ppoly[j] * pow(cold_rho, eos->Gamma_ppoly[j]);
-  const double ecold = Pcold / (cold_rho * (eos->Gamma_ppoly[j] - 1.0))
-                      + eos->eps_integ_const[j];
-  return (Pcold + (eos->Gamma_th - 1.0)
-          * (Z * (1.0 - vsq) - rho * (1.0 + ecold))) / eos->Gamma_th;
+  const double ecold
+        = Pcold / (cold_rho * (eos->Gamma_ppoly[j] - 1.0)) + eos->eps_integ_const[j];
+  return (Pcold + (eos->Gamma_th - 1.0) * (Z * (1.0 - vsq) - rho * (1.0 + ecold)))
+         / eos->Gamma_th;
 }
 
 static void test_Noble_hybrid_derivatives(void) {
@@ -152,14 +154,15 @@ static void test_Noble_hybrid_derivatives(void) {
     double pressure, dPdvsq, dPdZ;
     ghl_compute_func_auxiliaries(&eos, Z, vsq, D, &pressure, &dPdvsq, &dPdZ);
     // Allow double-precision roundoff between equivalent pressure formulas.
-    check_close("Noble pressure", hybrid_pressure_at_Z_vsq(&eos, Z, vsq, D),
-                pressure, 1e-13);
+    check_close(
+          "Noble pressure", hybrid_pressure_at_Z_vsq(&eos, Z, vsq, D), pressure, 1e-13);
     // The solver takes the interior derivative at clamps, and the upper
     // density piece at a transition; increasing vsq decreases density.
     const double lo = i == 5 ? vsq : vsq - delta;
     const double hi = (i == 4 || i == 6) ? vsq : vsq + delta;
     const double fd_v = (hybrid_pressure_at_Z_vsq(&eos, Z, hi, D)
-                         - hybrid_pressure_at_Z_vsq(&eos, Z, lo, D)) / (hi - lo);
+                         - hybrid_pressure_at_Z_vsq(&eos, Z, lo, D))
+                        / (hi - lo);
     const double fd_Z = (hybrid_pressure_at_Z_vsq(&eos, Z + delta, vsq, D)
                          - hybrid_pressure_at_Z_vsq(&eos, Z - delta, vsq, D))
                         / (2.0 * delta);
@@ -174,8 +177,12 @@ static int newton_evaluations;
 
 static void quadratic_residual(
       const ghl_eos_parameters *restrict eos,
-      harm_aux_vars_struct *restrict harm_aux, const double invalid,
-      const double x[], double dx[], double *restrict f, double *restrict df) {
+      harm_aux_vars_struct *restrict harm_aux,
+      const double invalid,
+      const double x[],
+      double dx[],
+      double *restrict f,
+      double *restrict df) {
   (void)eos;
   (void)harm_aux;
   newton_evaluations++;
@@ -187,8 +194,8 @@ static void quadratic_residual(
 
 static void test_Noble_newton_budgets(void) {
   ghl_eos_parameters eos = { 0 };
-  harm_aux_vars_struct aux = { .n_iter = 100, .max_iterations = 12,
-                               .solver_tolerance = 1e-12 };
+  harm_aux_vars_struct aux
+        = { .n_iter = 100, .max_iterations = 12, .solver_tolerance = 1e-12 };
   int expected_iterations = 0;
   for(int attempt = 0; attempt < 2; ++attempt) {
     double x[] = { 8.0 };
@@ -213,7 +220,8 @@ static void test_Noble_newton_budgets(void) {
   int before = aux.n_iter;
   if(ghl_general_newton_raphson(
            &eos, &aux, 1, 0.0, x, ghl_validate_1D_entropy, quadratic_residual)
-     != ghl_error_c2p_max_iter || aux.n_iter != before + 1) {
+           != ghl_error_c2p_max_iter
+     || aux.n_iter != before + 1) {
     ghl_error("Newton exhaustion status/count mismatch\n");
   }
   aux.max_iterations = 12;
@@ -254,8 +262,8 @@ static void test_Noble_newton_budgets(void) {
   aux.max_iterations = 12;
   before = aux.n_iter;
   ghl_func_Z(&eos, &aux, 0.8, x, dx, &f, &df);
-  if(aux.error != ghl_success || aux.n_iter != before + 2
-     || !isfinite(dx[0]) || !isfinite(df)) {
+  if(aux.error != ghl_success || aux.n_iter != before + 2 || !isfinite(dx[0])
+     || !isfinite(df)) {
     ghl_error("Nested density solve did not accumulate its iteration count\n");
   }
   // Allow roundoff in the linear density root and the outer squared residual.
@@ -263,12 +271,12 @@ static void test_Noble_newton_budgets(void) {
 }
 
 static void test_Noble_density_status(void) {
-  const ghl_con2prim_id_t backups[3] = {
-    ghl_con2prim_id_None, ghl_con2prim_id_None, ghl_con2prim_id_None
-  };
+  const ghl_con2prim_id_t backups[3]
+        = { ghl_con2prim_id_None, ghl_con2prim_id_None, ghl_con2prim_id_None };
   ghl_parameters params;
-  ghl_initialize_params(ghl_con2prim_id_Noble2D, backups, false, false, false,
-                        1e100, 10.0, 0.0, &params);
+  ghl_initialize_params(
+        ghl_con2prim_id_Noble2D, backups, false, false, false, 1e100, 10.0, 0.0,
+        &params);
   const double breaks[] = { 0.0 }, gammas[] = { 2.0 };
   ghl_eos_parameters eos = { 0 };
   ghl_initialize_hybrid_eos_functions_and_params(
@@ -277,9 +285,8 @@ static void test_Noble_density_status(void) {
   ghl_initialize_metric(1, 0, 0, 0, 1, 0, 0, 1, 0, 1, &metric);
   ghl_ADM_aux_quantities metric_aux;
   ghl_compute_ADM_auxiliaries(&metric, &metric_aux);
-  const ghl_primitive_quantities prims = {
-    .rho = 1.0, .press = 1.0, .eps = 1.0, .u0 = 1.0
-  };
+  const ghl_primitive_quantities prims
+        = { .rho = 1.0, .press = 1.0, .eps = 1.0, .u0 = 1.0 };
   ghl_conservative_quantities cons = { .rho = 1.0, .tau = 1.0 };
   harm_aux_vars_struct aux;
   double Z;
@@ -289,16 +296,17 @@ static void test_Noble_density_status(void) {
   const double invalid_density[] = { 0.0, -1.0, NAN, INFINITY, -INFINITY };
   for(size_t i = 0; i < sizeof(invalid_density) / sizeof(invalid_density[0]); ++i) {
     cons.rho = invalid_density[i];
-    if(ghl_initialize_Noble(&params, &eos, &metric, &metric_aux, &cons,
-                           &prims, &aux, &Z) != ghl_error_neg_rho) {
+    if(ghl_initialize_Noble(&params, &eos, &metric, &metric_aux, &cons, &prims, &aux, &Z)
+       != ghl_error_neg_rho) {
       ghl_error("Noble initialization did not report invalid density case %zu\n", i);
     }
     // The solver must return that status before starting the Newton iteration.
     ghl_primitive_quantities recovered = prims;
     ghl_con2prim_diagnostics diagnostics;
     ghl_initialize_diagnostics(&diagnostics);
-    if(ghl_hybrid_Noble1D(&params, &eos, &metric, &metric_aux, &cons, &recovered,
-                          &diagnostics) != ghl_error_neg_rho) {
+    if(ghl_hybrid_Noble1D(
+             &params, &eos, &metric, &metric_aux, &cons, &recovered, &diagnostics)
+       != ghl_error_neg_rho) {
       ghl_error("Noble1D did not propagate invalid density case %zu\n", i);
     }
   }
@@ -311,25 +319,30 @@ static void test_Noble_singular_residuals(void) {
         1e-12, 1e-12, 1e6, 1, breaks, gammas, 1.0, 2.0, &eos);
   const struct {
     const char *name;
-    void (*func)(const ghl_eos_parameters *, harm_aux_vars_struct *,
-                 double, const double[], double[], double *, double *);
+    void (*func)(
+          const ghl_eos_parameters *,
+          harm_aux_vars_struct *,
+          double,
+          const double[],
+          double[],
+          double *,
+          double *);
     double Qtsq, entropy;
-  } cases[] = {
-    { "nonfinite velocity", ghl_func_1D, NAN, 0.0 },
-    { "1D light-speed Jacobian", ghl_func_1D, 1.0, 0.0 },
-    { "2D light-speed Jacobian", ghl_func_2D, 1.0, 0.0 },
-    { "density zero Jacobian", ghl_func_rho, 0.0, 0.5 },
-    { "density nonfinite Jacobian", ghl_func_rho, 0.0, INFINITY },
-    { "momentum zero Jacobian", ghl_func_rho2, 1.0, 0.0 },
-    { "outer zero Jacobian", ghl_func_Z, 1.0, 0.0 },
-    // The density solve succeeds, then the outer Jacobian is nonfinite.
-    { "outer nonfinite Jacobian", ghl_func_Z, NAN, 0.0 }
-  };
+  } cases[] = { { "nonfinite velocity", ghl_func_1D, NAN, 0.0 },
+                { "1D light-speed Jacobian", ghl_func_1D, 1.0, 0.0 },
+                { "2D light-speed Jacobian", ghl_func_2D, 1.0, 0.0 },
+                { "density zero Jacobian", ghl_func_rho, 0.0, 0.5 },
+                { "density nonfinite Jacobian", ghl_func_rho, 0.0, INFINITY },
+                { "momentum zero Jacobian", ghl_func_rho2, 1.0, 0.0 },
+                { "outer zero Jacobian", ghl_func_Z, 1.0, 0.0 },
+                // The density solve succeeds, then the outer Jacobian is nonfinite.
+                { "outer nonfinite Jacobian", ghl_func_Z, NAN, 0.0 } };
   for(size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); ++i) {
-    harm_aux_vars_struct aux = {
-      .D = 1.0, .Qtsq = cases[i].Qtsq, .W_times_S = cases[i].entropy,
-      .max_iterations = 12, .solver_tolerance = 1e-12
-    };
+    harm_aux_vars_struct aux = { .D = 1.0,
+                                 .Qtsq = cases[i].Qtsq,
+                                 .W_times_S = cases[i].entropy,
+                                 .max_iterations = 12,
+                                 .solver_tolerance = 1e-12 };
     const double x[] = { 1.0, 1.0 };
     double dx[2], f, df;
     cases[i].func(&eos, &aux, 1.0, x, dx, &f, &df);
@@ -364,9 +377,8 @@ static void test_Noble_clamped_convergence(void) {
   ghl_initialize_hybrid_eos_functions_and_params(
         1e-12, 1e-12, 1e6, 3, breaks, gammas, 0.7, 1.8, &eos);
   for(int test = 0; test < 3; ++test) {
-    harm_aux_vars_struct aux = {
-      .D = 1e-12, .max_iterations = 4, .solver_tolerance = 1e-8
-    };
+    harm_aux_vars_struct aux
+          = { .D = 1e-12, .max_iterations = 4, .solver_tolerance = 1e-8 };
     double x[] = { 1.0, 1.0 - 1e-15 };
     double step_Z = 0.0, step_v = test == 0 ? 1e-6 : 1e-2;
     if(test == 2) {
@@ -380,8 +392,7 @@ static void test_Noble_clamped_convergence(void) {
     // (step_Z, step_v). This exercises the actual hybrid Noble2D callback.
     double press, dPdvsq, dPdZ;
     ghl_compute_func_auxiliaries(&eos, x[0], x[1], aux.D, &press, &dPdvsq, &dPdZ);
-    aux.Qtsq = x[1] * x[0] * x[0] + 2.0 * x[1] * x[0] * step_Z
-               + x[0] * x[0] * step_v;
+    aux.Qtsq = x[1] * x[0] * x[0] + 2.0 * x[1] * x[0] * step_Z + x[0] * x[0] * step_v;
     aux.Qdotn = -x[0] + press + (-1.0 + dPdZ) * step_Z + dPdvsq * step_v;
     double dx[2], f, df;
     ghl_func_2D(&eos, &aux, 0.0, x, dx, &f, &df);
@@ -389,25 +400,26 @@ static void test_Noble_clamped_convergence(void) {
        || (test == 1 ? f <= aux.solver_tolerance : f > aux.solver_tolerance)
        || (test == 0 && fabs(dx[1] / x[1]) <= aux.solver_tolerance)
        || (test == 2 && fabs(dx[0] / x[0]) <= 1.0)) {
-      ghl_error("Noble clamp case %d did not establish its intended residual/step\n", test);
+      ghl_error(
+            "Noble clamp case %d did not establish its intended residual/step\n", test);
     }
     // A stationary bounded velocity may converge with a small residual.
     // A large residual must still fail, as must a large Z step hidden by fabs.
     const ghl_error_codes_t expected = test == 0 ? ghl_success : ghl_error_c2p_max_iter;
-    if(ghl_general_newton_raphson(&eos, &aux, 2, 0.0, x,
-          ghl_validate_2D, ghl_func_2D) != expected) {
+    if(ghl_general_newton_raphson(&eos, &aux, 2, 0.0, x, ghl_validate_2D, ghl_func_2D)
+       != expected) {
       ghl_error("Noble clamp acceptance/residual rejection failed case %d\n", test);
     }
   }
 }
 
 static void test_Noble_negative_velocity_roundoff(void) {
-  const ghl_con2prim_id_t backups[] = {
-    ghl_con2prim_id_None, ghl_con2prim_id_None, ghl_con2prim_id_None
-  };
+  const ghl_con2prim_id_t backups[]
+        = { ghl_con2prim_id_None, ghl_con2prim_id_None, ghl_con2prim_id_None };
   ghl_parameters params;
-  ghl_initialize_params(ghl_con2prim_id_Noble1D, backups, false, false, false,
-                        1e100, 10.0, 0.0, &params);
+  ghl_initialize_params(
+        ghl_con2prim_id_Noble1D, backups, false, false, false, 1e100, 10.0, 0.0,
+        &params);
   const double breaks[] = { 0.0 }, gammas[] = { 2.0 };
   ghl_eos_parameters eos = { 0 };
   ghl_initialize_hybrid_eos_functions_and_params(
@@ -421,14 +433,13 @@ static void test_Noble_negative_velocity_roundoff(void) {
     // Isolate cancellation in Q^2 + (Q.n)^2: one ulp of inverse-metric
     // error is tolerated, while a larger inconsistency must be rejected.
     metric_aux.g4UU[0][0] = test == 0 ? -nextafter(1.0, 0.0) : -1.0 + 1e-6;
-    ghl_primitive_quantities prims = {
-      .rho = 1.0, .press = 1.0, .eps = 1.0, .u0 = 1.0
-    };
+    ghl_primitive_quantities prims = { .rho = 1.0, .press = 1.0, .eps = 1.0, .u0 = 1.0 };
     ghl_con2prim_diagnostics diagnostics;
     ghl_initialize_diagnostics(&diagnostics);
     const ghl_error_codes_t expected = test == 0 ? ghl_success : ghl_error_neg_vsq;
-    if(ghl_hybrid_Noble1D(&params, &eos, &metric, &metric_aux, &cons,
-                         &prims, &diagnostics) != expected) {
+    if(ghl_hybrid_Noble1D(
+             &params, &eos, &metric, &metric_aux, &cons, &prims, &diagnostics)
+       != expected) {
       ghl_error("Noble1D negative velocity handling failed case %d\n", test);
     }
     if(test == 0) {
@@ -439,14 +450,23 @@ static void test_Noble_negative_velocity_roundoff(void) {
 }
 
 enum newton_failure_case {
-  newton_first_error, newton_second_error, newton_second_f,
-  newton_second_df, newton_second_dx, newton_overflow, newton_invalid_trial
+  newton_first_error,
+  newton_second_error,
+  newton_second_f,
+  newton_second_df,
+  newton_second_dx,
+  newton_overflow,
+  newton_invalid_trial
 };
 
 static void failing_newton_residual(
       const ghl_eos_parameters *restrict eos,
-      harm_aux_vars_struct *restrict aux, const double failure,
-      const double x[], double dx[], double *restrict f, double *restrict df) {
+      harm_aux_vars_struct *restrict aux,
+      const double failure,
+      const double x[],
+      double dx[],
+      double *restrict f,
+      double *restrict df) {
   (void)eos;
   (void)x;
   ++newton_evaluations;
@@ -473,27 +493,28 @@ static void failing_newton_residual(
 static void test_Noble_newton_failures(void) {
   const ghl_eos_parameters eos = { 0 };
   for(int failure = newton_first_error; failure <= newton_invalid_trial; ++failure) {
-    harm_aux_vars_struct aux = {
-      .Qtsq = 4.0, .max_iterations = 2, .solver_tolerance = 1e-12
-    };
+    harm_aux_vars_struct aux
+          = { .Qtsq = 4.0, .max_iterations = 2, .solver_tolerance = 1e-12 };
     double x[] = { failure == newton_overflow ? DBL_MAX : 1.0 };
     newton_evaluations = 0;
     const ghl_error_codes_t expected = failure <= newton_second_error
-          ? ghl_error_invalid_Z : ghl_error_c2p_singular;
+                                             ? ghl_error_invalid_Z
+                                             : ghl_error_c2p_singular;
     const ghl_error_codes_t error = ghl_general_newton_raphson(
           &eos, &aux, 1, failure, x,
           failure == newton_invalid_trial ? ghl_validate_1D : ghl_validate_1D_entropy,
           failing_newton_residual);
     if(error != expected) {
-      ghl_error("Newton failure case %d: expected %d, got %d\n",
-                failure, expected, error);
+      ghl_error(
+            "Newton failure case %d: expected %d, got %d\n", failure, expected, error);
     }
   }
   harm_aux_vars_struct aux = { .max_iterations = 2, .solver_tolerance = 1e-12 };
   double x[] = { 1.0 };
   newton_evaluations = 0;
-  if(ghl_general_newton_raphson(&eos, &aux, 1, NAN, x,
-        ghl_validate_1D_entropy, quadratic_residual) != ghl_error_c2p_singular
+  if(ghl_general_newton_raphson(
+           &eos, &aux, 1, NAN, x, ghl_validate_1D_entropy, quadratic_residual)
+           != ghl_error_c2p_singular
      || newton_evaluations != 0 || aux.n_iter != 0) {
     ghl_error("Newton evaluated a nonfinite independent variable\n");
   }
@@ -503,11 +524,17 @@ static int brent_evaluations, brent_nan_at;
 static double brent_root;
 
 static double linear_brent_residual(
-      const double x, const ghl_parameters *restrict params,
+      const double x,
+      const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_conservative_quantities *restrict cons,
-      fparams_struct *restrict fparams, ghl_primitive_quantities *restrict prims) {
-  (void)params; (void)eos; (void)cons; (void)fparams; (void)prims;
+      fparams_struct *restrict fparams,
+      ghl_primitive_quantities *restrict prims) {
+  (void)params;
+  (void)eos;
+  (void)cons;
+  (void)fparams;
+  (void)prims;
   ++brent_evaluations;
   return brent_evaluations == brent_nan_at ? NAN : x - brent_root;
 }
@@ -523,17 +550,20 @@ static void test_Brent_failures(void) {
   } cases[] = {
     { "left endpoint", 1, 2, 1, 1e-12, 10, 0, ghl_success, true },
     { "right endpoint", 0, 1, 1, 1e-12, 10, 0, ghl_success, true },
-    { "narrow bracket", 1-1e-13, 1+2e-13, 1, 1e-12, 10, 0, ghl_success, true },
+    { "narrow bracket", 1 - 1e-13, 1 + 2e-13, 1, 1e-12, 10, 0, ghl_success, true },
     { "nonfinite bound", NAN, 1, 0, 1e-12, 10, 0, ghl_error_c2p_singular, true },
     { "nonfinite second bound", 0, NAN, 0, 1e-12, 10, 0, ghl_error_c2p_singular, true },
     { "zero tolerance", 0, 1, 0.5, 0, 10, 0, ghl_error_c2p_singular, true },
     { "nonfinite tolerance", 0, 1, 0.5, NAN, 10, 0, ghl_error_c2p_singular, true },
     { "unbracketed", 2, 3, 1, 1e-12, 10, 0, ghl_error_root_not_bracketed, true },
     { "no iterations", 0, 1, 0.5, 1e-12, 0, 0, ghl_error_c2p_max_iter, true },
-    { "nonfinite first endpoint", 0, 1, 0.5, 1e-12, 10, 1, ghl_error_c2p_singular, true },
-    { "nonfinite second endpoint", 0, 1, 0.5, 1e-12, 10, 2, ghl_error_c2p_singular, true },
+    { "nonfinite first endpoint", 0, 1, 0.5, 1e-12, 10, 1, ghl_error_c2p_singular,
+      true },
+    { "nonfinite second endpoint", 0, 1, 0.5, 1e-12, 10, 2, ghl_error_c2p_singular,
+      true },
     { "nonfinite interior", 0, 1, 0.5, 1e-12, 10, 3, ghl_error_c2p_singular, false },
-    { "overflowed iterate", -DBL_MAX, DBL_MAX, 0, 1e-12, 10, 0, ghl_error_c2p_singular, false }
+    { "overflowed iterate", -DBL_MAX, DBL_MAX, 0, 1e-12, 10, 0, ghl_error_c2p_singular,
+      false }
   };
   for(size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); ++i) {
     roots_params r;
@@ -544,8 +574,8 @@ static void test_Brent_failures(void) {
     brent_nan_at = cases[i].nan_at;
     brent_root = cases[i].root;
     const ghl_error_codes_t error = ghl_brent(
-          linear_brent_residual, NULL, NULL, NULL, NULL, NULL,
-          cases[i].a, cases[i].b, &r);
+          linear_brent_residual, NULL, NULL, NULL, NULL, NULL, cases[i].a, cases[i].b,
+          &r);
     if(error != cases[i].error || r.n_iters > r.max_iters
        || (cases[i].early_return && r.n_iters != 0)) {
       ghl_error("Brent %s status/iteration diagnostic mismatch\n", cases[i].name);
@@ -562,12 +592,12 @@ static void test_Brent_failures(void) {
 }
 
 static void test_Noble_EOS_domains(void) {
-  const ghl_con2prim_id_t backups[] = {
-    ghl_con2prim_id_Noble2D, ghl_con2prim_id_None, ghl_con2prim_id_None
-  };
+  const ghl_con2prim_id_t backups[]
+        = { ghl_con2prim_id_Noble2D, ghl_con2prim_id_None, ghl_con2prim_id_None };
   ghl_parameters params;
-  ghl_initialize_params(ghl_con2prim_id_Noble1D_entropy, backups,
-                        true, false, false, 1e100, 10.0, 0.0, &params);
+  ghl_initialize_params(
+        ghl_con2prim_id_Noble1D_entropy, backups, true, false, false, 1e100, 10.0, 0.0,
+        &params);
   params.con2prim_solver_tolerance = 1e-12;
   ghl_metric_quantities metric;
   ghl_initialize_metric(1, 0, 0, 0, 1, 0, 0, 1, 0, 1, &metric);
@@ -579,8 +609,8 @@ static void test_Noble_EOS_domains(void) {
   for(int regime = 0; regime < 3; ++regime) {
     ghl_eos_parameters eos = { 0 };
     ghl_initialize_hybrid_eos_functions_and_params(
-          1e-8, 1e-8, 1e6, regime == 2 ? 2 : 1, breaks, gammas,
-          0.7, regime == 0 ? 2.0 : 1.6, &eos);
+          1e-8, 1e-8, 1e6, regime == 2 ? 2 : 1, breaks, gammas, 0.7,
+          regime == 0 ? 2.0 : 1.6, &eos);
     for(int piece = 0; piece < (regime == 2 ? 2 : 1); ++piece) {
       const double rho = piece ? 1.5 : 0.5;
       double pcold, ecold;
@@ -590,17 +620,17 @@ static void test_Noble_EOS_domains(void) {
       const double W = 1.0 / sqrt(1.0 - 0.2 * 0.2);
       const double Z = (rho * (1.0 + eps) + press) * W * W;
       ghl_primitive_quantities source;
-      ghl_initialize_primitives(rho, press, eps, 0.2, 0, 0, 0, 0, 0,
+      ghl_initialize_primitives(
+            rho, press, eps, 0.2, 0, 0, 0, 0, 0,
             ghl_hybrid_compute_entropy_function(&eos, rho, press), 0.1, 0, &source);
       source.u0 = W;
       // Unmagnetized Minkowski conservative equations provide the oracle.
       ghl_conservative_quantities cons;
-      ghl_initialize_conservatives(rho * W, Z - press - rho * W,
-                                   0.2 * Z, 0, 0, source.entropy * W, 0, &cons);
-      const ghl_con2prim_id_t methods[] = {
-        ghl_con2prim_id_Noble1D, ghl_con2prim_id_Noble2D,
-        ghl_con2prim_id_Noble1D_entropy
-      };
+      ghl_initialize_conservatives(
+            rho * W, Z - press - rho * W, 0.2 * Z, 0, 0, source.entropy * W, 0, &cons);
+      const ghl_con2prim_id_t methods[]
+            = { ghl_con2prim_id_Noble1D, ghl_con2prim_id_Noble2D,
+                ghl_con2prim_id_Noble1D_entropy };
       for(int m = 0; m < 3; ++m) {
         ghl_primitive_quantities recovered = source;
         recovered.press *= 0.9;
@@ -608,8 +638,8 @@ static void test_Noble_EOS_domains(void) {
         ghl_con2prim_diagnostics diagnostics;
         ghl_initialize_diagnostics(&diagnostics);
         const ghl_error_codes_t error = ghl_con2prim_hybrid_select_method(
-              methods[m], &params, &eos, &metric, &metric_aux, &cons,
-              &recovered, &diagnostics);
+              methods[m], &params, &eos, &metric, &metric_aux, &cons, &recovered,
+              &diagnostics);
         if(m == 2 && regime != 0) {
           if(error != ghl_error_invalid_eos_type
              || diagnostics.which_routine != ghl_con2prim_id_None) {
@@ -767,11 +797,22 @@ static void test_Font1D_roundtrips(void) {
 
 // The Font loop is internal and is otherwise declared only by its wrapper.
 ghl_error_codes_t ghl_hybrid_Font1D_loop(
-      const ghl_eos_parameters *, int, double, double, double, double, double, double,
-      const ghl_conservative_quantities *, double, double *, int *);
+      const ghl_eos_parameters *,
+      int,
+      double,
+      double,
+      double,
+      double,
+      double,
+      double,
+      const ghl_conservative_quantities *,
+      double,
+      double *,
+      int *);
 
 static void Font_flat_conservatives(
-      const ghl_primitive_quantities *prims, ghl_conservative_quantities *cons) {
+      const ghl_primitive_quantities *prims,
+      ghl_conservative_quantities *cons) {
   const double w = prims->rho * (1.0 + prims->eps) + prims->press;
   double Bsq = 0.0, Bdotv = 0.0, vsq = 0.0;
   for(int i = 0; i < 3; ++i) {
@@ -783,12 +824,12 @@ static void Font_flat_conservatives(
   for(int i = 0; i < 3; ++i) {
     cons->SD[i] = (w * SQR(prims->u0) + Bsq) * prims->vU[i] - Bdotv * prims->BU[i];
   }
-  cons->tau = w * SQR(prims->u0) - prims->press
-              + 0.5 * (Bsq * (1.0 + vsq) - SQR(Bdotv)) - cons->rho;
+  cons->tau = w * SQR(prims->u0) - prims->press + 0.5 * (Bsq * (1.0 + vsq) - SQR(Bdotv))
+              - cons->rho;
 }
 
-static void Font_cycle_EOS(
-      const ghl_eos_parameters *eos, double rho, double *press, double *eps) {
+static void
+Font_cycle_EOS(const ghl_eos_parameters *eos, double rho, double *press, double *eps) {
   (void)eos;
   // With D=4 and S^2=9, this enthalpy maps density 1 -> 2 -> 3 -> 1.
   const double target = rho < 1.5 ? 2.0 : (rho < 2.5 ? 3.0 : 1.0);
@@ -797,15 +838,23 @@ static void Font_cycle_EOS(
 }
 
 static void Font_invalid_enthalpy_EOS(
-      const ghl_eos_parameters *eos, double rho, double *press, double *eps) {
-  (void)eos; (void)rho;
+      const ghl_eos_parameters *eos,
+      double rho,
+      double *press,
+      double *eps) {
+  (void)eos;
+  (void)rho;
   *press = 0.0;
   *eps = -1.0;
 }
 
 static void Font_nonfinite_enthalpy_EOS(
-      const ghl_eos_parameters *eos, double rho, double *press, double *eps) {
-  (void)eos; (void)rho;
+      const ghl_eos_parameters *eos,
+      double rho,
+      double *press,
+      double *eps) {
+  (void)eos;
+  (void)rho;
   // An overflowing cold pressure gives h = +inf, which would let the density
   // update ignore S^2 and move to D.
   *press = INFINITY;
@@ -813,7 +862,10 @@ static void Font_nonfinite_enthalpy_EOS(
 }
 
 static void Font_invalid_final_enthalpy_EOS(
-      const ghl_eos_parameters *eos, double rho, double *press, double *eps) {
+      const ghl_eos_parameters *eos,
+      double rho,
+      double *press,
+      double *eps) {
   (void)eos;
   // D=2, S^2=3 gives a trial just below rho=1, within the inner tolerance.
   // Its EOS output must still be checked when the outer solve resumes.
@@ -822,12 +874,11 @@ static void Font_invalid_final_enthalpy_EOS(
 }
 
 static void test_Font1D_convergence_and_failures(void) {
-  const ghl_con2prim_id_t backups[] = {
-    ghl_con2prim_id_None, ghl_con2prim_id_None, ghl_con2prim_id_None
-  };
+  const ghl_con2prim_id_t backups[]
+        = { ghl_con2prim_id_None, ghl_con2prim_id_None, ghl_con2prim_id_None };
   ghl_parameters params;
-  ghl_initialize_params(ghl_con2prim_id_Font1D, backups, false, false, false,
-                        1e100, 20.0, 0.0, &params);
+  ghl_initialize_params(
+        ghl_con2prim_id_Font1D, backups, false, false, false, 1e100, 20.0, 0.0, &params);
   ghl_metric_quantities metric;
   ghl_initialize_metric(1, 0, 0, 0, 1, 0, 0, 1, 0, 1, &metric);
   ghl_ADM_aux_quantities metric_aux;
@@ -835,16 +886,18 @@ static void test_Font1D_convergence_and_failures(void) {
   const double breaks[] = { 1.0, 0.0 }, gammas[] = { 2.0, 2.5 };
   ghl_eos_parameters eos = { 0 };
   // Slow convergence, retry-root preservation, then both clamped EOS sides.
-  const ghl_primitive_quantities sources[] = {
-    { .rho = 1.6471873100062842, .u0 = 6.2675255717245273,
-      .vU = { 0.24576832236796384, -0.6298836196815748, 0.71929654888492256 },
-      .BU = { -0.024417371126852359, -0.027718278148217226, 0.035661842008871583 } },
-    { .rho = 1.7049974218507717, .u0 = 7.0113974561455041,
-      .vU = { -0.017266040848673326, 0.26494954768124446, -0.9534997395194279 },
-      .BU = { -1.4578674958074784, 0.54285016628447347, -4.2688293260974897 } },
-    { .rho = 1e-30, .vU = { 0.99, 0.0, 0.0 } },
-    { .rho = 1e8, .vU = { 0.9, 0.0, 0.0 } }
-  };
+  const ghl_primitive_quantities sources[]
+        = { { .rho = 1.6471873100062842,
+              .u0 = 6.2675255717245273,
+              .vU = { 0.24576832236796384, -0.6298836196815748, 0.71929654888492256 },
+              .BU
+              = { -0.024417371126852359, -0.027718278148217226, 0.035661842008871583 } },
+            { .rho = 1.7049974218507717,
+              .u0 = 7.0113974561455041,
+              .vU = { -0.017266040848673326, 0.26494954768124446, -0.9534997395194279 },
+              .BU = { -1.4578674958074784, 0.54285016628447347, -4.2688293260974897 } },
+            { .rho = 1e-30, .vU = { 0.99, 0.0, 0.0 } },
+            { .rho = 1e8, .vU = { 0.9, 0.0, 0.0 } } };
   for(size_t test = 0; test < sizeof(sources) / sizeof(sources[0]); ++test) {
     ghl_initialize_hybrid_eos_functions_and_params(
           1e-8, 1e-8, 1e6, test == 3 ? 1 : 2, breaks, gammas, 0.7, 1.8, &eos);
@@ -860,7 +913,8 @@ static void test_Font1D_convergence_and_failures(void) {
     ghl_initialize_diagnostics(&diagnostics);
     ghl_abort_if_error(ghl_hybrid_Font1D(
           &params, &eos, &metric, &metric_aux, &cons, &recovered, &diagnostics));
-    if(diagnostics.speed_limited || diagnostics.which_routine != ghl_con2prim_id_Font1D) {
+    if(diagnostics.speed_limited
+       || diagnostics.which_routine != ghl_con2prim_id_Font1D) {
       ghl_error("Font convergence case %zu returned inconsistent diagnostics\n", test);
     }
     Font_flat_conservatives(&recovered, &recovered_cons);
@@ -873,7 +927,8 @@ static void test_Font1D_convergence_and_failures(void) {
       error_sq += SQR(recovered_cons.SD[i] - cons.SD[i]);
       momentum_sq += SQR(cons.SD[i]);
     }
-    check_close("Font slow/clamped momentum error", 0.0, sqrt(error_sq / momentum_sq), 1e-12);
+    check_close(
+          "Font slow/clamped momentum error", 0.0, sqrt(error_sq / momentum_sq), 1e-12);
   }
 
   ghl_conservative_quantities cons = { .rho = 1.0, .SD = { 1.0, 0.0, 0.0 } };
@@ -883,15 +938,16 @@ static void test_Font1D_convergence_and_failures(void) {
   for(size_t i = 0; i < sizeof(invalid_density) / sizeof(invalid_density[0]); ++i) {
     cons.rho = invalid_density[i];
     ghl_initialize_diagnostics(&diagnostics);
-    if(ghl_hybrid_Font1D(&params, &eos, &metric, &metric_aux, &cons, &prims,
-                       &diagnostics) != ghl_error_neg_rho
+    if(ghl_hybrid_Font1D(
+             &params, &eos, &metric, &metric_aux, &cons, &prims, &diagnostics)
+             != ghl_error_neg_rho
        || diagnostics.n_iter != 0 || diagnostics.which_routine != ghl_con2prim_id_None) {
       ghl_error("Font invalid-density diagnostics failed case %zu\n", i);
     }
     double rho_out;
     int n_iter = 0;
-    if(ghl_hybrid_Font1D_loop(&eos, 3, 1e-15, 1, 1, 1, 0, 0, &cons,
-                             1, &rho_out, &n_iter) != ghl_error_neg_rho
+    if(ghl_hybrid_Font1D_loop(&eos, 3, 1e-15, 1, 1, 1, 0, 0, &cons, 1, &rho_out, &n_iter)
+             != ghl_error_neg_rho
        || n_iter != 0 || rho_out != 1.0) {
       ghl_error("Font inner invalid-density guard failed case %zu\n", i);
     }
@@ -899,8 +955,8 @@ static void test_Font1D_convergence_and_failures(void) {
   cons.rho = 1.0;
   cons.SD[0] = INFINITY;
   ghl_initialize_diagnostics(&diagnostics);
-  if(ghl_hybrid_Font1D(&params, &eos, &metric, &metric_aux, &cons, &prims,
-                     &diagnostics) != ghl_error_c2p_singular) {
+  if(ghl_hybrid_Font1D(&params, &eos, &metric, &metric_aux, &cons, &prims, &diagnostics)
+     != ghl_error_c2p_singular) {
     ghl_error("Font accepted a nonfinite momentum norm\n");
   }
   // Finite inputs can overflow inside the iteration or its starting guess.
@@ -909,33 +965,37 @@ static void test_Font1D_convergence_and_failures(void) {
     cons.rho = extreme_density[i];
     cons.SD[0] = 1e134;
     ghl_initialize_diagnostics(&diagnostics);
-    if(ghl_hybrid_Font1D(&params, &eos, &metric, &metric_aux, &cons, &prims,
-                       &diagnostics) != ghl_error_c2p_singular
+    if(ghl_hybrid_Font1D(
+             &params, &eos, &metric, &metric_aux, &cons, &prims, &diagnostics)
+             != ghl_error_c2p_singular
        || diagnostics.which_routine != ghl_con2prim_id_None) {
       ghl_error("Font accepted overflowing finite inputs in case %zu\n", i);
     }
   }
 
   cons = (ghl_conservative_quantities){ .rho = 1.0, .SD = { 1.0, 0.0, 0.0 } };
-  const struct { double seed, W, Sf2, tolerance; } invalid_loop_inputs[] = {
-    { 0.0, 1.0, 1.0, 1e-15 }, { NAN, 1.0, 1.0, 1e-15 },
-    { 1.0, NAN, 1.0, 1e-15 }, { 1.0, 1.0, NAN, 1e-15 },
-    { 1.0, 1.0, -1.0, 1e-15 }, { 1.0, 1.0, 1.0, 0.0 },
-    { 1.0, 1.0, 1.0, NAN }
-  };
+  const struct {
+    double seed, W, Sf2, tolerance;
+  } invalid_loop_inputs[] = { { 0.0, 1.0, 1.0, 1e-15 },  { NAN, 1.0, 1.0, 1e-15 },
+                              { 1.0, NAN, 1.0, 1e-15 },  { 1.0, 1.0, NAN, 1e-15 },
+                              { 1.0, 1.0, -1.0, 1e-15 }, { 1.0, 1.0, 1.0, 0.0 },
+                              { 1.0, 1.0, 1.0, NAN } };
   double rho_out = NAN;
   int n_iter = 0;
-  for(size_t i = 0; i < sizeof(invalid_loop_inputs) / sizeof(invalid_loop_inputs[0]); ++i) {
-    if(ghl_hybrid_Font1D_loop(&eos, 3, invalid_loop_inputs[i].tolerance,
-          invalid_loop_inputs[i].W, invalid_loop_inputs[i].Sf2, 1, 0, 0, &cons,
-          invalid_loop_inputs[i].seed, &rho_out, &n_iter) != ghl_error_c2p_singular
+  for(size_t i = 0; i < sizeof(invalid_loop_inputs) / sizeof(invalid_loop_inputs[0]);
+      ++i) {
+    if(ghl_hybrid_Font1D_loop(
+             &eos, 3, invalid_loop_inputs[i].tolerance, invalid_loop_inputs[i].W,
+             invalid_loop_inputs[i].Sf2, 1, 0, 0, &cons, invalid_loop_inputs[i].seed,
+             &rho_out, &n_iter)
+             != ghl_error_c2p_singular
        || n_iter != 0) {
       ghl_error("Font inner input guard failed case %zu\n", i);
     }
   }
   cons.rho = 1e-200;
-  if(ghl_hybrid_Font1D_loop(&eos, 3, 1e-15, 1, 1, 1, 0, 0, &cons,
-                           1, &rho_out, &n_iter) != ghl_error_c2p_singular) {
+  if(ghl_hybrid_Font1D_loop(&eos, 3, 1e-15, 1, 1, 1, 0, 0, &cons, 1, &rho_out, &n_iter)
+     != ghl_error_c2p_singular) {
     ghl_error("Font accepted a density update that underflowed to zero\n");
   }
 
@@ -1556,12 +1616,24 @@ int main(int argc, char **argv) {
   test_Brent_failures();
   test_Noble_EOS_domains();
 
-  free(expected_errors); free(lapse); free(betax);
-  free(betay); free(betaz); free(gxx);
-  free(gxy); free(gxz); free(gyy);
-  free(gyz); free(gzz); free(Bx);
-  free(By); free(Bz); free(rho_star);
-  free(tau); free(S_x); free(S_y);
+  free(expected_errors);
+  free(lapse);
+  free(betax);
+  free(betay);
+  free(betaz);
+  free(gxx);
+  free(gxy);
+  free(gxz);
+  free(gyy);
+  free(gyz);
+  free(gzz);
+  free(Bx);
+  free(By);
+  free(Bz);
+  free(rho_star);
+  free(tau);
+  free(S_x);
+  free(S_y);
   free(S_z);
   return 0;
 }

@@ -9,24 +9,33 @@ static int observed_backup_successes;
 
 static double final_Noble_enthalpy;
 static ghl_error_codes_t (*Noble_enthalpy_lookup)(
-      const ghl_eos_parameters *, double, double, double,
-      double *, double *, double *, double *);
+      const ghl_eos_parameters *,
+      double,
+      double,
+      double,
+      double *,
+      double *,
+      double *,
+      double *);
 
 static ghl_error_codes_t record_Noble_enthalpy(
       const ghl_eos_parameters *restrict eos,
-      const double rho, const double Y_e, const double h,
-      double *restrict press, double *restrict eps,
-      double *restrict entropy, double *restrict temperature) {
+      const double rho,
+      const double Y_e,
+      const double h,
+      double *restrict press,
+      double *restrict eps,
+      double *restrict entropy,
+      double *restrict temperature) {
   final_Noble_enthalpy = h;
   return Noble_enthalpy_lookup(eos, rho, Y_e, h, press, eps, entropy, temperature);
 }
 
-static void check_thermodynamic_value(
-      const char *name, const double expected, const double actual) {
+static void
+check_thermodynamic_value(const char *name, const double expected, const double actual) {
   // Use the replay's 2e-6 velocity relative allowance for these coupled
   // recovery/EOS checks; the scale floor gives an absolute bound near zero.
-  if(!isfinite(actual)
-     || fabs(expected - actual) > 2e-6 * fmax(fabs(expected), 1e-15)) {
+  if(!isfinite(actual) || fabs(expected - actual) > 2e-6 * fmax(fabs(expected), 1e-15)) {
     ghl_error("%s mismatch: expected %.17e, got %.17e\n", name, expected, actual);
   }
 }
@@ -41,19 +50,19 @@ static void check_Noble_and_fixed_temperature_Palenzuela(
 
   // Interior table state with mild limiting: the retained Z has a physical
   // enthalpy target inside the table at both Lorentz factors.
-  ghl_primitive_quantities source = {
-    .rho = 1.6192159535484857e-7, .Y_e = 0.1, .temperature = 5.0, .u0 = 1.2
-  };
+  ghl_primitive_quantities source
+        = { .rho = 1.6192159535484857e-7, .Y_e = 0.1, .temperature = 5.0, .u0 = 1.2 };
   source.vU[0] = sqrt(1.0 - 1.0 / SQR(source.u0));
   ghl_abort_if_error(ghl_tabulated_compute_P_eps_S_from_T(
-        eos, source.rho, source.Y_e, source.temperature,
-        &source.press, &source.eps, &source.entropy));
+        eos, source.rho, source.Y_e, source.temperature, &source.press, &source.eps,
+        &source.entropy));
   const double D = source.rho * source.u0;
   const double Z = (source.rho * (1.0 + source.eps) + source.press) * SQR(source.u0);
   ghl_conservative_quantities cons;
   // Analytic unmagnetized Minkowski equations, independent of C2P.
-  ghl_initialize_conservatives(D, Z - source.press - D, Z * source.vU[0], 0, 0,
-                               source.entropy * source.u0, D * source.Y_e, &cons);
+  ghl_initialize_conservatives(
+        D, Z - source.press - D, Z * source.vU[0], 0, 0, source.entropy * source.u0,
+        D * source.Y_e, &cons);
 
   double unlimited_Z = NAN;
   for(int test = 0; test < 3; ++test) {
@@ -68,8 +77,8 @@ static void check_Noble_and_fixed_temperature_Palenzuela(
     ghl_primitive_quantities recovered = source;
     ghl_con2prim_diagnostics diagnostics;
     ghl_initialize_diagnostics(&diagnostics);
-    const ghl_con2prim_id_t method = test == 2 ? ghl_con2prim_id_Palenzuela1D
-                                              : ghl_con2prim_id_Noble2D;
+    const ghl_con2prim_id_t method
+          = test == 2 ? ghl_con2prim_id_Palenzuela1D : ghl_con2prim_id_Noble2D;
     if(test < 2) {
       final_Noble_enthalpy = NAN;
       Noble_enthalpy_lookup = ghl_tabulated_compute_P_eps_S_T_from_h;
@@ -83,10 +92,13 @@ static void check_Noble_and_fixed_temperature_Palenzuela(
     }
     ghl_abort_if_error(error);
     if(diagnostics.which_routine != method || diagnostics.speed_limited != (test == 1)) {
-      ghl_error("Independent tabulated recovery did not exercise intended branch %d\n", test);
+      ghl_error(
+            "Independent tabulated recovery did not exercise intended branch %d\n",
+            test);
     }
     const double W = recovered.u0;
-    check_thermodynamic_value("tabulated velocity/W", 1.0 / sqrt(1.0 - SQR(recovered.vU[0])), W);
+    check_thermodynamic_value(
+          "tabulated velocity/W", 1.0 / sqrt(1.0 - SQR(recovered.vU[0])), W);
     if(test == 1) {
       check_thermodynamic_value("tabulated limited W", 1.1, W);
     }
@@ -96,8 +108,8 @@ static void check_Noble_and_fixed_temperature_Palenzuela(
       // S_x = Z v_x independently determines the unlimited solver's Z. The
       // limited call repeats that solve and changes only finalization.
       unlimited_Z = cons.SD[0] / recovered.vU[0];
-      check_thermodynamic_value("tabulated energy residual",
-                                cons.tau, unlimited_Z - recovered.press - D);
+      check_thermodynamic_value(
+            "tabulated energy residual", cons.tau, unlimited_Z - recovered.press - D);
     }
     if(test < 2) {
       const double expected_h = unlimited_Z / (D * W);
@@ -107,21 +119,26 @@ static void check_Noble_and_fixed_temperature_Palenzuela(
       // Allow 100 times the 1e-12 Newton tolerance when deriving h via Z and W.
       if(!isfinite(final_Noble_enthalpy)
          || fabs(final_Noble_enthalpy - expected_h) > 1e-10 * fabs(expected_h)) {
-        ghl_error("Noble final enthalpy target mismatch: expected %.17e, got %.17e\n",
-                  expected_h, final_Noble_enthalpy);
+        ghl_error(
+              "Noble final enthalpy target mismatch: expected %.17e, got %.17e\n",
+              expected_h, final_Noble_enthalpy);
       }
     }
     double press, eps, entropy;
     ghl_abort_if_error(ghl_tabulated_compute_P_eps_S_from_T(
-          eos, recovered.rho, recovered.Y_e, recovered.temperature, &press, &eps, &entropy));
+          eos, recovered.rho, recovered.Y_e, recovered.temperature, &press, &eps,
+          &entropy));
     check_thermodynamic_value("tabulated EOS pressure", press, recovered.press);
     check_thermodynamic_value("tabulated EOS energy", eps, recovered.eps);
     if(test == 2) {
-      check_thermodynamic_value("tabulated recovered pressure", source.press, recovered.press);
+      check_thermodynamic_value(
+            "tabulated recovered pressure", source.press, recovered.press);
       check_thermodynamic_value("tabulated recovered energy", source.eps, recovered.eps);
-      check_thermodynamic_value("tabulated recovered velocity", source.vU[0], recovered.vU[0]);
-      check_thermodynamic_value("tabulated recovered temperature", source.temperature,
-                                recovered.temperature);
+      check_thermodynamic_value(
+            "tabulated recovered velocity", source.vU[0], recovered.vU[0]);
+      check_thermodynamic_value(
+            "tabulated recovered temperature", source.temperature,
+            recovered.temperature);
     }
     if(test == 2 && recovered.temperature != source.temperature) {
       ghl_error("Fixed-temperature Palenzuela changed the prescribed temperature\n");
@@ -142,8 +159,11 @@ static bool Noble_guard_enthalpy_called;
 
 static ghl_error_codes_t Noble_guard_initial_EOS(
       const ghl_eos_parameters *restrict eos,
-      const double rho, const double Y_e, const double T,
-      double *restrict press, double *restrict eps) {
+      const double rho,
+      const double Y_e,
+      const double T,
+      double *restrict press,
+      double *restrict eps) {
   (void)eos;
   (void)rho;
   (void)Y_e;
@@ -156,9 +176,14 @@ static ghl_error_codes_t Noble_guard_initial_EOS(
 
 static ghl_error_codes_t Noble_guard_enthalpy_EOS(
       const ghl_eos_parameters *restrict eos,
-      const double rho, const double Y_e, const double h,
-      double *restrict press, double *restrict eps,
-      double *restrict dPdrho, double *restrict dPdeps, double *restrict T) {
+      const double rho,
+      const double Y_e,
+      const double h,
+      double *restrict press,
+      double *restrict eps,
+      double *restrict dPdrho,
+      double *restrict dPdeps,
+      double *restrict T) {
   (void)eos;
   (void)rho;
   (void)Y_e;
@@ -184,15 +209,23 @@ static void check_tabulated_Noble_failure_guards(
         const ghl_eos_parameters *, double, double, double, double *, double *)
         = ghl_tabulated_compute_P_eps_from_T;
   ghl_error_codes_t (*saved_enthalpy)(
-        const ghl_eos_parameters *, double, double, double,
-        double *, double *, double *, double *, double *)
-        = ghl_tabulated_compute_P_eps_dPdrho_dPdeps_T_from_h;
+        const ghl_eos_parameters *, double, double, double, double *, double *, double *,
+        double *, double *) = ghl_tabulated_compute_P_eps_dPdrho_dPdeps_T_from_h;
 
   enum {
-    zero_enthalpy, zero_total_energy, density_underflow, nonfinite_derivative,
-    nonfinite_velocity, nonfinite_temperature, nonfinite_composition,
-    initial_EOS_failure, nonfinite_initial_EOS, enthalpy_EOS_failure,
-    zero_density, negative_density, nonfinite_density
+    zero_enthalpy,
+    zero_total_energy,
+    density_underflow,
+    nonfinite_derivative,
+    nonfinite_velocity,
+    nonfinite_temperature,
+    nonfinite_composition,
+    initial_EOS_failure,
+    nonfinite_initial_EOS,
+    enthalpy_EOS_failure,
+    zero_density,
+    negative_density,
+    nonfinite_density
   };
   const struct {
     const char *name;
@@ -284,10 +317,11 @@ static void check_tabulated_Noble_failure_guards(
     if(error != cases[test].error || diagnostics.which_routine != ghl_con2prim_id_None
        || Noble_guard_initial_called != cases[test].initial_called
        || Noble_guard_enthalpy_called != cases[test].enthalpy_called) {
-      ghl_error("Noble %s: expected error %d and EOS calls %d/%d; got %d and %d/%d\n",
-                cases[test].name, cases[test].error, cases[test].initial_called,
-                cases[test].enthalpy_called, error, Noble_guard_initial_called,
-                Noble_guard_enthalpy_called);
+      ghl_error(
+            "Noble %s: expected error %d and EOS calls %d/%d; got %d and %d/%d\n",
+            cases[test].name, cases[test].error, cases[test].initial_called,
+            cases[test].enthalpy_called, error, Noble_guard_initial_called,
+            Noble_guard_enthalpy_called);
     }
   }
 }
@@ -301,9 +335,13 @@ static bool Noble_guard_runtime_called;
 
 static ghl_error_codes_t Noble_guard_final_EOS(
       const ghl_eos_parameters *restrict eos,
-      const double rho, const double Y_e, const double h,
-      double *restrict press, double *restrict eps,
-      double *restrict entropy, double *restrict T) {
+      const double rho,
+      const double Y_e,
+      const double h,
+      double *restrict press,
+      double *restrict eps,
+      double *restrict entropy,
+      double *restrict T) {
   (void)eos;
   (void)rho;
   (void)Y_e;
@@ -318,8 +356,12 @@ static ghl_error_codes_t Noble_guard_final_EOS(
 
 static ghl_error_codes_t Noble_guard_runtime_EOS(
       const ghl_eos_parameters *restrict eos,
-      const double rho, const double Y_e, const double T,
-      double *restrict press, double *restrict eps, double *restrict entropy) {
+      const double rho,
+      const double Y_e,
+      const double T,
+      double *restrict press,
+      double *restrict eps,
+      double *restrict entropy) {
   (void)rho;
   (void)Y_e;
   Noble_guard_runtime_called = true;
@@ -340,25 +382,33 @@ static void check_tabulated_Noble_finalization_guards(
         const ghl_eos_parameters *, double, double, double, double *, double *)
         = ghl_tabulated_compute_P_eps_from_T;
   ghl_error_codes_t (*saved_enthalpy)(
-        const ghl_eos_parameters *, double, double, double,
-        double *, double *, double *, double *, double *)
-        = ghl_tabulated_compute_P_eps_dPdrho_dPdeps_T_from_h;
+        const ghl_eos_parameters *, double, double, double, double *, double *, double *,
+        double *, double *) = ghl_tabulated_compute_P_eps_dPdrho_dPdeps_T_from_h;
   ghl_error_codes_t (*saved_final)(
-        const ghl_eos_parameters *, double, double, double,
-        double *, double *, double *, double *)
-        = ghl_tabulated_compute_P_eps_S_T_from_h;
+        const ghl_eos_parameters *, double, double, double, double *, double *, double *,
+        double *) = ghl_tabulated_compute_P_eps_S_T_from_h;
   ghl_error_codes_t (*saved_runtime)(
-        const ghl_eos_parameters *, double, double, double,
-        double *, double *, double *)
+        const ghl_eos_parameters *, double, double, double, double *, double *, double *)
         = ghl_tabulated_compute_P_eps_S_from_T;
 
   enum {
-    invalid_table_coordinate, nonfinite_table_enthalpy, overflowing_table_enthalpy,
-    underflowing_table_enthalpy, zero_density_bound, invalid_inverse_lapse,
-    excessive_Z, overflowing_limited_enthalpy, final_EOS_failure,
-    negative_final_pressure, nonfinite_final_pressure, nonfinite_final_energy,
-    nonfinite_final_entropy, nonfinite_final_temperature, runtime_temperature_floor,
-    runtime_EOS_failure, nonfinite_runtime_EOS
+    invalid_table_coordinate,
+    nonfinite_table_enthalpy,
+    overflowing_table_enthalpy,
+    underflowing_table_enthalpy,
+    zero_density_bound,
+    invalid_inverse_lapse,
+    excessive_Z,
+    overflowing_limited_enthalpy,
+    final_EOS_failure,
+    negative_final_pressure,
+    nonfinite_final_pressure,
+    nonfinite_final_energy,
+    nonfinite_final_entropy,
+    nonfinite_final_temperature,
+    runtime_temperature_floor,
+    runtime_EOS_failure,
+    nonfinite_runtime_EOS
   };
   const struct {
     const char *name;
@@ -425,8 +475,9 @@ static void check_tabulated_Noble_finalization_guards(
       case overflowing_table_enthalpy:
       case underflowing_table_enthalpy:
         for(int i = 0; i < 8; ++i) {
-          logh[i] = test == nonfinite_table_enthalpy ? NAN
-                  : test == overflowing_table_enthalpy ? 1000.0 : -1000.0;
+          logh[i] = test == nonfinite_table_enthalpy     ? NAN
+                    : test == overflowing_table_enthalpy ? 1000.0
+                                                         : -1000.0;
         }
         break;
       case zero_density_bound:
@@ -501,20 +552,21 @@ static void check_tabulated_Noble_finalization_guards(
     ghl_tabulated_compute_P_eps_S_T_from_h = saved_final;
     ghl_tabulated_compute_P_eps_S_from_T = saved_runtime;
 
-    const ghl_con2prim_id_t expected_routine = error == ghl_success
-          ? ghl_con2prim_id_Noble2D : ghl_con2prim_id_None;
+    const ghl_con2prim_id_t expected_routine
+          = error == ghl_success ? ghl_con2prim_id_Noble2D : ghl_con2prim_id_None;
     if(error != cases[test].error || diagnostics.which_routine != expected_routine
        || diagnostics.speed_limited != (test == overflowing_limited_enthalpy)
        || Noble_guard_final_called != cases[test].final_called
        || Noble_guard_runtime_called != cases[test].runtime_called) {
-      ghl_error("Noble %s: expected error %d and final EOS calls %d/%d; got %d and %d/%d\n",
-                cases[test].name, cases[test].error, cases[test].final_called,
-                cases[test].runtime_called, error, Noble_guard_final_called,
-                Noble_guard_runtime_called);
+      ghl_error(
+            "Noble %s: expected error %d and final EOS calls %d/%d; got %d and %d/%d\n",
+            cases[test].name, cases[test].error, cases[test].final_called,
+            cases[test].runtime_called, error, Noble_guard_final_called,
+            Noble_guard_runtime_called);
     }
     if(error == ghl_success
-       && (prims.temperature != test_eos.T_min || prims.press != 0.25
-           || prims.eps != 0.5 || prims.entropy != 0.75)) {
+       && (prims.temperature != test_eos.T_min || prims.press != 0.25 || prims.eps != 0.5
+           || prims.entropy != 0.75)) {
       ghl_error("Noble runtime temperature floor did not recompute thermodynamics\n");
     }
   }
@@ -522,8 +574,11 @@ static void check_tabulated_Noble_finalization_guards(
 
 static ghl_error_codes_t Newman_entropy_EOS_failure(
       const ghl_eos_parameters *restrict eos,
-      const double rho, const double Y_e, const double entropy,
-      double *restrict press, double *restrict T) {
+      const double rho,
+      const double Y_e,
+      const double entropy,
+      double *restrict press,
+      double *restrict T) {
   (void)eos;
   (void)rho;
   (void)Y_e;
@@ -551,7 +606,8 @@ static void check_Newman_failures(
   ghl_error_codes_t error = ghl_tabulated_Newman1D_entropy(
         params, eos, &metric, &metric_aux, &cons, &prims, &diagnostics);
   ghl_tabulated_compute_P_T_from_S = saved_entropy;
-  if(error != ghl_error_table_bisection || diagnostics.which_routine != ghl_con2prim_id_None) {
+  if(error != ghl_error_table_bisection
+     || diagnostics.which_routine != ghl_con2prim_id_None) {
     ghl_error("Newman entropy did not propagate its EOS failure (error=%d)\n", error);
   }
 
@@ -582,14 +638,17 @@ static void check_Newman_failures(
   for(int use_entropy = 0; use_entropy <= 1; ++use_entropy) {
     prims.temperature = 1.0;
     ghl_initialize_diagnostics(&diagnostics);
-    error = use_entropy ? ghl_tabulated_Newman1D_entropy(
-          params, eos, &metric, &metric_aux, &cons, &prims, &diagnostics)
-                        : ghl_tabulated_Newman1D_energy(
-          params, eos, &metric, &metric_aux, &cons, &prims, &diagnostics);
+    error = use_entropy
+                  ? ghl_tabulated_Newman1D_entropy(
+                          params, eos, &metric, &metric_aux, &cons, &prims, &diagnostics)
+                  : ghl_tabulated_Newman1D_energy(
+                          params, eos, &metric, &metric_aux, &cons, &prims,
+                          &diagnostics);
     if(error != ghl_error_c2p_singular
        || diagnostics.which_routine != ghl_con2prim_id_None) {
-      ghl_error("Newman variant %d accepted a nonfinite root (error=%d)\n",
-                use_entropy, error);
+      ghl_error(
+            "Newman variant %d accepted a nonfinite root (error=%d)\n", use_entropy,
+            error);
     }
   }
 }
