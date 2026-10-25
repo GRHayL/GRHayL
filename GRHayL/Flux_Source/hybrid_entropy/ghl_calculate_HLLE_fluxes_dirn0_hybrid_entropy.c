@@ -139,8 +139,5 @@ ghl_error_codes_t ghl_calculate_HLLE_fluxes_dirn0_hybrid_entropy_checked(ghl_pri
 }
 
 void ghl_calculate_HLLE_fluxes_dirn0_hybrid_entropy(ghl_primitive_quantities *restrict prims_r, ghl_primitive_quantities *restrict prims_l, const ghl_eos_parameters *restrict eos, const ghl_metric_quantities *restrict metric_face, const double cmin_dirn0, const double cmax_dirn0, ghl_conservative_quantities *restrict cons) {
-  const ghl_error_codes_t error = ghl_calculate_HLLE_fluxes_dirn0_hybrid_entropy_checked(prims_r, prims_l, eos, metric_face, cmin_dirn0, cmax_dirn0, cons);
-  if(error != ghl_success) {
-    ghl_abort_if_error(error);
-  }
+  ghl_abort_if_error(ghl_calculate_HLLE_fluxes_dirn0_hybrid_entropy_checked(prims_r, prims_l, eos, metric_face, cmin_dirn0, cmax_dirn0, cons));
 }

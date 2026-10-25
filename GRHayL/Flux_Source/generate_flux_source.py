@@ -237,10 +237,7 @@ def write_function(
         f"{equations}  return ghl_success;\n"
         "}\n\n"
         f"void {name}({params}) {{\n"
-        f"  const ghl_error_codes_t error = {checked}({arguments});\n"
-        "  if(error != ghl_success) {\n"
-        "    ghl_abort_if_error(error);\n"
-        "  }\n"
+        f"  ghl_abort_if_error({checked}({arguments}));\n"
         "}\n"
     )
     destination.write_text(content)

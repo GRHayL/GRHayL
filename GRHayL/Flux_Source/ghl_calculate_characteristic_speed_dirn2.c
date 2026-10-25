@@ -107,8 +107,5 @@ ghl_error_codes_t ghl_calculate_characteristic_speed_dirn2_checked(ghl_primitive
 }
 
 void ghl_calculate_characteristic_speed_dirn2(ghl_primitive_quantities *restrict prims_r, ghl_primitive_quantities *restrict prims_l, const ghl_eos_parameters *restrict eos, const ghl_metric_quantities *restrict metric_face, double *cmin_dirn2, double *cmax_dirn2) {
-  const ghl_error_codes_t error = ghl_calculate_characteristic_speed_dirn2_checked(prims_r, prims_l, eos, metric_face, cmin_dirn2, cmax_dirn2);
-  if(error != ghl_success) {
-    ghl_abort_if_error(error);
-  }
+  ghl_abort_if_error(ghl_calculate_characteristic_speed_dirn2_checked(prims_r, prims_l, eos, metric_face, cmin_dirn2, cmax_dirn2));
 }

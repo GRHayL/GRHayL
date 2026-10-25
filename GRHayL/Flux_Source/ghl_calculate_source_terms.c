@@ -126,8 +126,5 @@ ghl_error_codes_t ghl_calculate_source_terms_checked(const ghl_eos_parameters *r
 }
 
 void ghl_calculate_source_terms(const ghl_eos_parameters *restrict eos, ghl_primitive_quantities *restrict prims, const ghl_metric_quantities *restrict metric, const ghl_metric_quantities *restrict metric_derivs_x, const ghl_metric_quantities *restrict metric_derivs_y, const ghl_metric_quantities *restrict metric_derivs_z, const ghl_extrinsic_curvature *restrict curv, ghl_conservative_quantities *restrict cons) {
-  const ghl_error_codes_t error = ghl_calculate_source_terms_checked(eos, prims, metric, metric_derivs_x, metric_derivs_y, metric_derivs_z, curv, cons);
-  if(error != ghl_success) {
-    ghl_abort_if_error(error);
-  }
+  ghl_abort_if_error(ghl_calculate_source_terms_checked(eos, prims, metric, metric_derivs_x, metric_derivs_y, metric_derivs_z, curv, cons));
 }

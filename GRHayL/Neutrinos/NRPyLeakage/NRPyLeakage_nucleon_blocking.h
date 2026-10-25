@@ -584,7 +584,10 @@ static inline ghl_error_codes_t nrpyl_combine_shifted_fermi_moments(
  * \f$\Phi_k=\int_0^\infty (x+a)^{2+k}(x+b)^2
  * [1+\exp(x-\eta)]^{-1}dx\f$ for \f$k=0,1\f$ by expanding the polynomial into
  * the existing complete Fermi integrals. This is the algebraic grey
- * approximation adapted from ILEAS Appendix B, Eqs. (78)--(88).
+ * approximation adapted from ILEAS Appendix B, Eqs. (78)--(88). The only error
+ * of `NRPyLeakage_Fermi_Dirac_integrals()` is an unsupported key, and the
+ * literal keys 2--5 used here are supported, so its status returns are
+ * discarded.
  *
  * @param[in] a Neutrino-energy threshold in units of temperature.
  * @param[in] b Charged-lepton-energy shift in units of temperature.
@@ -598,7 +601,6 @@ static inline ghl_error_codes_t nrpyl_compute_shifted_fermi_moments(
       const double eta,
       nrpyl_beta_moments *restrict moments) {
   nrpyl_fermi_integrals F;
-  /* Literal keys 2--5 are the complete valid domain of these calls. */
   (void)NRPyLeakage_Fermi_Dirac_integrals(2, eta, &F.F2);
   (void)NRPyLeakage_Fermi_Dirac_integrals(3, eta, &F.F3);
   (void)NRPyLeakage_Fermi_Dirac_integrals(4, eta, &F.F4);
@@ -697,8 +699,11 @@ static inline ghl_error_codes_t nrpyl_compute_beta_emission_moments(
  * Identical to nrpyl_compute_beta_absorption_moments() except for the optional
  * `unshifted` integrals. A caller that already holds \f$F_2\f$--\f$F_5\f$ at
  * `eta_nu` passes them to supply the normalization and, when the threshold
- * vanishes, the shifted moments, instead of evaluating them again. `NULL`
- * evaluates the integrals here.
+ * vanishes, the shifted moments, instead of evaluating them again. Without a
+ * threshold the shifted and unshifted integrals coincide. `NULL` evaluates the
+ * integrals here. The only error of `NRPyLeakage_Fermi_Dirac_integrals()` is an
+ * unsupported key, and the literal keys 2 and 3 used here are supported, so its
+ * status returns are discarded.
  *
  * @param[in] T Temperature in MeV.
  * @param[in] mu_e Electron chemical potential in MeV.
@@ -726,7 +731,6 @@ static inline ghl_error_codes_t nrpyl_compute_beta_absorption_moments_with_fermi
   const double shift = sign * q / T;
   const double a = fmax(0.0, -shift);
   const double b = fmax(0.0, shift);
-  /* Without a threshold the shifted and unshifted integrals coincide. */
   ghl_error_codes_t error
         = (unshifted != NULL && a == 0.0)
                 ? nrpyl_combine_shifted_fermi_moments(a, b, unshifted, moments)
@@ -741,7 +745,6 @@ static inline ghl_error_codes_t nrpyl_compute_beta_absorption_moments_with_fermi
     F3 = unshifted->F3;
   }
   else {
-    /* Literal keys 2 and 3 are the complete valid domain of these calls. */
     (void)NRPyLeakage_Fermi_Dirac_integrals(2, eta_nu, &F2);
     (void)NRPyLeakage_Fermi_Dirac_integrals(3, eta_nu, &F3);
   }
