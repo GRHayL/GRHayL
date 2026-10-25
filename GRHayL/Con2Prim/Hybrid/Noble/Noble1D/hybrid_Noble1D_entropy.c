@@ -93,7 +93,7 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
 
   gnr_out[0] = Z_last;
 
-  ghl_error_codes_t retval = ghl_general_newton_raphson(eos, &harm_aux, 1, rho0, gnr_out, ghl_validate_1D_entropy, ghl_func_Z);
+  ghl_error_codes_t retval = ghl_general_newton_raphson(eos, &harm_aux, 1, rho0, gnr_out, ghl_validate_1D_entropy, ghl_func_Z, false);
 
   const double Z = gnr_out[0];
 
@@ -109,7 +109,7 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
 
   int ntries = 0;
   while (
-    (retval = ghl_general_newton_raphson(eos, &harm_aux, 1, Z, gnr_out, ghl_validate_1D_entropy, ghl_func_rho))
+    (retval = ghl_general_newton_raphson(eos, &harm_aux, 1, Z, gnr_out, ghl_validate_1D_entropy, ghl_func_rho, false))
     && (ntries++ < 10) ) {
     rho_g *= 10.0;
     gnr_out[0] = rho_g;

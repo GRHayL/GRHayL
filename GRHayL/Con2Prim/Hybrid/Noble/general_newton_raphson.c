@@ -6,7 +6,11 @@
  * @details n_iter accumulates attempted iterations, including nested solves
  * and retries. Residual callbacks may set harm_aux->error to propagate a
  * failure before their outputs are used. Nonfinite outputs or iterates return
- * ghl_error_c2p_singular. A nonpositive budget performs no iterations.
+ * ghl_error_c2p_singular. A nonpositive budget performs no iterations. A true
+ * funcd_is_repeatable asserts that funcd returns the same step, residual,
+ * derivative, and error status when called again at the same x and reads
+ * neither n_iter nor temp_guess, so the residual evaluation ending each
+ * iteration also supplies the next step.
  */
 ghl_error_codes_t ghl_general_newton_raphson(
       const ghl_eos_parameters *restrict eos,
@@ -26,9 +30,10 @@ ghl_error_codes_t ghl_general_newton_raphson(
             const double[],
             double[],
             double *restrict,
-            double *restrict)) {
+            double *restrict),
+      const bool funcd_is_repeatable) {
 
-  double dx[ndim], dx_resid[ndim], x_old[ndim];
+  double dx[ndim], x_old[ndim];
 
   harm_aux->error = ghl_success;
   if(!isfinite(indep_var_in)) {
@@ -40,16 +45,21 @@ ghl_error_codes_t ghl_general_newton_raphson(
     }
   }
 
-  /* Start the Newton-Raphson iterations: */
+  /* Start the Newton-Raphson iterations. A repeatable funcd returns the same
+     result when called again at the same x, so the residual evaluation at the
+     end of an iteration already provides the step for the next one. */
+  bool have_step = false;
   for(int n_iter = 0; n_iter < harm_aux->max_iterations; n_iter++) {
     harm_aux->n_iter++;
     double f, df;
-    funcd(eos, harm_aux, indep_var_in, x, dx, &f, &df);
-    if(harm_aux->error != ghl_success) {
-      return harm_aux->error;
-    }
-    if(!isfinite(f) || !isfinite(df)) {
-      return ghl_error_c2p_singular;
+    if(!have_step) {
+      funcd(eos, harm_aux, indep_var_in, x, dx, &f, &df);
+      if(harm_aux->error != ghl_success) {
+        return harm_aux->error;
+      }
+      if(!isfinite(f) || !isfinite(df)) {
+        return ghl_error_c2p_singular;
+      }
     }
 
     /* Save old values and make the newton step: */
@@ -86,7 +96,7 @@ ghl_error_codes_t ghl_general_newton_raphson(
       const double errx_id = (x_scale == 0.0) ? abs_dx : abs_dx / x_scale;
       errx = fmax(errx, errx_id);
     }
-    funcd(eos, harm_aux, indep_var_in, x, dx_resid, &f, &df);
+    funcd(eos, harm_aux, indep_var_in, x, dx, &f, &df);
     if(harm_aux->error != ghl_success) {
       return harm_aux->error;
     }
@@ -94,13 +104,14 @@ ghl_error_codes_t ghl_general_newton_raphson(
       return ghl_error_c2p_singular;
     }
     for(int id = 0; id < ndim; id++) {
-      if(!isfinite(dx_resid[id])) {
+      if(!isfinite(dx[id])) {
         return ghl_error_c2p_singular;
       }
     }
     if(errx <= harm_aux->solver_tolerance && fabs(f) <= harm_aux->solver_tolerance) {
       return ghl_success;
     }
+    have_step = funcd_is_repeatable;
   }
 
   return ghl_error_c2p_max_iter;

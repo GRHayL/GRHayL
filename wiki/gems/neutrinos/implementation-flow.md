@@ -245,7 +245,15 @@ Flow:
    absorption moments algebraically when both free populations are positive.
    Exactly-one-zero populations use the analytic zero limit of the charged-
    current products without forming `q`; both-zero populations retain neutral
-   moments.
+   moments. The electron-neutrino and electron-antineutrino scattering Fermi
+   integrals at their degeneracies are evaluated first and handed to
+   `nrpyl_compute_beta_absorption_moments_with_fermi`, which uses them as its
+   F2 and F3 normalizers. A channel whose neutrino-energy threshold
+   `max(0, -sign*q/T)` is zero also reuses all four integrals as its shifted
+   moments instead of re-evaluating them at the same argument. The sign of `q`
+   guarantees that at least one channel has a zero threshold, and both do when
+   `q` is zero; a channel with a nonzero threshold evaluates its shifted
+   integrals as before.
 5. Run the remaining source-owned generated formula blocks for
    absorption/scattering opacity entries. Calls through
    `NRPYLEAKAGE_FD_OR_RETURN` propagate invalid keys.
