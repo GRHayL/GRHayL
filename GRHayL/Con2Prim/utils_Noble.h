@@ -2,6 +2,7 @@
 #define __HARM_U2P_UTIL__C__
 
 #include "ghl_con2prim.h"
+#include "ghl_nrpyeos_hybrid.h"
 
 // HARM uses lots of globals. These auxiliary variables
 // allow us to pass useful quantities to the con2prim
@@ -32,6 +33,23 @@ static inline bool ghl_Noble_pressure_is_valid(const double press) {
     return false;
   }
   return press > 0.0;
+}
+
+/**
+ * @ingroup c2p_internal
+ * @brief Returns whether the hybrid energy residuals are repeatable.
+ *
+ * @details
+ * ghl_func_1D and ghl_func_2D depend only on their inputs and on the cold
+ * hybrid EOS, which they reach through ghl_hybrid_find_polytropic_index and
+ * ghl_hybrid_compute_P_cold_and_eps_cold. The supplied implementations of
+ * both are pure, so the residuals are repeatable only while those pointers
+ * are bound to them.
+ */
+static inline bool ghl_Noble_hybrid_residual_is_repeatable(void) {
+  return ghl_hybrid_find_polytropic_index == &NRPyEOS_find_polytropic_index
+         && ghl_hybrid_compute_P_cold_and_eps_cold
+                  == &NRPyEOS_compute_P_cold_and_eps_cold;
 }
 
 /**************************************************
@@ -196,7 +214,8 @@ ghl_error_codes_t ghl_general_newton_raphson(
             const double [],
             double [],
             double *restrict,
-            double *restrict));
+            double *restrict),
+      const bool funcd_is_repeatable);
 
 void ghl_func_Z(
       const ghl_eos_parameters *restrict eos,

@@ -169,6 +169,9 @@ ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
                                                params, eos, metric_adm, metric_aux,
                                                cons_undens, prims, diagnostics);
   diagnostics->speed_limited |= previous_speed_limited;
+  if(error == ghl_success) {
+    return ghl_success;
+  }
 
   // If Con2Prim failed and the user requested neural networks, try again using
   // the neural network initial guess. We start by copying prims_guess into

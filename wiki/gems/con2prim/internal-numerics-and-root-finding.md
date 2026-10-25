@@ -101,7 +101,13 @@ Core Noble helper files are built from
 - [`general_newton_raphson.c`](../../../GRHayL/Con2Prim/Hybrid/Noble/general_newton_raphson.c)
   runs the shared Newton loop, calls the supplied residual and validate
   callbacks, increments `harm_aux->n_iter`, and returns success,
-  `ghl_error_c2p_singular`, or `ghl_error_c2p_max_iter`.
+  `ghl_error_c2p_singular`, or `ghl_error_c2p_max_iter`. Its
+  `funcd_is_repeatable` argument asserts that the residual returns the same
+  step, residual, and derivative when called again at the same `x`, and reads
+  neither `harm_aux->n_iter` nor `harm_aux->temp_guess`. The loop then reuses
+  the residual evaluation that ends each iteration as the step of the next
+  one; otherwise it calls the residual again, as before. The convergence test
+  is the same either way.
 - [`validate_x.c`](../../../GRHayL/Con2Prim/Hybrid/Noble/validate_x.c)
   contains `ghl_validate_1D`, `ghl_validate_1D_entropy`, and
   `ghl_validate_2D` constraints for Newton updates.
@@ -132,6 +138,14 @@ finalizes primitives. Finalization writes the direct call's `speed_limited`
 result before the wrapper's pressure gate;
 `diagnostics->n_iter` and `diagnostics->which_routine` are set only after that
 gate succeeds.
+
+`hybrid_Noble1D.c` and `hybrid_Noble2D.c` pass
+`ghl_Noble_hybrid_residual_is_repeatable()` from `utils_Noble.h` as
+`funcd_is_repeatable`. It is true only while the hybrid polytropic-index and
+cold-pressure function pointers are still the stock `NRPyEOS` bindings, because
+those are what make `ghl_func_1D` and `ghl_func_2D` pure. The entropy paths
+(`ghl_func_Z` runs a nested Newton solve) and tabulated Noble 2D (which updates
+`harm_aux->temp_guess`) pass `false`.
 
 Hybrid Noble 2D lives in
 [`GRHayL/Con2Prim/Hybrid/Noble/Noble2D/`](../../../GRHayL/Con2Prim/Hybrid/Noble/Noble2D/).

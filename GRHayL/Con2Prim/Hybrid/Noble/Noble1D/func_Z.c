@@ -34,7 +34,7 @@ void ghl_func_Z(
   // Find rho from Z
   int ntries = 0;
   while (
-    (ghl_general_newton_raphson(eos, harm_aux, 1, Z, x_rho, ghl_validate_1D_entropy, ghl_func_rho))
+    (ghl_general_newton_raphson(eos, harm_aux, 1, Z, x_rho, ghl_validate_1D_entropy, ghl_func_rho, false))
     && (ntries++ < 10) ) {
     rho     *= 10.;
     x_rho[0] = rho;
