@@ -296,4 +296,6 @@ int main(int argc, char **argv) {
   free(Ttz_pert); free(Txx_pert); free(Txy_pert);
   free(Txz_pert); free(Tyy_pert); free(Tyz_pert);
   free(Tzz_pert);
+
+  free(entropy); free(ent_trusted); free(ent_pert);
 }

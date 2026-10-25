@@ -445,4 +445,6 @@ int main(int argc, char **argv) {
   free(vx_trusted); free(vy_trusted); free(vz_trusted);
   free(rho_b_pert); free(press_pert); free(eps_pert);
   free(vx_pert); free(vy_pert); free(vz_pert);
+
+  free(entropy); free(ent_trusted); free(ent_pert);
 }

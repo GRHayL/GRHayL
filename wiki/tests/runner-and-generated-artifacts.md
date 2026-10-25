@@ -116,10 +116,10 @@ Its other TestData downloads use
 ET Legacy, analytic EOS, Core, Flux_Source, PLM, Neutrinos, and Induction data.
 Link these selector files rather than copying their values into the KB.
 
-Workflow download selection differs: shared hybrid Con2Prim/Core fixtures use
-the Con2Prim selector, and ET Legacy/Flux_Source use the ET Legacy selector.
-Standalone Core, analytic EOS, Reconstruction, Induction, Neutrinos, and
-tabulated Con2Prim jobs download from TestData `main`. Inspect the owning
+Workflow downloads for shared hybrid Con2Prim/Core fixtures and tabulated
+Con2Prim replay use the Con2Prim selector; ET Legacy/Flux_Source use the ET
+Legacy selector. Standalone Core, analytic EOS, Reconstruction, Induction, and
+Neutrinos jobs download from TestData `main`. Inspect the owning
 [workflow](../../.github/workflows/) for each command. Neither a download
 command nor a current local generator proves how a historical fixture was
 produced; preexisting-file reuse adds another local provenance boundary.

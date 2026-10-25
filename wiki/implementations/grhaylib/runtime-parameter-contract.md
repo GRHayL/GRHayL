@@ -29,8 +29,8 @@ Con2Prim/EOS compatibility, and entropy-gated methods.
 
 `GRHayLib_initialize` owns runtime allocation and setup:
 
-1. Allocates `ghl_params` with `malloc(sizeof(ghl_parameters))`.
-2. Allocates `ghl_eos` with `malloc(sizeof(ghl_eos_parameters))`.
+1. Allocates zeroed `ghl_params` storage with `calloc(1, sizeof(*ghl_params))`.
+2. Allocates zeroed `ghl_eos` storage with `calloc(1, sizeof(*ghl_eos))`.
 3. Maps `con2prim_routine` and `con2prim_backup_routines[3]` through
    `parse_C2P_routine_keyword`.
 4. Calls `GRHayLib_paramcheck`.
@@ -38,25 +38,37 @@ Con2Prim/EOS compatibility, and entropy-gated methods.
 6. Copies PPM Cactus parameters into `ghl_params`.
 7. Initializes EOS parameters and EOS-dependent dispatch for `EOS_type`.
 
-Both allocations use unchecked `malloc`, not zero-initializing allocation.
-There is no GRHayLib-local rollback path if setup later errors. Core tabulated
+Allocations use checked `calloc`; allocation failure frees any partial storage,
+clears the globals, and reports a Cactus error. Later fatal setup errors have no
+GRHayLib-local rollback path. Core tabulated
 initialization accepts fresh uninitialized storage and publishes an empty tagged
 aggregate after failure; see the [tabulated table contract](../../gems/eos/tabulated-table-contract.md).
 Treat successful initialization as a precondition for consumers.
 
-`GRHayLib_terminate` owns shutdown:
+`GRHayLib_terminate` releases the shared globals regardless of which
+initializer supplied them:
 
-1. If `ghl_eos->eos_type == ghl_eos_tabulated`, call
+1. If `ghl_eos` is non-null and `ghl_eos->eos_type == ghl_eos_tabulated`, call
    `ghl_tabulated_free_memory(ghl_eos)` before freeing EOS storage.
 2. Free `ghl_eos`.
 3. Free `ghl_params`.
 4. Set both globals to `NULL`.
 
-No other owner is visible for these global allocations in GRHayLib source.
-The schedule skips `GRHayLib_initialize` when `ID_converter_ILGRMHD` is active,
-but still schedules `GRHayLib_terminate`; this repository does not contain that
-thorn or prove who initializes these globals on the skipped path. Safe ownership
-there needs downstream confirmation before runtime claims.
+Null globals and repeated termination after cleanup are safe. Non-null globals
+must denote live heap allocations with valid EOS state and, for a tabulated
+EOS, initialized cleanup dispatch. A null check cannot validate a dangling or
+uninitialized non-null pointer.
+
+The [local schedule](../../../implementations/GRHayLib/schedule.ccl) skips
+`GRHayLib_initialize` when `ID_converter_ILGRMHD` is active, but still schedules
+`GRHayLib_terminate`. In GRHayLET, `IllinoisGRMHD_backward_compatible_initialize`
+allocates these shared globals and initializes Hybrid EOS dispatch on that
+path. Its source and schedule are linked under
+[Ground Truth References](#ground-truth-references); the downstream schedule
+provides no corresponding termination hook. GRHayLib cleanup serves this
+compatibility path as well as local initialization. This static integration
+evidence does not establish Cactus runtime behavior; see
+[verification and drift](verification-and-drift.md).
 
 ## `ghl_initialize_params` Map
 
@@ -239,7 +251,8 @@ entropy-required diagnostic family.
 Entropy methods require `evolve_entropy`. `GRHayLib_paramcheck` rejects
 `Noble1D_entropy`, `Noble1D_entropy2`, `Palenzuela1D_entropy`, and
 `Newman1D_entropy` as main or backup choices when `evolve_entropy` is false.
-`Noble1D_entropy2` is available for Simple EOS and equivalent one-piece Hybrid
+`Noble1D_entropy` and `Noble1D_entropy2` are available for Simple EOS and
+equivalent one-piece Hybrid
 metadata with `Gamma_th == Gamma_ppoly_in[0]`; parameter checks reject other
 Hybrid metadata and tabulated EOS for both main and backup selections.
 
@@ -282,13 +295,14 @@ Record these source facts as drift evidence only; this page does not propose
 source changes:
 
 - `schedule.ccl` conditionally skips initialization for
-  `ID_converter_ILGRMHD` but always schedules termination. Local files do not
-  establish alternate allocation ownership or a safe terminate precondition.
+  `ID_converter_ILGRMHD` but always schedules termination. The compatibility
+  initializer lives downstream; termination frees the shared globals for either
+  initialization path.
 - Simple/hybrid Core EOS initialization sets `Y_e_atm` and `T_atm` to zero
   placeholders before the built constant-atmosphere routine can copy them.
-- `GRHayLib_terminate` calls tabulated cleanup only after successful state is
-  assumed; neither global-pointer null checks nor partial-initialization guards
-  are present.
+- `GRHayLib_terminate` checks pointer presence before tabulated cleanup;
+  downstream initialization and later fatal setup failures
+  still require downstream lifecycle verification.
 
 ## Local Ground Truth
 
@@ -307,3 +321,8 @@ source changes:
 - [`GRHayL/include/ghl.h`](../../../GRHayL/include/ghl.h)
 - [`GRHayL/include/ghl_con2prim.h`](../../../GRHayL/include/ghl_con2prim.h)
 - [`GRHayL/include/ghl_eos_functions.h`](../../../GRHayL/include/ghl_eos_functions.h)
+
+## Ground Truth References
+
+- [GRHayLET compatibility initializer](https://github.com/GRHayL/GRHayLET/blob/main/IllinoisGRMHD/src/backward_compatible_initialize.c): allocation of the shared globals and Hybrid EOS setup.
+- [IllinoisGRMHD schedule](https://github.com/GRHayL/GRHayLET/blob/main/IllinoisGRMHD/schedule.ccl): compatibility initialization under `ID_converter_ILGRMHD`.

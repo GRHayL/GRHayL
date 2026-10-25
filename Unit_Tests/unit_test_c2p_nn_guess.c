@@ -319,10 +319,11 @@ static void check_atmosphere_guess(
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict metric,
       const double BU[3],
+      const double expected_Y_e,
       const ghl_primitive_quantities *restrict prims) {
   CHECK(prims->rho == eos->rho_atm && prims->press == eos->press_atm
               && prims->eps == eos->eps_atm && prims->entropy == eos->entropy_atm
-              && prims->Y_e == eos->Y_e_atm && prims->temperature == eos->T_atm,
+              && prims->Y_e == expected_Y_e && prims->temperature == eos->T_atm,
         "tabulated guess did not return atmosphere thermodynamics");
   CHECK(prims->vU[0] == -metric->betaU[0] && prims->vU[1] == -metric->betaU[1]
               && prims->vU[2] == -metric->betaU[2] && prims->u0 == metric->lapseinv,
@@ -348,6 +349,8 @@ static void test_public_primitive_guess_helper(void) {
   eos.eps_atm = 0.03;
   eos.entropy_atm = 0.04;
   eos.Y_e_atm = 0.05;
+  eos.Y_e_min = 0.05;
+  eos.Y_e_max = 0.5;
   eos.T_atm = 0.06;
   eos.T_max = 10.0;
 
@@ -383,23 +386,23 @@ static void test_public_primitive_guess_helper(void) {
         "NN test state does not span zero in its admissible x bracket");
   const double zero_spanning_BU[3] = { prims.BU[0], prims.BU[1], prims.BU[2] };
   ghl_c2p_nn_guess_primitives(&params, &eos, &metric, &cons, &prims);
-  check_atmosphere_guess(&eos, &metric, zero_spanning_BU, &prims);
+  check_atmosphere_guess(&eos, &metric, zero_spanning_BU, 0.2, &prims);
 
   ghl_initialize_conservatives(1.0, -2.0, 0.0, 0.0, 0.0, 0.0, 0.2, &cons);
   ghl_initialize_primitives(
         0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
   ghl_c2p_nn_guess_primitives(&params, &eos, &metric, &cons, &prims);
-  check_atmosphere_guess(&eos, &metric, prims.BU, &prims);
+  check_atmosphere_guess(&eos, &metric, prims.BU, 0.2, &prims);
 
   ghl_initialize_conservatives(1.0, -DBL_MAX, 0.0, 0.0, 0.0, 0.0, 0.2, &cons);
   prims.BU[0] = sqrt(DBL_MAX / 2.0);
   ghl_c2p_nn_guess_primitives(&params, &eos, &metric, &cons, &prims);
-  check_atmosphere_guess(&eos, &metric, prims.BU, &prims);
+  check_atmosphere_guess(&eos, &metric, prims.BU, 0.2, &prims);
 
   ghl_initialize_conservatives(1.0, 0.75 * DBL_MAX, 0.0, 0.0, 0.0, 0.0, 0.2, &cons);
   prims.BU[0] = 0.0;
   ghl_c2p_nn_guess_primitives(&params, &eos, &metric, &cons, &prims);
-  check_atmosphere_guess(&eos, &metric, prims.BU, &prims);
+  check_atmosphere_guess(&eos, &metric, prims.BU, 0.2, &prims);
 
   ghl_initialize_conservatives(1.0, -0.5, 0.0, 0.0, 0.0, 0.0, 0.2, &cons);
   ghl_initialize_primitives(
@@ -420,18 +423,18 @@ static void test_public_primitive_guess_helper(void) {
 
   ghl_tabulated_primitive_guess_from_x(
         &params, &eos, &metric, &cons, &negative_aux, 0.0, &prims);
-  check_atmosphere_guess(&eos, &metric, negative_BU, &prims);
+  check_atmosphere_guess(&eos, &metric, negative_BU, 0.2, &prims);
 
   ghl_tabulated_enforce_bounds_rho_Ye_eps = NULL;
   ghl_tabulated_primitive_guess_from_x(
         &params, &eos, &metric, &cons, &negative_aux, -2.0, &prims);
-  check_atmosphere_guess(&eos, &metric, negative_BU, &prims);
+  check_atmosphere_guess(&eos, &metric, negative_BU, 0.2, &prims);
   ghl_tabulated_enforce_bounds_rho_Ye_eps = fake_enforce_bounds;
 
   ghl_tabulated_compute_P_S_T_from_eps = NULL;
   ghl_tabulated_primitive_guess_from_x(
         &params, &eos, &metric, &cons, &negative_aux, -2.0, &prims);
-  check_atmosphere_guess(&eos, &metric, negative_BU, &prims);
+  check_atmosphere_guess(&eos, &metric, negative_BU, 0.2, &prims);
 
   ghl_tabulated_compute_P_S_T_from_eps = fake_compute_P_S_T_error;
   ghl_tabulated_primitive_guess_from_x(
@@ -449,11 +452,11 @@ static void test_public_primitive_guess_helper(void) {
   prims.BU[2] = BU[2];
   eos.c2p_nn = NULL;
   ghl_c2p_nn_guess_primitives(&params, &eos, &metric, &cons, &prims);
-  check_atmosphere_guess(&eos, &metric, BU, &prims);
+  check_atmosphere_guess(&eos, &metric, BU, 0.2, &prims);
 
   cons.rho = 0.0;
   ghl_guess_primitives(&params, &eos, &metric, &cons, &prims);
-  check_atmosphere_guess(&eos, &metric, BU, &prims);
+  check_atmosphere_guess(&eos, &metric, BU, eos.Y_e_atm, &prims);
 
   ghl_tabulated_primitive_guess_aux aux = { 0 };
   cons.rho = 1.0;
@@ -463,11 +466,11 @@ static void test_public_primitive_guess_helper(void) {
   aux.SU[0] = aux.SU[1] = aux.SU[2] = 1.0;
   ghl_tabulated_primitive_guess_from_x(
         &params, &eos, &metric, &cons, &aux, 1e200, &prims);
-  check_atmosphere_guess(&eos, &metric, BU, &prims);
+  check_atmosphere_guess(&eos, &metric, BU, 0.2, &prims);
 
   ghl_tabulated_primitive_guess_from_x(
         &params, &eos, &metric, &cons, &aux, DBL_MIN, &prims);
-  check_atmosphere_guess(&eos, &metric, BU, &prims);
+  check_atmosphere_guess(&eos, &metric, BU, 0.2, &prims);
 
   aux.r = DBL_MAX;
   aux.q = aux.s = aux.t = 0.0;
@@ -475,7 +478,7 @@ static void test_public_primitive_guess_helper(void) {
   aux.SU[0] = aux.SU[1] = aux.SU[2] = 0.0;
   ghl_tabulated_primitive_guess_from_x(
         &params, &eos, &metric, &cons, &aux, pow(DBL_MIN, 0.25), &prims);
-  check_atmosphere_guess(&eos, &metric, BU, &prims);
+  check_atmosphere_guess(&eos, &metric, BU, 0.2, &prims);
 
   aux.q = aux.r = aux.s = aux.t = 1.0;
   aux.B_squared = aux.BdotS = 1.0;
@@ -483,7 +486,7 @@ static void test_public_primitive_guess_helper(void) {
   cons.Y_e = DBL_MAX;
   cons.rho = DBL_MIN;
   ghl_tabulated_primitive_guess_from_x(&params, &eos, &metric, &cons, &aux, 2.0, &prims);
-  check_atmosphere_guess(&eos, &metric, BU, &prims);
+  check_atmosphere_guess(&eos, &metric, BU, eos.Y_e_atm, &prims);
   cons.rho = 1.0;
   cons.Y_e = 0.2;
 
@@ -493,11 +496,13 @@ static void test_public_primitive_guess_helper(void) {
   aux.B_squared = aux.BdotS = 0.0;
   aux.SU[0] = aux.SU[1] = aux.SU[2] = 0.0;
   ghl_tabulated_primitive_guess_from_x(&params, &eos, &metric, &cons, &aux, 1.0, &prims);
-  check_atmosphere_guess(&eos, &metric, BU, &prims);
+  check_atmosphere_guess(&eos, &metric, BU, 0.2, &prims);
 
+  // Keep eps finite so nonfinite EOS output triggers the fallback.
+  aux.q = 0.0;
   ghl_tabulated_compute_P_S_T_from_eps = fake_compute_P_S_T_nonfinite;
   ghl_tabulated_primitive_guess_from_x(&params, &eos, &metric, &cons, &aux, 2.0, &prims);
-  check_atmosphere_guess(&eos, &metric, BU, &prims);
+  check_atmosphere_guess(&eos, &metric, BU, 0.2, &prims);
 
   ghl_tabulated_compute_P_S_T_from_eps = fake_compute_P_S_T;
   aux.q = aux.r = aux.s = aux.t = 0.0;
@@ -506,11 +511,11 @@ static void test_public_primitive_guess_helper(void) {
   aux.SU[1] = aux.SU[2] = 0.0;
   ghl_tabulated_primitive_guess_from_x(
         &params, &eos, &metric, &cons, &aux, 1e-70, &prims);
-  check_atmosphere_guess(&eos, &metric, BU, &prims);
+  check_atmosphere_guess(&eos, &metric, BU, 0.2, &prims);
 
   aux.SU[0] = 1e200;
   ghl_tabulated_primitive_guess_from_x(&params, &eos, &metric, &cons, &aux, 1.0, &prims);
-  check_atmosphere_guess(&eos, &metric, BU, &prims);
+  check_atmosphere_guess(&eos, &metric, BU, 0.2, &prims);
 }
 
 #ifdef GHL_DISABLE_HDF5
@@ -572,6 +577,9 @@ static void test_disabled_direct_tabulated_solvers(void) {
         "disabled direct solver mutated primitives");
   CHECK(diagnostics_equal(&diagnostics, &diagnostics_before),
         "disabled direct solver mutated diagnostics");
+
+  CHECK_ERROR(ghl_c2p_nn_load_from_eos_hdf5("unused.h5", &eos),
+              ghl_error_used_disabled_hdf5);
 }
 #endif
 

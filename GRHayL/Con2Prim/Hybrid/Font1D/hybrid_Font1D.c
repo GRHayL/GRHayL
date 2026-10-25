@@ -9,7 +9,7 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
       const double sdots,
       const double BdotS2,
       const double B2,
-      const ghl_conservative_quantities *restrict cons,
+      const ghl_conservative_quantities *restrict cons_undens,
       const double rhob_in,
       double *restrict rhob_out_ptr,
       int *restrict n_iter);
@@ -25,15 +25,16 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
  * the text preceding Eq. 84. This method serves as a backup for very low
  * densities where other hybrid Con2Prim routines might recover a negative
  * pressure. Font1D assumes that \f$ P=P_\mathrm{cold} \f$ and solves for
- * \f$ \rho \f$ using an iterative method. This method is guaranteed to
- * succeed so long as the input conservative density is positive and the
- * momentum components are finite.
+ * \f$ \rho \f$ using an iterative method with an outer iteration budget and
+ * inner density cycle detection. It requires positive conservative density
+ * and finite momentum components; invalid intermediate states, nonconvergent
+ * density cycles, or an exhausted outer budget return recoverable errors.
  * The return value gives information on the success or failure of the
  * recovery attempt. The public Con2Prim dispatchers pass the local
  * `cons_undens` struct to this routine. In the formulas below,
  * \f$ D \f$ denotes the undensitized density stored in
- * \f$ \mathrm{\texttt{cons->rho}} \f$, \f$ S^\mathrm{in}_i \f$ denotes the
- * undensitized momentum stored in \f$ \mathrm{\texttt{cons->SD}} \f$.
+ * \f$ \mathrm{\texttt{cons_undens->rho}} \f$, \f$ S^\mathrm{in}_i \f$ denotes the
+ * undensitized momentum stored in \f$ \mathrm{\texttt{cons_undens->SD}} \f$.
  *
  * @param[in] params pointer to ghl_parameters struct
  *
@@ -43,7 +44,7 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
  *
  * @param[in] metric_aux pointer to ghl_ADM_aux_quantities struct
  *
- * @param[in] cons pointer to ghl_conservative_quantities struct containing
+ * @param[in] cons_undens pointer to ghl_conservative_quantities struct containing
  *                 the input conservative variables; public dispatchers pass
  *                 their `cons_undens` argument here
  *
@@ -62,58 +63,68 @@ ghl_error_codes_t ghl_hybrid_Font1D(
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
-      const ghl_conservative_quantities *restrict cons,
+      const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
   diagnostics->speed_limited = false;
 
   diagnostics->n_iter = 0;
+  if(!isfinite(cons_undens->rho) || cons_undens->rho <= 0.0) {
+    return ghl_error_neg_rho;
+  }
   double utU[3];
 
-  const double sdots = ghl_compute_vec2_from_vec3D(metric_adm->gammaUU, cons->SD);
+  const double sdots = ghl_compute_vec2_from_vec3D(metric_adm->gammaUU, cons_undens->SD);
   /**
    * # Function Step-by-Step
    *
-     * We start by computing several intermediate quantities dependent on
-     * \f$ B^i \f$ and \f$ S^\mathrm{in}_i \f$ using
-     * @ref ghl_compute_vec2_from_vec3D(). Additionally, if
-     * \f$ S_\mathrm{in}^2 \approx 0 \f$ we can immediately assume the
+   * We start by computing several intermediate quantities dependent on
+   * \f$ B^i \f$ and \f$ S^\mathrm{in}_i \f$ using
+   * @ref ghl_compute_vec2_from_vec3D(). Additionally, if
+   * \f$ S_\mathrm{in}^2 \approx 0 \f$ we can immediately assume the
    * velocity is zero and skip the iterative solve.
    */
 
   const double B2 = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, prims->BU);
+  if(!isfinite(sdots) || sdots < 0.0 || !isfinite(B2) || B2 < 0.0) {
+    return ghl_error_c2p_singular;
+  }
 
   double BdotS, BdotS2, hatBdotS;
   if(B2 < 1e-150) {
     BdotS = BdotS2 = hatBdotS = 0.0;
-  } else {
+  }
+  else {
     const double B_mag = sqrt(B2);
-    BdotS = prims->BU[0]*cons->SD[0] + prims->BU[1]*cons->SD[1] + prims->BU[2]*cons->SD[2];
-    BdotS2 = BdotS*BdotS;
-    hatBdotS = BdotS/B_mag;
+    BdotS = prims->BU[0] * cons_undens->SD[0] + prims->BU[1] * cons_undens->SD[1]
+            + prims->BU[2] * cons_undens->SD[2];
+    BdotS2 = BdotS * BdotS;
+    hatBdotS = BdotS / B_mag;
   }
 
   double rhob;
-  if (sdots<1.e-300) {
+  if(sdots < 1.e-300) {
     utU[0] = 0.0;
     utU[1] = 0.0;
     utU[2] = 0.0;
-    prims->u0    = metric_adm->lapseinv;
+    prims->u0 = metric_adm->lapseinv;
     prims->vU[0] = -metric_adm->betaU[0];
     prims->vU[1] = -metric_adm->betaU[1];
     prims->vU[2] = -metric_adm->betaU[2];
-  } else {
-    double W0 = sqrt(SQR(hatBdotS) + SQR(cons->rho));
-    double Sf20  = (SQR(W0)*sdots + BdotS2*(B2 + 2.0*W0))/SQR(W0+B2);
-    double rhob0 = cons->rho / sqrt(1.0 + Sf20 / SQR(cons->rho));
+  }
+  else {
+    double W0 = sqrt(SQR(hatBdotS) + SQR(cons_undens->rho));
+    double Sf20 = (SQR(W0) * sdots + BdotS2 * (B2 + 2.0 * W0)) / SQR(W0 + B2);
+    double rhob0 = cons_undens->rho / sqrt(1.0 + Sf20 / SQR(cons_undens->rho));
     /**
      * Now we apply core @ref ghl_hybrid_Font1D_loop method with several
      * attempts. As this method is intended as a final resort backup, it tries
-     * 5 times, with the max iterations scaling from 300 to 500 and the
+     * 5 times, with the max outer iterations scaling from 300 to 500 and the
      * tolerance cutoff from \f$ 10^{-15} \f$ to \f$ 2.56 \times 10^{-13} \f$.
-     * Each attempt also inherits the converged result from the previous attempt
-     * to improve the likelihood of success.
+     * Each attempt also inherits the last completed inner density solve from
+     * the previous attempt to improve the likelihood of success. An unfinished
+     * density iteration does not replace the retry's initial guess.
      *
      * We also compute several initial guess quantities outside the loop so
      * we can reuse the values.
@@ -123,20 +134,27 @@ ghl_error_codes_t ghl_hybrid_Font1D(
     double tol = 1.e-15;
     ghl_error_codes_t error = ghl_success;
     const int Font1D_attempts = 5;
-    for(int n=0; n<Font1D_attempts; n++) {
-      const int loop_maxits = maxits + n*50; // From 300 to 500 for 5 iterations
-      const double loop_tol = tol*pow(4,n); // tolerance multipliers are {0,4,16,64,256}
+    for(int n = 0; n < Font1D_attempts; n++) {
+      const int loop_maxits = maxits + n * 50; // From 300 to 500 for 5 iterations
+      const double loop_tol
+            = tol * pow(4, n); // tolerance multipliers are {1,4,16,64,256}
       error = ghl_hybrid_Font1D_loop(
-            eos, loop_maxits, loop_tol, W0, Sf20, sdots, BdotS2, B2, cons, rhob0, &rhob,
-            &diagnostics->n_iter);
+            eos, loop_maxits, loop_tol, W0, Sf20, sdots, BdotS2, B2, cons_undens, rhob0,
+            &rhob, &diagnostics->n_iter);
       rhob0 = rhob;
-      if(error == ghl_success) break;
+      if(error == ghl_success) {
+        break;
+      }
+      if(error != ghl_error_c2p_max_iter) {
+        return error;
+      }
     }
 
     //****************************************************************
 
-    if(error != ghl_success)
+    if(error != ghl_success) {
       return error;
+    }
 
     /**
      * If @ref ghl_hybrid_Font1D_loop succeeds, then we compute the other
@@ -152,7 +170,7 @@ ghl_error_codes_t ghl_hybrid_Font1D(
      */
     double P_cold, eps_cold;
     ghl_hybrid_compute_P_cold_and_eps_cold(eos, rhob, &P_cold, &eps_cold);
-    double h = 1.0 + eps_cold + P_cold/rhob;
+    double h = 1.0 + eps_cold + P_cold / rhob;
 
     /**
      * We then compute \f$ \gamma_v \f$ using equation (A19) in \cite Etienne_2012 :
@@ -161,8 +179,8 @@ ghl_error_codes_t ghl_hybrid_Font1D(
      * \gamma_v = \frac{D}{\rho}
      * \f]
      */
-    double gammav = cons->rho / rhob;
-    double rhosh = cons->rho*h;
+    double gammav = cons_undens->rho / rhob;
+    double rhosh = cons_undens->rho * h;
 
     /**
      * Finally, we compute and speed-limit the velocity
@@ -186,15 +204,16 @@ ghl_error_codes_t ghl_hybrid_Font1D(
     double fac2 = 1.0 / (rhosh + B2 / gammav);
 
     double SU[3];
-    ghl_raise_lower_vector_3D(metric_adm->gammaUU, cons->SD, SU);
+    ghl_raise_lower_vector_3D(metric_adm->gammaUU, cons_undens->SD, SU);
 
-    utU[0] = fac2*(SU[0] + fac1*prims->BU[0]);
-    utU[1] = fac2*(SU[1] + fac1*prims->BU[1]);
-    utU[2] = fac2*(SU[2] + fac1*prims->BU[2]);
-    diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, metric_adm, utU, prims);
+    utU[0] = fac2 * (SU[0] + fac1 * prims->BU[0]);
+    utU[1] = fac2 * (SU[1] + fac1 * prims->BU[1]);
+    utU[2] = fac2 * (SU[2] + fac1 * prims->BU[2]);
+    diagnostics->speed_limited
+          = ghl_limit_utilde_and_compute_v(params, metric_adm, utU, prims);
   }
 
-  prims->rho = cons->rho / (metric_adm->lapse * prims->u0);
+  prims->rho = cons_undens->rho / (metric_adm->lapse * prims->u0);
   /**
    * The Font fix only sets the velocities. We set the remaining primitives using
    * @ref ghl_hybrid_compute_P_cold_and_eps_cold and
@@ -212,8 +231,9 @@ ghl_error_codes_t ghl_hybrid_Font1D(
    */
 
   ghl_hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &prims->press, &prims->eps);
-  if(params->evolve_entropy)
+  if(params->evolve_entropy) {
     prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
+  }
 
   diagnostics->which_routine = ghl_con2prim_id_Font1D;
   return ghl_success;

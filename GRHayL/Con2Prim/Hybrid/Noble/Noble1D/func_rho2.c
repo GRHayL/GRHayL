@@ -59,6 +59,10 @@ void ghl_func_rho2(
         = 2.0 * dZdrho
                 * (Z * momentum_resid - Z * Z * vsq * Bsq_plus_Z + harm_aux->QdotBsq)
           - Z * Z * dvsqdrho * Bsq_plus_Z * Bsq_plus_Z;
+  if(!isfinite(jac) || jac == 0.0) {
+    harm_aux->error = ghl_error_c2p_singular;
+    return;
+  }
   // Set dx (NR step), f, and df (see function description above)
   dx[0] = -resid / jac;
   *df = -resid * resid;

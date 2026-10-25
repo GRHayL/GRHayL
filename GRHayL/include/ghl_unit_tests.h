@@ -164,99 +164,6 @@ void ghl_pert_test_fail_stress_energy(
       const ghl_stress_energy *restrict Tmunu,
       const ghl_stress_energy *restrict Tmunu_pert);
 
-// con2prim binary input functions
-void read_primitive_binary(
-      const int eos_type,
-      const bool evolve_entropy,
-      double *restrict rho,
-      double *restrict press,
-      double *restrict vx,
-      double *restrict vy,
-      double *restrict vz,
-      double *restrict eps,
-      double *restrict Bx,
-      double *restrict By,
-      double *restrict Bz,
-      double *restrict entropy,
-      double *restrict Y_e,
-      double *restrict temperature,
-      FILE *restrict outfile);
-
-void read_primitive_struct_binary(
-      const int eos_type,
-      const bool evolve_entropy,
-      ghl_primitive_quantities *restrict prims,
-      FILE *restrict infile);
-
-void read_conservative_binary(
-      const bool evolve_entropy,
-      double *restrict rho,
-      double *restrict tau,
-      double *restrict S_x,
-      double *restrict S_y,
-      double *restrict S_z,
-      double *restrict entropy,
-      FILE *restrict outfile);
-
-void read_conservative_struct_binary(
-      const bool evolve_entropy,
-      ghl_conservative_quantities *restrict cons,
-      FILE *restrict infile);
-
-void read_stress_energy_binary(
-      double *restrict Ttt,
-      double *restrict Ttx,
-      double *restrict Tty,
-      double *restrict Ttz,
-      double *restrict Txx,
-      double *restrict Txy,
-      double *restrict Txz,
-      double *restrict Tyy,
-      double *restrict Tyz,
-      double *restrict Tzz,
-      FILE *restrict outfile);
-
-void read_stress_energy_struct_binary(
-      ghl_stress_energy *restrict Tmunu,
-      FILE *restrict outfile);
-
-void read_metric_binary(
-      double *restrict lapse,
-      double *restrict gxx,
-      double *restrict gxy,
-      double *restrict gxz,
-      double *restrict gyy,
-      double *restrict gyz,
-      double *restrict gzz,
-      double *restrict betax,
-      double *restrict betay,
-      double *restrict betaz,
-      FILE *restrict infile);
-
-void read_metric_struct_binary(
-      ghl_metric_quantities *restrict metric,
-      FILE *restrict infile);
-
-// con2prim binary output functions
-void write_primitive_binary(
-      const int eos_type,
-      const bool evolve_entropy,
-      const ghl_primitive_quantities *restrict prims,
-      FILE *restrict outfile);
-
-void write_conservative_binary(
-      const bool evolve_entropy,
-      const ghl_conservative_quantities *restrict cons,
-      FILE *restrict outfile);
-
-void write_stress_energy_binary(
-      const ghl_stress_energy *restrict Tmunu,
-      FILE *restrict outfile);
-
-void write_metric_binary(
-      const ghl_metric_quantities *restrict metric,
-      FILE *restrict outfile);
-
 // Tabulated EOS helper functions
 double get_table_quantity(
       const int which_var,
@@ -301,12 +208,6 @@ static inline bool ghl_pert_test_fail(
 static inline double randf(double low,double high) {
   return (rand()/(double)(RAND_MAX))*(high-low)+low;
 }
-
-void ghl_initial_random_data(
-      const double xrho,
-      const double xpress,
-      ghl_metric_quantities *restrict metric,
-      ghl_primitive_quantities *restrict prims);
 
 void ghl_randomize_metric(
       double *restrict lapse,

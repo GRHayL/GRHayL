@@ -12,6 +12,52 @@
  *
  * The solvers are split by the types of EOS they support, which are detailed
  * more explicitly within the documentation subpages.
+ *
+ * @section c2p_calling_contract Recovery calling contract
+ *
+ * Every solver, selector, and multi-method recovery driver takes undensitized
+ * conservatives: D = rho W, tau, and S_i. Use ghl_undensitize_conservatives()
+ * on densitized evolution variables before recovery. In contrast,
+ * ghl_apply_conservative_limits() operates on densitized conservatives, and
+ * ghl_compute_conservs() / ghl_compute_conservs_and_Tmunu() produce them.
+ *
+ * Initialize the EOS and its function-pointer dispatch, metric and ADM
+ * auxiliaries, and ghl_con2prim_diagnostics before recovery. The primitive
+ * argument supplies the magnetic field and any method-specific initial guess;
+ * it receives the recovered state on success and may be modified on failure.
+ * With primitive guessing disabled or a direct solver call, the caller supplies
+ * the required guess. In particular, tabulated Palenzuela uses incoming Y_e and
+ * temperature, bounding composition rather than reconstructing it from the
+ * conservatives. Its fixed-temperature mode uses the supplied temperature,
+ * subject to EOS bounds and an internal retry that can reset it to T_min.
+ *
+ * Recovery returns ghl_success or a numerical/EOS error. An unsupported method
+ * selection returns ghl_error_invalid_c2p_key; tabulated selection without
+ * HDF5 returns ghl_error_used_disabled_hdf5. Multi-method drivers try configured
+ * backups after recoverable errors. Apply
+ * ghl_enforce_primitive_limits_and_compute_u0() afterward when configured
+ * primitive bounds are required, then recompute conservatives for consistency.
+ *
+ * @section c2p_solver_settings Iteration controls
+ *
+ * ghl_parameters::con2prim_max_iterations and
+ * ghl_parameters::con2prim_solver_tolerance control Noble Newton solves.
+ * Each Newton invocation has its own iteration budget. Convergence requires
+ * both the Newton correction (relative to the updated variable, or absolute
+ * when it is zero) and the recomputed residual objective to satisfy the
+ * tolerance. Hybrid Noble2D measures its bounded squared-velocity coordinate
+ * using the update actually applied after validation. Other coordinates and
+ * tabulated recovery retain the proposed correction, because validation can
+ * hide a large step even when the absolute residual is small.
+ * Font, Palenzuela, and Newman use local iteration and tolerance settings;
+ * changing those public Noble controls does not tune these methods.
+ * Font limits its outer iterations and detects exact cycles in each inner
+ * density solve, allowing slowly converging inner solves to continue beyond
+ * the outer iteration budget. Only a completed inner solve supplies a new
+ * density seed for a retry. Within a common EOS-clamped density branch,
+ * geometric damping, applied only where it contracts faster than the undamped
+ * map, suppresses nearly reciprocal oscillations while the undamped density
+ * residual still determines convergence.
  */
 
 /**
@@ -32,9 +78,9 @@
  * | Palenzuela1D with entropy | @ref ghl_hybrid_Palenzuela1D_entropy | [Werneck _et al._ (2023)](https://arxiv.org/abs/2208.14487) |
  *
  * The simple EOS can also use all these methods **except** for Font1D which
- * assumes that there's a split between cold and thermal parts. The entropy-rho
- * method supports hybrid metadata only when it describes the same one-piece
- * constant-Gamma law as the simple EOS.
+ * assumes that there's a split between cold and thermal parts. Both Noble
+ * entropy methods require neos == 1 and Gamma_th == Gamma_ppoly[0]; hybrid
+ * metadata must describe the same one-piece constant-Gamma law as the simple EOS.
  *
  * Ordinary hybrid Noble finalization keeps a speed-limited state consistent
  * with the solved variable by recomputing \f$\rho=D/W_{\rm final}\f$ and the
@@ -60,12 +106,33 @@
  * | Newman1D with entropy     | @ref ghl_tabulated_Newman1D_entropy     | [Werneck _et al._ (2023)](https://arxiv.org/abs/2208.14487) |
  * | Palenzuela1D              | @ref ghl_tabulated_Palenzuela1D_energy  | [Palenzuela _et al._ (2015)](https://arxiv.org/abs/1505.01607) |
  * | Palenzuela1D with entropy | @ref ghl_tabulated_Palenzuela1D_entropy | [Werneck _et al._ (2023)](https://arxiv.org/abs/2208.14487) |
+ *
+ * These solvers require tabulated EOS support. Their declarations remain
+ * visible in public headers when GHL_DISABLE_HDF5 is defined, but the solver
+ * implementations are excluded from that build.
+ */
+
+/**
+ * @defgroup c2p_guess Primitive Initial Guesses
+ * @ingroup Con2Prim
+ *
+ * These routines supply seeds for recovery; they do not establish convergence
+ * or EOS admissibility. The NN predicts the Palenzuela variable x=hW from the
+ * fixed input layout {q,r,s,t}; normal solvers still perform recovery.
+ *
+ * NN inference, validation, cleanup, and primitive-guess helpers are built
+ * without HDF5. The model loaders remain callable in that mode and return
+ * ghl_error_used_disabled_hdf5. Successful loading replaces the EOS-owned
+ * model; failed loading preserves it. See ghl_c2p_nn_model for ownership.
  */
 
 /**
  * @defgroup c2p_internal Internal Con2Prim Routines
  * @ingroup Con2Prim
  *
- * These are internal functions/attributes used by the @ref Con2Prim
- * routines but should not be called by standard users.
+ * These are implementation helpers used by the @ref Con2Prim routines.
+ * Private headers such as roots.h and utils_Palenzuela1D.h are not installed;
+ * external linkage alone does not make their routines supported public APIs.
+ * ghl_palenzuela_quantities remains declared for compatibility, while active
+ * Palenzuela recovery uses private workspace types.
  */

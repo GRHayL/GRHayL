@@ -36,7 +36,8 @@ Primary source paths:
 - `ghl_c2p_nn_guess`: maps `ghl_nn_c2p_input_t` plus `ghl_c2p_nn_model` to an `x` guess.
 - `ghl_c2p_nn_guess_primitives`: computes tabulated auxiliaries and completes
   primitives only for a finite bounded candidate; otherwise it returns
-  the documented atmosphere initial guess while preserving magnetic fields.
+  the documented atmosphere initial guess while preserving magnetic fields and
+  any finite conservative composition ratio at positive density within EOS bounds.
   If only the EOS inversion fails after a valid algebraic candidate is built,
   it instead preserves bounded `rho`, `Y_e`, and `eps`, restores `T_max` as
   the root seed, supplies finite atmosphere pressure/entropy, and completes
@@ -64,7 +65,8 @@ The backup loop in [GRHayL/Con2Prim/con2prim_multi_method.c](../../../GRHayL/Con
 
 [GRHayL/Con2Prim/Tabulated/neural_network_guess/ghl_c2p_nn.h](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/ghl_c2p_nn.h) transforms input features by kind `0` as identity and kind `1` as `log10` after an `x_eps` floor, clips transformed inputs into the configured scaling interval, applies hard-tanh hidden layers, applies sigmoid output activation, and clamps each output into `[y_eps, 1 - y_eps]`, with the upper endpoint computed in `float` arithmetic.
 
-[GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_primitives.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_primitives.c) requires a validated model, positive finite conservative density, finite auxiliaries, ordered finite bounds, and a finite algebraically usable candidate before calling completion. Candidate sign alone is not an EOS admissibility test. Missing models or rejected numerical states return initialized EOS atmosphere fields, coordinate velocity `-beta`, `u0 = lapseinv`, and the incoming magnetic fields. The arguments, EOS atmosphere, metric, parameters, and magnetic inputs must already satisfy their public contracts; the helper does not validate corrupted model/EOS objects. On the usable path it clamps `x` to `[1 + q - s, 2 + 2q - s]`, then calls `ghl_tabulated_primitive_guess_from_x`. That helper in [GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c](../../../GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c) computes Lorentz factor, `rho`, `Y_e`, `eps`, `u0`, pressure, entropy, temperature, and velocity through existing tabulated EOS and speed-limit helpers.
+[GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_primitives.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_primitives.c) requires a validated model, positive finite conservative density, finite auxiliaries, ordered finite bounds, and a finite algebraically usable candidate before calling completion. Candidate sign alone is not an EOS admissibility test. Missing models or rejected numerical states return initialized EOS atmosphere fields, coordinate velocity `-beta`, `u0 = lapseinv`, and the incoming magnetic fields. Finite conservative composition at positive
+density is retained within EOS bounds on fallback. The arguments, EOS atmosphere, metric, parameters, and magnetic inputs must already satisfy their public contracts; the helper does not validate corrupted model/EOS objects. On the usable path it clamps `x` to `[1 + q - s, 2 + 2q - s]`, then calls `ghl_tabulated_primitive_guess_from_x`. That helper in [GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c](../../../GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c) computes Lorentz factor, `rho`, `Y_e`, `eps`, `u0`, pressure, entropy, temperature, and velocity through existing tabulated EOS and speed-limit helpers.
 
 ## HDF5 Model Contract
 
@@ -93,6 +95,13 @@ The direct [free helper](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess
 ## Build/Lifetime
 
 [GRHayL/Con2Prim/Tabulated/make.code.defn](../../../GRHayL/Con2Prim/Tabulated/make.code.defn) includes `neural_network_guess`, and [GRHayL/Con2Prim/Tabulated/neural_network_guess/make.code.defn](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/make.code.defn) lists the NN free, guess, loader, and validation sources.
+
+The NN manifest also registers its private inline header with
+`#! INCS = ghl_c2p_nn.h`. [scripts/parser](../../../scripts/parser) reads this
+registration into the header dependencies used by [configure](../../../configure),
+so changing the header rebuilds dependent objects. Installation uses the separate
+`install_headers` manifest entries; this registration does not install the
+private header.
 
 When HDF5 is disabled, [GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_load_from_eos_hdf5.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_load_from_eos_hdf5.c) compiles loader stubs returning `ghl_error_used_disabled_hdf5`. [configure](../../../configure) defines `GHL_DISABLE_HDF5`; the exact retained and excluded source/test surface is owned by [Build and CI](../../build-and-ci.md).
 Pure inference with an independently valid in-memory model does not itself use

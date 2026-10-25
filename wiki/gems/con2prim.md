@@ -68,8 +68,8 @@ inferring status from any single layer.
 
 - Initialize `ghl_con2prim_diagnostics` with `ghl_initialize_diagnostics`.
 - `n_iter` starts at zero. Font1D reports the total iterations for its current
-  invocation; other solvers retain their documented local counters, subject to
-  the [Palenzuela early-return limitation](con2prim/internal-numerics-and-root-finding.md#brent-and-root-helper-route).
+  invocation; other solvers retain their documented local counters, as described in
+  [internal root-finding](con2prim/internal-numerics-and-root-finding.md#brent-and-root-helper-route).
   `nn_guess_used` records an attempted tabulated NN retry, not success.
 - Track densitized versus undensitized conservative inputs before calling
   selectors or helpers.

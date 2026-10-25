@@ -47,7 +47,7 @@ tests; repo-local source remains authority.
    actually tried, it sets `diagnostics->backup[n] = true`, resets `*prims` to
    the saved primitive guess, and calls the same selector layer again. The
    successful solver updates `diagnostics->which_routine` and its applicable
-   `diagnostics->n_iter`, subject to the [Palenzuela early-return limitation](internal-numerics-and-root-finding.md#brent-and-root-helper-route). Attempt flags are sticky over the logical recovery:
+   `diagnostics->n_iter`; see [root-finder diagnostics](internal-numerics-and-root-finding.md#brent-and-root-helper-route). Attempt flags are sticky over the logical recovery:
    `speed_limited`, `backup[]`, and `nn_guess_used` record whether the event
    occurred in any attempt, including failed attempts.
    Source: `GRHayL/Con2Prim/con2prim_multi_method.c`;
@@ -107,8 +107,7 @@ Tests: [Unit_Tests/unit_test_c2p_nn_guess.c](../../../Unit_Tests/unit_test_c2p_n
   multi-method records attempted backup slots and NN retry and accumulates
   solver `speed_limited` results; post-limit speed limiting also accumulates it.
   A successful direct solver alone reports only its current call. The successful solver
-  owns `which_routine` and its applicable `n_iter`, with the Palenzuela
-  early-return caveat above; when no solver succeeds,
+  owns `which_routine` and its applicable `n_iter`; when no solver succeeds,
   `which_routine` remains `None` and `n_iter` is unspecified.
   Source: `GRHayL/include/ghl_con2prim.h`,
   `GRHayL/Con2Prim/initialize_diagnostics.c`,

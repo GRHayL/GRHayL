@@ -10,9 +10,9 @@ ghl_error_codes_t ghl_c2p_nn_load_hdf5(
 }
 
 ghl_error_codes_t ghl_c2p_nn_load_from_eos_hdf5(
-      const char *tablepath,
+      const char *eos_table_filepath,
       ghl_eos_parameters *restrict eos) {
-  (void)tablepath;
+  (void)eos_table_filepath;
   (void)eos;
   return ghl_error_used_disabled_hdf5;
 }
@@ -320,16 +320,16 @@ ghl_error_codes_t ghl_c2p_nn_load_hdf5(
 }
 
 ghl_error_codes_t ghl_c2p_nn_load_from_eos_hdf5(
-      const char *tablepath,
+      const char *eos_table_filepath,
       ghl_eos_parameters *restrict eos) {
   if(eos == NULL) {
     return ghl_error_eos_struct_is_null;
   }
-  if(tablepath == NULL || tablepath[0] == '\0') {
+  if(eos_table_filepath == NULL || eos_table_filepath[0] == '\0') {
     return ghl_error_could_not_open_file;
   }
 
-  const hid_t file_id = H5Fopen(tablepath, H5F_ACC_RDONLY, H5P_DEFAULT);
+  const hid_t file_id = H5Fopen(eos_table_filepath, H5F_ACC_RDONLY, H5P_DEFAULT);
   if(file_id < 0) {
     return ghl_error_could_not_open_file;
   }
@@ -337,7 +337,7 @@ ghl_error_codes_t ghl_c2p_nn_load_from_eos_hdf5(
     H5Fclose(file_id);
     return ghl_error_hdf5_dataset_could_not_open;
   }
-  const ghl_error_codes_t err = nn__load_model_from_hdf5(file_id, GHL_NN_EOS_GROUP, tablepath, eos);
+  const ghl_error_codes_t err = nn__load_model_from_hdf5(file_id, GHL_NN_EOS_GROUP, eos_table_filepath, eos);
   H5Fclose(file_id);
   return err;
 }

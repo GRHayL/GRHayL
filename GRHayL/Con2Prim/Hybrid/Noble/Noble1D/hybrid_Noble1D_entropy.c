@@ -26,12 +26,14 @@
 ***********************************************************************************/
 
 /**
- * @ingroup Con2Prim
+ * @ingroup hyb_c2p
  * @brief Solves for the primitive variables using an entropy variant
  *        of the Noble1D method
  *
- * @todo
- * Needs inline descriptions; internal functions also need documentation.
+ * @details Solves for Z with nested density solves closed by conservative
+ * entropy. The EOS must have one polytropic piece with Gamma_th equal to
+ * Gamma_ppoly[0]. Each solve and retry receives its own Newton budget;
+ * successful diagnostics count all attempted Newton iterations.
  *
  * @param[in] params pointer to ghl_parameters struct
  *
@@ -62,6 +64,11 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
+  if((eos->eos_type != ghl_eos_simple && eos->eos_type != ghl_eos_hybrid)
+     || eos->neos != 1 || eos->Gamma_th != eos->Gamma_ppoly[0]) {
+    return ghl_error_invalid_eos_type;
+  }
+
   diagnostics->speed_limited = false;
 
   double gnr_out[1];
@@ -86,7 +93,7 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
 
   gnr_out[0] = Z_last;
 
-  ghl_error_codes_t retval = ghl_general_newton_raphson(eos, &harm_aux, 1, rho0, gnr_out, ghl_validate_1D_entropy, ghl_func_Z, false);
+  ghl_error_codes_t retval = ghl_general_newton_raphson(eos, &harm_aux, 1, rho0, gnr_out, ghl_validate_1D_entropy, ghl_func_Z);
 
   const double Z = gnr_out[0];
 
@@ -97,14 +104,12 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
     return ghl_error_invalid_Z;
   }
 
-  const int n_iter = harm_aux.n_iter;
-
   double rho_g    =  rho0;
   gnr_out[0] = rho0;
 
   int ntries = 0;
   while (
-    (retval = ghl_general_newton_raphson(eos, &harm_aux, 1, Z, gnr_out, ghl_validate_1D_entropy, ghl_func_rho, false))
+    (retval = ghl_general_newton_raphson(eos, &harm_aux, 1, Z, gnr_out, ghl_validate_1D_entropy, ghl_func_rho))
     && (ntries++ < 10) ) {
     rho_g *= 10.0;
     gnr_out[0] = rho_g;
@@ -113,9 +118,6 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
   if(retval != 0) {
     return retval;
   }
-
-  // Combine count for both loops
-  harm_aux.n_iter += n_iter;
 
   // Calculate v^2:
   rho0       = gnr_out[0];

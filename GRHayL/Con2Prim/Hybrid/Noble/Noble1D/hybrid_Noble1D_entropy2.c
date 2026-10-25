@@ -1,7 +1,7 @@
 #include "../../../utils_Noble.h"
 
 /**
- * @ingroup Con2Prim
+ * @ingroup hyb_c2p
  * @brief Solves for primitive variables with the density-based entropy
  *        variant of the Noble1D method.
  *
@@ -55,8 +55,7 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy2(
   gnr_out[0] = rho0;
 
   const ghl_error_codes_t retval = ghl_general_newton_raphson(
-        eos, &harm_aux, 1, Z_last, gnr_out, ghl_validate_1D_entropy, ghl_func_rho2,
-        false);
+        eos, &harm_aux, 1, Z_last, gnr_out, ghl_validate_1D_entropy, ghl_func_rho2);
 
   rho0 = gnr_out[0];
 

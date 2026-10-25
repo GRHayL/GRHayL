@@ -1,5 +1,21 @@
 #include "../../utils_Noble.h"
 
+/**
+ * @ingroup c2p_internal
+ * @brief Runs Newton iteration with a separate budget for each invocation.
+ * @details n_iter accumulates attempted iterations, including nested solves
+ * and retries. Residual callbacks may set harm_aux->error to propagate a
+ * failure before their outputs are used. Nonfinite outputs or iterates return
+ * ghl_error_c2p_singular. A nonpositive budget performs no iterations. The
+ * residual evaluation that ends each iteration also supplies the next step, so
+ * funcd must return the same step, residual, derivative, and error status when
+ * called again at the same x. The tabulated residual meets this to within the
+ * table's temperature root-finding precision, because it warm-starts from
+ * harm_aux->temp_guess. Under that contract and a validate_x that depends only on
+ * its arguments, an unconverged iteration whose validated x equals x_old in every
+ * component would repeat forever, so it returns ghl_error_c2p_max_iter without
+ * spending the rest of the budget.
+ */
 ghl_error_codes_t ghl_general_newton_raphson(
       const ghl_eos_parameters *restrict eos,
       harm_aux_vars_struct *restrict harm_aux,
@@ -8,43 +24,56 @@ ghl_error_codes_t ghl_general_newton_raphson(
       double x[],
       void (*validate_x)(
             const harm_aux_vars_struct *restrict harm_aux,
-            const double [],
-            const double [],
-            double []),
+            const double[],
+            const double[],
+            double[]),
       void (*funcd)(
             const ghl_eos_parameters *restrict,
             harm_aux_vars_struct *restrict,
             const double,
-            const double [],
-            double [],
+            const double[],
+            double[],
             double *restrict,
-            double *restrict),
-      const bool funcd_is_repeatable) {
+            double *restrict)) {
 
   double dx[ndim], x_old[ndim];
 
-  // Initialize various parameters and variables:
-  double errx = 1.0;
-  double residual = 1.0;
-  double df = 1.0;
-  double f = 1.0;
-  for(int id = 0; id < ndim; id++)
-    x_old[id] = x[id];
+  harm_aux->error = ghl_success;
+  if(!isfinite(indep_var_in)) {
+    return ghl_error_c2p_singular;
+  }
+  for(int id = 0; id < ndim; id++) {
+    if(!isfinite(x[id])) {
+      return ghl_error_c2p_singular;
+    }
+  }
 
-  /* Start the Newton-Raphson iterations. A repeatable funcd returns the same
-     result when called again at the same x, so the residual evaluation at the
-     end of an iteration already provides the step for the next one. */
+  /* Start the Newton-Raphson iterations. The residual evaluation at the end of
+     an iteration already provides the step for the next one. */
   bool have_step = false;
-  int keep_iterating = 1;
-  while(keep_iterating) {
+  for(int n_iter = 0; n_iter < harm_aux->max_iterations; n_iter++) {
+    harm_aux->n_iter++;
+    double f, df;
     if(!have_step) {
       funcd(eos, harm_aux, indep_var_in, x, dx, &f, &df);
+      if(harm_aux->error != ghl_success) {
+        return harm_aux->error;
+      }
+      if(!isfinite(f) || !isfinite(df)) {
+        return ghl_error_c2p_singular;
+      }
     }
 
     /* Save old values and make the newton step: */
     for(int id = 0; id < ndim; id++) {
+      if(!isfinite(dx[id])) {
+        return ghl_error_c2p_singular;
+      }
       x_old[id] = x[id];
       x[id] += dx[id];
+      if(!isfinite(x[id])) {
+        return ghl_error_c2p_singular;
+      }
     }
 
     /******************************************/
@@ -55,30 +84,47 @@ ghl_error_codes_t ghl_general_newton_raphson(
     /***************************************/
     /* Calculate the convergence criterion */
     /***************************************/
-    errx = 0.0;
+    double errx = 0.0;
     for(int id = 0; id < ndim; id++) {
+      if(!isfinite(x[id])) {
+        return ghl_error_c2p_singular;
+      }
+      // Only hybrid Noble2D's bounded v^2 uses the applied step. Z, density,
+      // and tabulated recovery need the raw correction: validation can hide a
+      // large Newton update behind a small absolute residual.
+      const double abs_dx
+            = fabs((funcd == ghl_func_2D && id == 1) ? x[id] - x_old[id] : dx[id]);
       const double x_scale = fabs(x[id]);
-      const double errx_id = (x_scale == 0.0) ? fabs(dx[id]) : fabs(dx[id])/x_scale;
+      const double errx_id = (x_scale == 0.0) ? abs_dx : abs_dx / x_scale;
       errx = fmax(errx, errx_id);
     }
     funcd(eos, harm_aux, indep_var_in, x, dx, &f, &df);
-    residual = fabs(f);
-    have_step = funcd_is_repeatable;
-
-    harm_aux->n_iter++;
-
-    if( ((errx <= harm_aux->solver_tolerance) && (residual <= harm_aux->solver_tolerance))
-        || (harm_aux->n_iter >= harm_aux->max_iterations) ) {
-      keep_iterating = 0;
+    if(harm_aux->error != ghl_success) {
+      return harm_aux->error;
     }
-  }   // END of while(keep_iterating)
+    if(!isfinite(f) || !isfinite(df)) {
+      return ghl_error_c2p_singular;
+    }
+    for(int id = 0; id < ndim; id++) {
+      if(!isfinite(dx[id])) {
+        return ghl_error_c2p_singular;
+      }
+    }
+    if(errx <= harm_aux->solver_tolerance && fabs(f) <= harm_aux->solver_tolerance) {
+      return ghl_success;
+    }
 
-  /*  Check for bad untrapped divergences : */
-  if(!isfinite(f) ||  !isfinite(df)) {
-    return ghl_error_c2p_singular;
-  } else if(errx <= harm_aux->solver_tolerance && residual <= harm_aux->solver_tolerance) {
-    return ghl_success;
-  } else {
-    return ghl_error_c2p_max_iter;
+    /* Validation that returns every component to x_old makes the next iteration
+       an exact repeat of this one, so the remaining budget cannot change the result. */
+    bool stalled = true;
+    for(int id = 0; id < ndim; id++) {
+      stalled = stalled && x[id] == x_old[id];
+    }
+    if(stalled) {
+      return ghl_error_c2p_max_iter;
+    }
+    have_step = true;
   }
+
+  return ghl_error_c2p_max_iter;
 }

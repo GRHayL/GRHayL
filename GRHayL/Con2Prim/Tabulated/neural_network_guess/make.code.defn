@@ -5,3 +5,5 @@ SRCS = c2p_nn_free.c               \
        c2p_nn_validate_model.c
 
 SUBDIRS =
+
+#! INCS = ghl_c2p_nn.h

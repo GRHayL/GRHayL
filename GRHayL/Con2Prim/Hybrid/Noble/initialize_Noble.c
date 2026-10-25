@@ -16,6 +16,12 @@ ghl_error_codes_t ghl_initialize_Noble(
   harm_aux->max_iterations = params->con2prim_max_iterations;
   harm_aux->solver_tolerance = params->con2prim_solver_tolerance;
 
+  // Noble recovery requires finite positive conserved density. Report the
+  // shared density error before cold-EOS clamping can hide the invalid input.
+  if(!isfinite(cons_undens->rho) || cons_undens->rho <= 0.0) {
+    return ghl_error_neg_rho;
+  }
+
   harm_aux->Bsq = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, prims->BU);
 
   const double uu = - cons_undens->tau*metric_adm->lapse
