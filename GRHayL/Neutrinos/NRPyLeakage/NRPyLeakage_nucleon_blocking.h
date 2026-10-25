@@ -533,6 +533,50 @@ static inline double nrpyl_log_fd1h_derivative(const double eta) {
   return eta + log(0.886226925452758014);
 }
 
+/** Complete Fermi integrals \f$F_2\f$--\f$F_5\f$ at one degeneracy parameter. */
+typedef struct {
+  double F2, F3, F4, F5;
+} nrpyl_fermi_integrals;
+
+/**
+ * @brief Combine complete Fermi integrals into threshold-shifted beta moments.
+ *
+ * @param[in] a Neutrino-energy threshold in units of temperature.
+ * @param[in] b Charged-lepton-energy shift in units of temperature.
+ * @param[in] F The integrals at the degeneracy parameter of the shifted moments.
+ * @param[out] moments Number and energy phase-space moments.
+ * @return `ghl_success` on success, otherwise a Fermi-integral error.
+ * @see nrpyl_compute_shifted_fermi_moments
+ */
+static inline ghl_error_codes_t nrpyl_combine_shifted_fermi_moments(
+      const double a,
+      const double b,
+      const nrpyl_fermi_integrals *restrict F,
+      nrpyl_beta_moments *restrict moments) {
+  const double F2 = F->F2;
+  const double F3 = F->F3;
+  const double F4 = F->F4;
+  const double F5 = F->F5;
+
+  /*
+   * In a strongly blocked channel all complete moments can underflow
+   * together. Their common Boltzmann factor then lies below the dynamic range
+   * of double precision, so both raw phase-space moments have the
+   * representable zero limit. Emission uses that limit directly; normalized
+   * absorption cancels the common Boltzmann factor analytically below.
+   */
+  if(F2 == 0.0 && F3 == 0.0 && F4 == 0.0 && F5 == 0.0) {
+    moments->number = 0.0;
+    moments->energy = 0.0;
+    return ghl_success;
+  }
+
+  moments->number = F4 + 2.0 * (a + b) * F3 + (a * a + b * b) * F2;
+  moments->energy
+        = F5 + (3.0 * a + 2.0 * b) * F4 + (3.0 * a * a + b * b) * F3 + a * a * a * F2;
+  return nrpyl_validate_beta_moments(moments);
+}
+
 /**
  * @brief Evaluate the threshold-shifted Fermi moments used by beta reactions.
  *
@@ -553,30 +597,13 @@ static inline ghl_error_codes_t nrpyl_compute_shifted_fermi_moments(
       const double b,
       const double eta,
       nrpyl_beta_moments *restrict moments) {
-  double F2, F3, F4, F5;
+  nrpyl_fermi_integrals F;
   /* Literal keys 2--5 are the complete valid domain of these calls. */
-  (void)NRPyLeakage_Fermi_Dirac_integrals(2, eta, &F2);
-  (void)NRPyLeakage_Fermi_Dirac_integrals(3, eta, &F3);
-  (void)NRPyLeakage_Fermi_Dirac_integrals(4, eta, &F4);
-  (void)NRPyLeakage_Fermi_Dirac_integrals(5, eta, &F5);
-
-  /*
-   * In a strongly blocked channel all complete moments can underflow
-   * together. Their common Boltzmann factor then lies below the dynamic range
-   * of double precision, so both raw phase-space moments have the
-   * representable zero limit. Emission uses that limit directly; normalized
-   * absorption cancels the common Boltzmann factor analytically below.
-   */
-  if(F2 == 0.0 && F3 == 0.0 && F4 == 0.0 && F5 == 0.0) {
-    moments->number = 0.0;
-    moments->energy = 0.0;
-    return ghl_success;
-  }
-
-  moments->number = F4 + 2.0 * (a + b) * F3 + (a * a + b * b) * F2;
-  moments->energy
-        = F5 + (3.0 * a + 2.0 * b) * F4 + (3.0 * a * a + b * b) * F3 + a * a * a * F2;
-  return nrpyl_validate_beta_moments(moments);
+  (void)NRPyLeakage_Fermi_Dirac_integrals(2, eta, &F.F2);
+  (void)NRPyLeakage_Fermi_Dirac_integrals(3, eta, &F.F3);
+  (void)NRPyLeakage_Fermi_Dirac_integrals(4, eta, &F.F4);
+  (void)NRPyLeakage_Fermi_Dirac_integrals(5, eta, &F.F5);
+  return nrpyl_combine_shifted_fermi_moments(a, b, &F, moments);
 }
 
 /**
@@ -665,26 +692,24 @@ static inline ghl_error_codes_t nrpyl_compute_beta_emission_moments(
 }
 
 /**
- * @brief Compute algebraic grey absorption moments for one beta channel.
+ * @brief Compute absorption moments, optionally reusing unshifted Fermi integrals.
  *
- * This uses the same reaction shift and threshold as the paired emission
- * kernel. Ordinary absorption includes final-state charged-lepton blocking;
- * stimulated neutrino absorption is not included in an opacity.
+ * Identical to nrpyl_compute_beta_absorption_moments() except for the optional
+ * `unshifted` integrals. A caller that already holds \f$F_2\f$--\f$F_5\f$ at
+ * `eta_nu` passes them to supply the normalization and, when the threshold
+ * vanishes, the shifted moments, instead of evaluating them again. `NULL`
+ * evaluates the integrals here.
  *
- * @param[in] T Temperature in MeV.
- * @param[in] mu_e Electron chemical potential in MeV.
- * @param[in] eta_nu Neutrino degeneracy parameter.
- * @param[in] sign `+1` for nue or `-1` for anue.
- * @param[in] q Reaction-energy shift in MeV.
- * @param[out] moments Dimensionless blocked opacity moments.
- * @return `ghl_success` on success, otherwise a Fermi-integral or input error.
+ * @param[in] unshifted The integrals at `eta_nu`, or `NULL`.
+ * @see nrpyl_compute_beta_absorption_moments
  */
-static inline ghl_error_codes_t nrpyl_compute_beta_absorption_moments(
+static inline ghl_error_codes_t nrpyl_compute_beta_absorption_moments_with_fermi(
       const double T,
       const double mu_e,
       const double eta_nu,
       const int sign,
       const double q,
+      const nrpyl_fermi_integrals *restrict unshifted,
       nrpyl_beta_moments *restrict moments) {
   if(!(T > 0.0) || !robust_isfinite(T) || !robust_isfinite(mu_e)
      || !robust_isfinite(eta_nu) || !robust_isfinite(q) || (sign != 1 && sign != -1)) {
@@ -694,16 +719,25 @@ static inline ghl_error_codes_t nrpyl_compute_beta_absorption_moments(
   const double shift = sign * q / T;
   const double a = fmax(0.0, -shift);
   const double b = fmax(0.0, shift);
+  /* Without a threshold the shifted and unshifted integrals coincide. */
   ghl_error_codes_t error
-        = nrpyl_compute_shifted_fermi_moments(a, b, eta_nu - a, moments);
+        = (unshifted != NULL && a == 0.0)
+                ? nrpyl_combine_shifted_fermi_moments(a, b, unshifted, moments)
+                : nrpyl_compute_shifted_fermi_moments(a, b, eta_nu - a, moments);
   if(error != ghl_success) {
     return error;
   }
 
   double F2, F3;
-  /* Literal keys 2 and 3 are the complete valid domain of these calls. */
-  (void)NRPyLeakage_Fermi_Dirac_integrals(2, eta_nu, &F2);
-  (void)NRPyLeakage_Fermi_Dirac_integrals(3, eta_nu, &F3);
+  if(unshifted != NULL) {
+    F2 = unshifted->F2;
+    F3 = unshifted->F3;
+  }
+  else {
+    /* Literal keys 2 and 3 are the complete valid domain of these calls. */
+    (void)NRPyLeakage_Fermi_Dirac_integrals(2, eta_nu, &F2);
+    (void)NRPyLeakage_Fermi_Dirac_integrals(3, eta_nu, &F3);
+  }
 
   if(moments->number == 0.0) {
     /*
@@ -744,6 +778,32 @@ static inline ghl_error_codes_t nrpyl_compute_beta_absorption_moments(
   moments->number = (moments->number / F2) * vacancy;
   moments->energy = (moments->energy / F3) * vacancy;
   return nrpyl_validate_beta_moments(moments);
+}
+
+/**
+ * @brief Compute algebraic grey absorption moments for one beta channel.
+ *
+ * This uses the same reaction shift and threshold as the paired emission
+ * kernel. Ordinary absorption includes final-state charged-lepton blocking;
+ * stimulated neutrino absorption is not included in an opacity.
+ *
+ * @param[in] T Temperature in MeV.
+ * @param[in] mu_e Electron chemical potential in MeV.
+ * @param[in] eta_nu Neutrino degeneracy parameter.
+ * @param[in] sign `+1` for nue or `-1` for anue.
+ * @param[in] q Reaction-energy shift in MeV.
+ * @param[out] moments Dimensionless blocked opacity moments.
+ * @return `ghl_success` on success, otherwise a Fermi-integral or input error.
+ */
+static inline ghl_error_codes_t nrpyl_compute_beta_absorption_moments(
+      const double T,
+      const double mu_e,
+      const double eta_nu,
+      const int sign,
+      const double q,
+      nrpyl_beta_moments *restrict moments) {
+  return nrpyl_compute_beta_absorption_moments_with_fermi(
+        T, mu_e, eta_nu, sign, q, NULL, moments);
 }
 
 static inline ghl_error_codes_t nrpyl_validate_blocking_outputs(

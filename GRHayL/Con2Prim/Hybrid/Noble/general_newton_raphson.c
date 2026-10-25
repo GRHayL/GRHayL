@@ -18,9 +18,10 @@ ghl_error_codes_t ghl_general_newton_raphson(
             const double [],
             double [],
             double *restrict,
-            double *restrict)) {
+            double *restrict),
+      const bool funcd_is_repeatable) {
 
-  double dx[ndim], dx_resid[ndim], x_old[ndim];
+  double dx[ndim], x_old[ndim];
 
   // Initialize various parameters and variables:
   double errx = 1.0;
@@ -30,10 +31,15 @@ ghl_error_codes_t ghl_general_newton_raphson(
   for(int id = 0; id < ndim; id++)
     x_old[id] = x[id];
 
-  /* Start the Newton-Raphson iterations: */
+  /* Start the Newton-Raphson iterations. A repeatable funcd returns the same
+     result when called again at the same x, so the residual evaluation at the
+     end of an iteration already provides the step for the next one. */
+  bool have_step = false;
   int keep_iterating = 1;
   while(keep_iterating) {
-    funcd(eos, harm_aux, indep_var_in, x, dx, &f, &df);
+    if(!have_step) {
+      funcd(eos, harm_aux, indep_var_in, x, dx, &f, &df);
+    }
 
     /* Save old values and make the newton step: */
     for(int id = 0; id < ndim; id++) {
@@ -55,8 +61,9 @@ ghl_error_codes_t ghl_general_newton_raphson(
       const double errx_id = (x_scale == 0.0) ? fabs(dx[id]) : fabs(dx[id])/x_scale;
       errx = fmax(errx, errx_id);
     }
-    funcd(eos, harm_aux, indep_var_in, x, dx_resid, &f, &df);
+    funcd(eos, harm_aux, indep_var_in, x, dx, &f, &df);
     residual = fabs(f);
+    have_step = funcd_is_repeatable;
 
     harm_aux->n_iter++;
 

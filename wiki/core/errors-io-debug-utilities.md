@@ -99,6 +99,12 @@ Core declares `ghl_imin`, `ghl_imax`, `ghl_iclamp`, and `ghl_clamp` in
 library floating-point min/max route. Source:
 [`GRHayL/GRHayL_Core/min_max_clamp.c`](../../GRHayL/GRHayL_Core/min_max_clamp.c).
 
+The tabulated-EOS interpolation helpers do not call `ghl_iclamp`. Their
+header carries a private always-inline `NRPyEOS_iclamp` with the same
+`min(max(x, x_min), x_max)` order so the interpolation spots avoid external
+calls; change both together if the clamp semantics ever change. Source:
+[`GRHayL/EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h`](../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h).
+
 Neither clamp validates that `x_min <= x_max`; reversed bounds remain caller
 error and produce the literal composed min/max result. These functions expose
 no error return.

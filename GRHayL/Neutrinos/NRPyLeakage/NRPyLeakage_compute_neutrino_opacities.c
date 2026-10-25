@@ -78,6 +78,11 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_opacities(
   const double tmp_18 = exp(-tau->anue[0]);
   const double tmp_20
         = NRPyLeakage_eta_anue_0 * tmp_18 + (1 - tmp_18) * (muhat * tmp_1 - tmp_2);
+  double tmp_21_fd, tmp_22_fd, tmp_24_fd, tmp_26_fd;
+  NRPYLEAKAGE_FD_OR_RETURN(tmp_21_fd, 4, tmp_20);
+  NRPYLEAKAGE_FD_OR_RETURN(tmp_22_fd, 2, tmp_20);
+  NRPYLEAKAGE_FD_OR_RETURN(tmp_24_fd, 5, tmp_20);
+  NRPYLEAKAGE_FD_OR_RETURN(tmp_26_fd, 3, tmp_20);
   nrpyl_beta_moments beta_nue_absorption = { 0.0, 0.0 };
   nrpyl_beta_moments beta_anue_absorption = { 0.0, 0.0 };
   // At an exact single-species endpoint these moments take their analytic
@@ -85,22 +90,22 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_opacities(
   if(X_n > 0.0 && X_p > 0.0) {
     const double reaction_shift
           = nrpyl_compute_reaction_shift(T, muhat, eta_n_minus_eta_p);
-    error = nrpyl_compute_beta_absorption_moments(
-          T, mu_e, tmp_4, 1, reaction_shift, &beta_nue_absorption);
+    // Scattering already evaluated the unshifted integrals that absorption needs.
+    const nrpyl_fermi_integrals nue_fermi
+          = { .F2 = tmp_7_fd, .F3 = tmp_15_fd, .F4 = tmp_5_fd, .F5 = tmp_12_fd };
+    const nrpyl_fermi_integrals anue_fermi
+          = { .F2 = tmp_22_fd, .F3 = tmp_26_fd, .F4 = tmp_21_fd, .F5 = tmp_24_fd };
+    error = nrpyl_compute_beta_absorption_moments_with_fermi(
+          T, mu_e, tmp_4, 1, reaction_shift, &nue_fermi, &beta_nue_absorption);
     if(error == ghl_success) {
-      error = nrpyl_compute_beta_absorption_moments(
-            T, mu_e, tmp_20, -1, reaction_shift, &beta_anue_absorption);
+      error = nrpyl_compute_beta_absorption_moments_with_fermi(
+            T, mu_e, tmp_20, -1, reaction_shift, &anue_fermi, &beta_anue_absorption);
     }
     if(error != ghl_success) {
       return error;
     }
   }
-  double tmp_21_fd, tmp_22_fd, tmp_24_fd, tmp_26_fd, tmp_28_fd4, tmp_28_fd2, tmp_30_fd5,
-        tmp_30_fd3;
-  NRPYLEAKAGE_FD_OR_RETURN(tmp_21_fd, 4, tmp_20);
-  NRPYLEAKAGE_FD_OR_RETURN(tmp_22_fd, 2, tmp_20);
-  NRPYLEAKAGE_FD_OR_RETURN(tmp_24_fd, 5, tmp_20);
-  NRPYLEAKAGE_FD_OR_RETURN(tmp_26_fd, 3, tmp_20);
+  double tmp_28_fd4, tmp_28_fd2, tmp_30_fd5, tmp_30_fd3;
   NRPYLEAKAGE_FD_OR_RETURN(tmp_28_fd4, 4, 0);
   NRPYLEAKAGE_FD_OR_RETURN(tmp_28_fd2, 2, 0);
   NRPYLEAKAGE_FD_OR_RETURN(tmp_30_fd5, 5, 0);

@@ -141,5 +141,8 @@ ghl_error_codes_t ghl_calculate_HLLE_fluxes_dirn1_tabulated_checked(ghl_primitiv
 }
 
 void ghl_calculate_HLLE_fluxes_dirn1_tabulated(ghl_primitive_quantities *restrict prims_r, ghl_primitive_quantities *restrict prims_l, const ghl_eos_parameters *restrict eos, const ghl_metric_quantities *restrict metric_face, const double cmin_dirn1, const double cmax_dirn1, ghl_conservative_quantities *restrict cons) {
-  ghl_abort_if_error(ghl_calculate_HLLE_fluxes_dirn1_tabulated_checked(prims_r, prims_l, eos, metric_face, cmin_dirn1, cmax_dirn1, cons));
+  const ghl_error_codes_t error = ghl_calculate_HLLE_fluxes_dirn1_tabulated_checked(prims_r, prims_l, eos, metric_face, cmin_dirn1, cmax_dirn1, cons);
+  if(error != ghl_success) {
+    ghl_abort_if_error(error);
+  }
 }

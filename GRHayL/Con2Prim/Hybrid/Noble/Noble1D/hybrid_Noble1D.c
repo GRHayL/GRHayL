@@ -75,7 +75,8 @@ ghl_error_codes_t ghl_hybrid_Noble1D(
     return error;
 
   // To be consistent with entropy variants, unused argument 0.0 is needed
-  const ghl_error_codes_t retval = ghl_general_newton_raphson(eos, &harm_aux, 1, 0.0, gnr_out, ghl_validate_1D, ghl_func_1D);
+  const ghl_error_codes_t retval = ghl_general_newton_raphson(eos, &harm_aux, 1, 0.0, gnr_out, ghl_validate_1D, ghl_func_1D,
+        ghl_Noble_hybrid_residual_is_repeatable());
 
   const double Z = gnr_out[0];
 
