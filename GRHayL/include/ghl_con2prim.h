@@ -232,7 +232,8 @@ ghl_error_codes_t ghl_hybrid_Noble1D(
 
 /**
  * @ingroup hyb_c2p
- * @brief Recover primitives with the Noble entropy solve for a one-piece, equal-Gamma EOS.
+ * @brief Recover primitives with the Noble entropy solve for a one-piece, equal-Gamma
+ * EOS.
  */
 ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
       const ghl_parameters *restrict params,
@@ -446,9 +447,9 @@ void ghl_tabulated_compute_primitive_guess_auxiliaries(
  * values return the initialized EOS atmosphere while preserving incoming
  * magnetic components. For finite positive conservative density and a finite
  * cons_undens->Y_e / cons_undens->rho, fallback retains that composition within
- * EOS bounds; otherwise it uses atmospheric composition. If the EOS inversion alone fails after the algebraic
- * state is valid, the helper preserves its bounded `rho`, `Y_e`, and `eps`,
- * uses `T_max` as the temperature seed, and supplies finite atmosphere
+ * EOS bounds; otherwise it uses atmospheric composition. If the EOS inversion alone
+ * fails after the algebraic state is valid, the helper preserves its bounded `rho`,
+ * `Y_e`, and `eps`, uses `T_max` as the temperature seed, and supplies finite atmosphere
  * pressure and entropy before completing the velocity seed.
  *
  * @param[in] params Con2Prim parameters
