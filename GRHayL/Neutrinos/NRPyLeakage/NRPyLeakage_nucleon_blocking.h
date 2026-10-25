@@ -700,7 +700,14 @@ static inline ghl_error_codes_t nrpyl_compute_beta_emission_moments(
  * vanishes, the shifted moments, instead of evaluating them again. `NULL`
  * evaluates the integrals here.
  *
+ * @param[in] T Temperature in MeV.
+ * @param[in] mu_e Electron chemical potential in MeV.
+ * @param[in] eta_nu Neutrino degeneracy parameter.
+ * @param[in] sign `+1` for nue or `-1` for anue.
+ * @param[in] q Reaction-energy shift in MeV.
  * @param[in] unshifted The integrals at `eta_nu`, or `NULL`.
+ * @param[out] moments Dimensionless blocked opacity moments.
+ * @return `ghl_success` on success, otherwise a Fermi-integral or input error.
  * @see nrpyl_compute_beta_absorption_moments
  */
 static inline ghl_error_codes_t nrpyl_compute_beta_absorption_moments_with_fermi(

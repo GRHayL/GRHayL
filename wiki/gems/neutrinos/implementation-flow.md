@@ -251,8 +251,9 @@ Flow:
    F2 and F3 normalizers. A channel whose neutrino-energy threshold
    `max(0, -sign*q/T)` is zero also reuses all four integrals as its shifted
    moments instead of re-evaluating them at the same argument. The sign of `q`
-   guarantees that at least one channel has a zero threshold; the other
-   evaluates its shifted integrals as before.
+   guarantees that at least one channel has a zero threshold, and both do when
+   `q` is zero; a channel with a nonzero threshold evaluates its shifted
+   integrals as before.
 5. Run the remaining source-owned generated formula blocks for
    absorption/scattering opacity entries. Calls through
    `NRPYLEAKAGE_FD_OR_RETURN` propagate invalid keys.
