@@ -78,14 +78,18 @@ static void check_Noble_and_fixed_temperature_Palenzuela(
     const ghl_error_codes_t error = ghl_con2prim_tabulated_select_method(
           method, &test_params, eos, &metric, &metric_aux, &cons, &recovered,
           &diagnostics);
-    if(test < 2) ghl_tabulated_compute_P_eps_S_T_from_h = Noble_enthalpy_lookup;
+    if(test < 2) {
+      ghl_tabulated_compute_P_eps_S_T_from_h = Noble_enthalpy_lookup;
+    }
     ghl_abort_if_error(error);
     if(diagnostics.which_routine != method || diagnostics.speed_limited != (test == 1)) {
       ghl_error("Independent tabulated recovery did not exercise intended branch %d\n", test);
     }
     const double W = recovered.u0;
     check_thermodynamic_value("tabulated velocity/W", 1.0 / sqrt(1.0 - SQR(recovered.vU[0])), W);
-    if(test == 1) check_thermodynamic_value("tabulated limited W", 1.1, W);
+    if(test == 1) {
+      check_thermodynamic_value("tabulated limited W", 1.1, W);
+    }
     check_thermodynamic_value("tabulated D/W", D / W, recovered.rho);
     check_thermodynamic_value("tabulated Ye", source.Y_e, recovered.Y_e);
     if(test == 0) {
@@ -476,8 +480,12 @@ static void check_tabulated_Noble_finalization_guards(
       case nonfinite_runtime_EOS:
         Noble_guard_final.temperature = 0.5;
         Noble_guard_final.entropy = 0.75;
-        if(test == runtime_EOS_failure) Noble_guard_runtime_error = ghl_error_table_min_T;
-        if(test == nonfinite_runtime_EOS) Noble_guard_runtime_entropy = NAN;
+        if(test == runtime_EOS_failure) {
+          Noble_guard_runtime_error = ghl_error_table_min_T;
+        }
+        if(test == nonfinite_runtime_EOS) {
+          Noble_guard_runtime_entropy = NAN;
+        }
         break;
     }
     ghl_tabulated_compute_P_eps_from_T = Noble_guard_initial_EOS;

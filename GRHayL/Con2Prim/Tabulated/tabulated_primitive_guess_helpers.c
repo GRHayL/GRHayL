@@ -11,8 +11,9 @@ static void set_tabulated_atmosphere_guess(
   // A failed initial guess must not replace usable conserved composition.
   if(isfinite(cons_undens->rho) && cons_undens->rho > 0.0) {
     const double Y_e = cons_undens->Y_e / cons_undens->rho;
-    if(isfinite(Y_e))
+    if(isfinite(Y_e)) {
       prims->Y_e = ghl_clamp(Y_e, eos->Y_e_min, eos->Y_e_max);
+    }
   }
   prims->vU[0] = -metric_adm->betaU[0];
   prims->vU[1] = -metric_adm->betaU[1];

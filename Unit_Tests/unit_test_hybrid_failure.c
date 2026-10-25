@@ -126,7 +126,9 @@ static double hybrid_pressure_at_Z_vsq(
   const double rho = D * sqrt(1.0 - vsq);
   const double cold_rho = fmin(eos->rho_max, fmax(eos->rho_min, rho));
   int j = 0;
-  while(j + 1 < eos->neos && cold_rho >= eos->rho_ppoly[j]) j++;
+  while(j + 1 < eos->neos && cold_rho >= eos->rho_ppoly[j]) {
+    j++;
+  }
   const double Pcold = eos->K_ppoly[j] * pow(cold_rho, eos->Gamma_ppoly[j]);
   const double ecold = Pcold / (cold_rho * (eos->Gamma_ppoly[j] - 1.0))
                       + eos->eps_integ_const[j];
@@ -456,9 +458,15 @@ static void failing_newton_residual(
   dx[0] = failure == newton_overflow ? DBL_MAX : 1.0;
   *f = *df = 0.0;
   if(newton_evaluations == 2) {
-    if(failure == newton_second_f) *f = NAN;
-    if(failure == newton_second_df) *df = NAN;
-    if(failure == newton_second_dx) dx[0] = NAN;
+    if(failure == newton_second_f) {
+      *f = NAN;
+    }
+    if(failure == newton_second_df) {
+      *df = NAN;
+    }
+    if(failure == newton_second_dx) {
+      dx[0] = NAN;
+    }
   }
 }
 
@@ -841,7 +849,9 @@ static void test_Font1D_convergence_and_failures(void) {
     ghl_initialize_hybrid_eos_functions_and_params(
           1e-8, 1e-8, 1e6, test == 3 ? 1 : 2, breaks, gammas, 0.7, 1.8, &eos);
     ghl_primitive_quantities source = sources[test];
-    if(test >= 2) source.u0 = 1.0 / sqrt(1.0 - SQR(source.vU[0]));
+    if(test >= 2) {
+      source.u0 = 1.0 / sqrt(1.0 - SQR(source.vU[0]));
+    }
     ghl_hybrid_compute_P_cold_and_eps_cold(&eos, source.rho, &source.press, &source.eps);
     ghl_conservative_quantities cons = { 0 }, recovered_cons = { 0 };
     Font_flat_conservatives(&source, &cons);
