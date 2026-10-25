@@ -11,7 +11,10 @@
  * funcd must return the same step, residual, derivative, and error status when
  * called again at the same x. The tabulated residual meets this to within the
  * table's temperature root-finding precision, because it warm-starts from
- * harm_aux->temp_guess.
+ * harm_aux->temp_guess. Under that contract and a validate_x that depends only on
+ * its arguments, an unconverged iteration whose validated x equals x_old in every
+ * component would repeat forever, so it returns ghl_error_c2p_max_iter without
+ * spending the rest of the budget.
  */
 ghl_error_codes_t ghl_general_newton_raphson(
       const ghl_eos_parameters *restrict eos,
@@ -109,6 +112,16 @@ ghl_error_codes_t ghl_general_newton_raphson(
     }
     if(errx <= harm_aux->solver_tolerance && fabs(f) <= harm_aux->solver_tolerance) {
       return ghl_success;
+    }
+
+    /* Validation that returns every component to x_old makes the next iteration
+       an exact repeat of this one, so the remaining budget cannot change the result. */
+    bool stalled = true;
+    for(int id = 0; id < ndim; id++) {
+      stalled = stalled && x[id] == x_old[id];
+    }
+    if(stalled) {
+      return ghl_error_c2p_max_iter;
     }
     have_step = true;
   }

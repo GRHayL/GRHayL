@@ -55,8 +55,9 @@
  * density solve, allowing slowly converging inner solves to continue beyond
  * the outer iteration budget. Only a completed inner solve supplies a new
  * density seed for a retry. Within a common EOS-clamped density branch,
- * geometric damping suppresses nearly reciprocal oscillations while the
- * undamped density residual still determines convergence.
+ * geometric damping, applied only where it contracts faster than the undamped
+ * map, suppresses nearly reciprocal oscillations while the undamped density
+ * residual still determines convergence.
  */
 
 /**

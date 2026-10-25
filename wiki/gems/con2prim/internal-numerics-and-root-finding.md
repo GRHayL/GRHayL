@@ -117,6 +117,10 @@ Core Noble helper files are built from
   `ghl_func_Z` does apart from the `harm_aux->n_iter` its nested solve
   accumulates. The tabulated residual does to within the table's temperature
   root-finding precision, because it warm-starts from `harm_aux->temp_guess`.
+  Under that contract and a validator that depends only on its arguments, an
+  unconverged iteration whose validated `x` equals `x_old` in every component
+  would repeat forever, so the loop returns `ghl_error_c2p_max_iter` at once
+  instead of spending the rest of the budget.
 - [`validate_x.c`](../../../GRHayL/Con2Prim/Hybrid/Noble/validate_x.c)
   contains `ghl_validate_1D`, `ghl_validate_1D_entropy`, and
   `ghl_validate_2D` constraints for Newton updates.
@@ -227,11 +231,14 @@ short inner budget tied to the outer limit, so slowly converging density
 iterations can continue. Only a completed inner solve updates the density
 seed available to a retry; an unfinished cycle cannot replace it. When successive
 densities occupy the same EOS-clamped branch and the cold pressure and
-`1 + eps_cold` are nonnegative, geometric damping suppresses nearly reciprocal
-oscillations without changing the fixed point. Convergence still uses the
-undamped density residual. The wrapper requires finite positive conservative
-density before the shortcut. The shortcut reports zero only when the conservative momentum norm
-satisfies `S_i gamma^ij S_j < 1e-300`.
+`1 + eps_cold` are nonnegative, the density map's logarithmic derivative `L` lies
+in `(-1, 0]`. Geometric damping suppresses nearly reciprocal oscillations without
+changing the fixed point and has derivative `(1 + L) / 2`, so it is applied only
+where `L < -1/3`, where that is smaller in magnitude than the undamped `|L|`.
+Convergence still uses the undamped density residual. The wrapper requires
+finite positive conservative density before the shortcut. The shortcut reports
+zero only when the conservative momentum norm satisfies
+`S_i gamma^ij S_j < 1e-300`.
 
 [`GRHayL/Con2Prim/Tabulated/Newman1D/`](../../../GRHayL/Con2Prim/Tabulated/Newman1D/)
 contains the tabulated Newman energy and entropy paths. Both compute

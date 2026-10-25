@@ -146,14 +146,17 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
 
       // Within either clamped EOS branch h = a + P/rho, with constant
       // a = 1 + eps_cold and P. For a, P >= 0, the logarithmic derivative
-      // of the density map lies in [-1, 0]. Near -1 the map is almost
-      // reciprocal and an oscillation can drift for arbitrarily many steps.
-      // Geometric damping preserves its fixed point and puts that derivative
-      // in [0, 1/2]. Both endpoints must be in the same clamped branch, so
-      // the damped iterate stays there. Test the undamped residual above.
+      // of the density map, L = -(1 - (rhob1/D)^2) P/(rhob0 h), lies in
+      // (-1, 0]. Near -1 the map is almost reciprocal and an oscillation can
+      // drift for arbitrarily many steps. Geometric damping preserves its fixed
+      // point and puts that derivative at (1 + L)/2, which is smaller in
+      // magnitude than |L| exactly when L < -1/3, so damp only there. Both
+      // endpoints must be in the same clamped branch, so the damped iterate
+      // stays there. Test the undamped residual above.
       if(P_cold >= 0.0 && eps_cold >= -1.0
          && ((rhob0 < eos->rho_min && rhob1 < eos->rho_min)
-             || (rhob0 > eos->rho_max && rhob1 > eos->rho_max))) {
+             || (rhob0 > eos->rho_max && rhob1 > eos->rho_max))
+         && 3.0 * (1.0 - SQR(rhob1 / cons_undens->rho)) * P_cold > rhob0 * h) {
         rhob1 = sqrt(rhob0) * sqrt(rhob1);
         j1 = ghl_hybrid_find_polytropic_index(eos, rhob1);
       }

@@ -8,10 +8,12 @@ void ghl_validate_1D(
 
   // Try the full step, then fixed fractions back to the old iterate. Requiring
   // positive Z and v^2 < 1 keeps every accepted trial physical. Never cross
-  // x_old; if even the old iterate is invalid, report failure to the driver.
+  // x_old; if even the old iterate is invalid, report failure to the driver. The
+  // last fraction is exactly zero, so the last trial is x_old exactly, whether or
+  // not the compiler fuses the multiply-add.
   for(int backstep = 0; backstep <= 10; backstep++) {
     if(backstep > 0) {
-      x[0] = x_old[0] + (1.0 - 0.1 * backstep) * dx[0];
+      x[0] = x_old[0] + 0.1 * (10 - backstep) * dx[0];
     }
     if(isfinite(x[0]) && x[0] > 0.0) {
       const double vsq = ghl_vsq_calc(harm_aux, x[0]);

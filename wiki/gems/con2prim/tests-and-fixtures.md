@@ -52,9 +52,9 @@ invalid cubic discriminants, and nonfinite-root rejection in both variants.
 The Font1D round trips in
 [unit_test_hybrid_failure.c](../../../Unit_Tests/unit_test_hybrid_failure.c)
 check slowly converging multi-piece states, preservation of the cold root across
-retries, and damping below and above the EOS density bounds. An injected cyclic
-EOS checks cycle rejection and preservation of the last completed density seed.
-Focused Newton cases use the actual
+retries, and recovery with densities below and above the EOS density bounds. An
+injected cyclic EOS checks cycle rejection and preservation of the last completed
+density seed. Focused Newton cases use the actual
 hybrid Noble2D callback to accept a stationary bounded velocity only with a
 small residual, reject a large residual, and reject a large enthalpy-variable
 step hidden by validation. Separate callback cases check error propagation and
