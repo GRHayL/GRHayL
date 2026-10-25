@@ -25,7 +25,7 @@ void ghl_func_Z(
   ghl_error_codes_t error;
   for(int ntries = 0; ntries <= 10; ntries++) {
     error = ghl_general_newton_raphson(
-          eos, harm_aux, 1, Z, x_rho, ghl_validate_1D_entropy, ghl_func_rho, false);
+          eos, harm_aux, 1, Z, x_rho, ghl_validate_1D_entropy, ghl_func_rho);
     if(error == ghl_success) {
       break;
     }

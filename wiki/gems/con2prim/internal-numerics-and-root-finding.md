@@ -109,13 +109,14 @@ Core Noble helper files are built from
   `x - x_old`. Other coordinates and tabulated recovery retain the proposed
   correction: validation can hide a large step despite a small absolute
   residual. The largest component measure and the recomputed residual
-  objective `|f|` must both meet `solver_tolerance`. The
-  `funcd_is_repeatable` argument asserts that the residual returns the same
-  step, residual, derivative, and error status when called again at the same
-  `x`, and reads neither `harm_aux->n_iter` nor `harm_aux->temp_guess`. The loop
-  then reuses the residual evaluation that ends each iteration as the step of
-  the next one; otherwise it calls the residual again at the start of each
-  iteration. The convergence test is the same either way.
+  objective `|f|` must both meet `solver_tolerance`. The residual evaluation
+  that ends each iteration also supplies the next step, so every residual
+  callback must return the same step, residual, derivative, and error status
+  when called again at the same `x`. The hybrid residuals do, provided the
+  cold-EOS function pointers they call are deterministic in their inputs.
+  `ghl_func_Z` does apart from the `harm_aux->n_iter` its nested solve
+  accumulates. The tabulated residual does to within the table's temperature
+  root-finding precision, because it warm-starts from `harm_aux->temp_guess`.
 - [`validate_x.c`](../../../GRHayL/Con2Prim/Hybrid/Noble/validate_x.c)
   contains `ghl_validate_1D`, `ghl_validate_1D_entropy`, and
   `ghl_validate_2D` constraints for Newton updates.
@@ -147,14 +148,6 @@ finalizes primitives. Finalization writes the direct call's `speed_limited`
 result before the wrapper's pressure gate;
 `diagnostics->n_iter` and `diagnostics->which_routine` are set only after that
 gate succeeds.
-
-`hybrid_Noble1D.c` and `hybrid_Noble2D.c` pass
-`ghl_Noble_hybrid_residual_is_repeatable()` from `utils_Noble.h` as
-`funcd_is_repeatable`. It is true only while the hybrid polytropic-index and
-cold-pressure function pointers are still the stock `NRPyEOS` bindings, because
-those are what make `ghl_func_1D` and `ghl_func_2D` pure. The entropy paths
-(`ghl_func_Z` runs a nested Newton solve) and tabulated Noble 2D (which updates
-`harm_aux->temp_guess`) pass `false`.
 
 Hybrid Noble 2D lives in
 [`GRHayL/Con2Prim/Hybrid/Noble/Noble2D/`](../../../GRHayL/Con2Prim/Hybrid/Noble/Noble2D/).

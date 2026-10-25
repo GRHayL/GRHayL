@@ -193,13 +193,13 @@ static void test_Noble_newton_budgets(void) {
     const int before = aux.n_iter;
     newton_evaluations = 0;
     ghl_abort_if_error(ghl_general_newton_raphson(
-          &eos, &aux, 1, 0.0, x, ghl_validate_1D_entropy, quadratic_residual, false));
+          &eos, &aux, 1, 0.0, x, ghl_validate_1D_entropy, quadratic_residual));
     // Match the Newton tolerance configured above for this analytic root.
     check_close("Newton analytic root", sqrt(2.0), x[0], 1e-12);
-    // Pin the current residual evaluations before and after each applied step.
+    // Pin the residual evaluations: one before the first step and one after each.
     const int iterations = aux.n_iter - before;
     if(iterations < 2 || iterations > aux.max_iterations
-       || iterations * 2 != newton_evaluations
+       || iterations + 1 != newton_evaluations
        || (attempt && iterations != expected_iterations)) {
       ghl_error("Newton invocations did not receive independent iteration budgets\n");
     }
@@ -210,7 +210,7 @@ static void test_Noble_newton_budgets(void) {
   aux.max_iterations = 1;
   int before = aux.n_iter;
   if(ghl_general_newton_raphson(
-           &eos, &aux, 1, 0.0, x, ghl_validate_1D_entropy, quadratic_residual, false)
+           &eos, &aux, 1, 0.0, x, ghl_validate_1D_entropy, quadratic_residual)
      != ghl_error_c2p_max_iter || aux.n_iter != before + 1) {
     ghl_error("Newton exhaustion status/count mismatch\n");
   }
@@ -218,7 +218,7 @@ static void test_Noble_newton_budgets(void) {
   x[0] = 8.0;
   before = aux.n_iter;
   ghl_abort_if_error(ghl_general_newton_raphson(
-        &eos, &aux, 1, 0.0, x, ghl_validate_1D_entropy, quadratic_residual, false));
+        &eos, &aux, 1, 0.0, x, ghl_validate_1D_entropy, quadratic_residual));
   if(aux.n_iter - before != expected_iterations) {
     ghl_error("Newton retry inherited the exhausted iteration counter\n");
   }
@@ -227,7 +227,7 @@ static void test_Noble_newton_budgets(void) {
     x[0] = invalid == 4 ? NAN : 8.0;
     newton_evaluations = 0;
     const ghl_error_codes_t error = ghl_general_newton_raphson(
-          &eos, &aux, 1, invalid, x, ghl_validate_1D_entropy, quadratic_residual, false);
+          &eos, &aux, 1, invalid, x, ghl_validate_1D_entropy, quadratic_residual);
     if(error != ghl_error_c2p_singular || newton_evaluations > 2) {
       ghl_error("Newton did not promptly reject nonfinite case %d\n", invalid);
     }
@@ -393,7 +393,7 @@ static void test_Noble_clamped_convergence(void) {
     // A large residual must still fail, as must a large Z step hidden by fabs.
     const ghl_error_codes_t expected = test == 0 ? ghl_success : ghl_error_c2p_max_iter;
     if(ghl_general_newton_raphson(&eos, &aux, 2, 0.0, x,
-          ghl_validate_2D, ghl_func_2D, false) != expected) {
+          ghl_validate_2D, ghl_func_2D) != expected) {
       ghl_error("Noble clamp acceptance/residual rejection failed case %d\n", test);
     }
   }
@@ -475,7 +475,7 @@ static void test_Noble_newton_failures(void) {
     const ghl_error_codes_t error = ghl_general_newton_raphson(
           &eos, &aux, 1, failure, x,
           failure == newton_invalid_trial ? ghl_validate_1D : ghl_validate_1D_entropy,
-          failing_newton_residual, false);
+          failing_newton_residual);
     if(error != expected) {
       ghl_error("Newton failure case %d: expected %d, got %d\n",
                 failure, expected, error);
@@ -485,7 +485,7 @@ static void test_Noble_newton_failures(void) {
   double x[] = { 1.0 };
   newton_evaluations = 0;
   if(ghl_general_newton_raphson(&eos, &aux, 1, NAN, x,
-        ghl_validate_1D_entropy, quadratic_residual, false) != ghl_error_c2p_singular
+        ghl_validate_1D_entropy, quadratic_residual) != ghl_error_c2p_singular
      || newton_evaluations != 0 || aux.n_iter != 0) {
     ghl_error("Newton evaluated a nonfinite independent variable\n");
   }

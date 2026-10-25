@@ -6,11 +6,12 @@
  * @details n_iter accumulates attempted iterations, including nested solves
  * and retries. Residual callbacks may set harm_aux->error to propagate a
  * failure before their outputs are used. Nonfinite outputs or iterates return
- * ghl_error_c2p_singular. A nonpositive budget performs no iterations. A true
- * funcd_is_repeatable asserts that funcd returns the same step, residual,
- * derivative, and error status when called again at the same x and reads
- * neither n_iter nor temp_guess, so the residual evaluation ending each
- * iteration also supplies the next step.
+ * ghl_error_c2p_singular. A nonpositive budget performs no iterations. The
+ * residual evaluation that ends each iteration also supplies the next step, so
+ * funcd must return the same step, residual, derivative, and error status when
+ * called again at the same x. The tabulated residual meets this to within the
+ * table's temperature root-finding precision, because it warm-starts from
+ * harm_aux->temp_guess.
  */
 ghl_error_codes_t ghl_general_newton_raphson(
       const ghl_eos_parameters *restrict eos,
@@ -30,8 +31,7 @@ ghl_error_codes_t ghl_general_newton_raphson(
             const double[],
             double[],
             double *restrict,
-            double *restrict),
-      const bool funcd_is_repeatable) {
+            double *restrict)) {
 
   double dx[ndim], x_old[ndim];
 
@@ -45,9 +45,8 @@ ghl_error_codes_t ghl_general_newton_raphson(
     }
   }
 
-  /* Start the Newton-Raphson iterations. A repeatable funcd returns the same
-     result when called again at the same x, so the residual evaluation at the
-     end of an iteration already provides the step for the next one. */
+  /* Start the Newton-Raphson iterations. The residual evaluation at the end of
+     an iteration already provides the step for the next one. */
   bool have_step = false;
   for(int n_iter = 0; n_iter < harm_aux->max_iterations; n_iter++) {
     harm_aux->n_iter++;
@@ -111,7 +110,7 @@ ghl_error_codes_t ghl_general_newton_raphson(
     if(errx <= harm_aux->solver_tolerance && fabs(f) <= harm_aux->solver_tolerance) {
       return ghl_success;
     }
-    have_step = funcd_is_repeatable;
+    have_step = true;
   }
 
   return ghl_error_c2p_max_iter;

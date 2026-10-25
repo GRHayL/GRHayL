@@ -408,7 +408,7 @@ ghl_error_codes_t ghl_tabulated_Noble2D(
   }
 
   const ghl_error_codes_t retval = ghl_general_newton_raphson(
-        eos, &harm_aux, 2, 0.0, gnr_out, ghl_validate_2D, tabulated_func_2D, false);
+        eos, &harm_aux, 2, 0.0, gnr_out, ghl_validate_2D, tabulated_func_2D);
   if(retval != ghl_success) {
     return retval;
   }
