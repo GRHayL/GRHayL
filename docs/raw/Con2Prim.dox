@@ -48,7 +48,14 @@
  * tolerance. Hybrid Noble2D measures its bounded squared-velocity coordinate
  * using the update actually applied after validation. Other coordinates and
  * tabulated recovery retain the proposed correction, because validation can
- * hide a large step even when the absolute residual is small.
+ * hide a large step even when the absolute residual is small. Where hybrid
+ * Noble2D's validation clips the squared velocity to its upper bound, the
+ * residual objective is also evaluated in dimensionless form, scaling the
+ * momentum residual by \f$(B^2+Z)^2\f$ and the energy residual by the largest
+ * of \f$|Q\cdot n|\f$, \f$|Z|\f$, and \f$B^2\f$, and the larger objective
+ * must meet the tolerance. A clipped iterate with a tiny absolute residual but
+ * a large relative equation error is therefore not accepted. This guard acts at
+ * that bound only and is discontinuous there.
  * Font, Palenzuela, and Newman use local iteration and tolerance settings;
  * changing those public Noble controls does not tune these methods.
  * Font limits its outer iterations and detects exact cycles in each inner

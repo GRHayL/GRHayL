@@ -108,12 +108,19 @@ Core Noble helper files are built from
   squared-velocity coordinate instead uses the actual update after validation,
   `x - x_old`. Other coordinates and tabulated recovery retain the proposed
   correction: validation can hide a large step despite a small absolute
-  residual. The largest component measure and the recomputed residual
-  objective `|f|` must both meet `solver_tolerance`. The residual evaluation
-  that ends each iteration also supplies the next step, so every residual
-  callback must return the same step, residual, derivative, and error status
-  when called again at the same `x`. The hybrid residuals do, provided the
-  cold-EOS function pointers they call are deterministic in their inputs.
+  residual. Where `ghl_validate_2D` clips that coordinate to its upper bound,
+  `ghl_func_2D` also evaluates the objective with the momentum residual scaled
+  by `(Bsq + Z)^2` and the energy residual scaled by the largest of
+  `|Qdotn|`, `|Z|`, and `Bsq`, and reports the larger value, so a clipped
+  iterate with a tiny absolute residual but a large relative equation error is
+  not accepted; the bound must equal the clip in `ghl_hybrid_Noble2D`, and the
+  guard is discontinuous there. The largest component measure and the
+  recomputed residual objective `|f|` must both meet `solver_tolerance`. The
+  residual evaluation that ends each iteration also supplies the next step, so
+  every residual callback must return the same step, residual, derivative, and
+  error status when called again at the same `x`. The hybrid residuals do,
+  provided the cold-EOS function pointers they call are deterministic in
+  their inputs.
   `ghl_func_Z` does apart from the `harm_aux->n_iter` its nested solve
   accumulates. The tabulated residual does to within the table's temperature
   root-finding precision, because it warm-starts from `harm_aux->temp_guess`.

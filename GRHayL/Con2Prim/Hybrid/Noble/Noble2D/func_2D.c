@@ -49,4 +49,16 @@ void ghl_func_2D(
 
   *df = -t11 * t11 - t18 * t18;
   *f = -0.5 * (*df);
+
+  // The raw merit is dimensional, so it can be tiny while the equations have a
+  // large relative error. Where validation clips v^2 to the ceiling, also bound
+  // the residuals scaled by (Bsq + Z)^2 and by the energy scale. The ceiling must
+  // equal the clip in ghl_validate_2D and ghl_hybrid_Noble2D.
+  if(vsq >= 1.0 - 1.e-15) {
+    const double momentum_err = t11 / t4;
+    const double energy_err
+          = t18 / fmax(fmax(fabs(harm_aux->Qdotn), fabs(Z)), harm_aux->Bsq);
+    *f = fmax(*f, 0.5 * (momentum_err * momentum_err + energy_err * energy_err));
+    *df = -2.0 * (*f);
+  }
 }
