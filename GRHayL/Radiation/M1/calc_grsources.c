@@ -18,8 +18,8 @@ int ghl_m1_calc_grsources(
     const ghl_metric_quantities *metric_derivs_y,
     const ghl_metric_quantities *metric_derivs_z,
     const double E,
-    const ghl_radiation_pressure_tensor *P4,
     const ghl_radiation_flux_vector *F4,
+    const ghl_radiation_pressure_tensor *P4,
     const ghl_extrinsic_curvature *curv,
     ghl_m1_conservative_quantities *rhs_gr // output
     ){

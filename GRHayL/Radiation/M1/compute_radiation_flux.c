@@ -67,18 +67,23 @@ double calc_E_flux(
       const double E,
       const ghl_radiation_flux_vector *F4,
       const int dir4) {
-  return metric->lapse * F4->U[dir4] - metric->betaU[dir4] * E;
+  int dir3 = dir4 - 1;
+  return metric->lapse * F4->U[dir4] - metric->betaU[dir3] * E;
 }
 
 // Eq (28) - 3
-// should I just return 3*3 tensor?
 double calc_F_flux(
       const ghl_metric_quantities *metric,
       const ghl_radiation_flux_vector *F4,
       const ghl_radiation_pressure_tensor *P4,
       const int dir4,
       const int comp) {
-  return metric->lapse * P4->UD[dir4][comp] - metric->betaU[dir4] * F4->D[comp];
+  int dir3 = dir4 - 1;
+  // if(dir4 == 1 && comp == 1){
+  //   printf("F4x = %e, P4xx = %e\n", F4->D[comp], P4->UD[dir4][comp]);
+  // }
+  
+  return metric->lapse * P4->UD[dir4][comp] - metric->betaU[dir3] * F4->D[comp];
 }
 
 // Eq (29) - 2
@@ -100,10 +105,17 @@ void calc_rF_source(
       const ghl_ADM_aux_quantities *adm_aux,
       const ghl_radiation_con_source_vector *S4,
       ghl_radiation_con_source_vector *rF_source) {
-  for(int a = 0; a < 4; ++a) {
-    rF_source->D[a] = 0.0;
-    for(int b = 0; b < 4; ++b) {
-      rF_source->D[a] += metric->lapse * metric->gammaDD[b][a] * S4->U[b];
+  // for(int a = 0; a < 4; ++a) {
+  //   rF_source->D[a] = 0.0;
+  //   for(int b = 0; b < 4; ++b) {
+  //     rF_source->D[a] += metric->lapse * metric->gammaDD[b][a] * S4->U[b];
+  //   }
+  // }
+
+  for(int i = 0; i < 3; ++i) {
+    rF_source->D[i+1] = 0.0;
+    for(int j = 0; j < 3; ++j) {
+      rF_source->D[i+1] += metric->lapse * metric->gammaDD[j][i] * S4->U[j+1];
     }
   }
 }

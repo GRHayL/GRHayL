@@ -33,9 +33,10 @@ void ghl_radiation_compute_pressure_tensor_thick(
   double n4D[4] = { -metric->lapse, 0, 0, 0 };
 
   // v.F = vU FD
+  // vU[0] is always zero
   double v_dot_F = 0;
-  for(int a = 0; a < 4; a++) {
-    v_dot_F += v4U[a] * F4->D[a];
+  for(int i = 1; i < 4; i++) {
+    v_dot_F += v4U[i] * F4->D[i];
   }
 
   // fluid Lorentz factor W = -uU nD
@@ -255,6 +256,11 @@ int ghl_radiation_rootSolve_closure(m1_root_params *restrict fparams_in) {
   // Step 1: Set specific quantities for this routine
   // m1_root_params * fparams = (m1_root_params*) fparams_in;
 
+  // make sure F4[0] is properly defined
+  fparams_in->F4->D[0] = fparams_in->metric->betaU[1] * fparams_in->F4->D[1]
+                       + fparams_in->metric->betaU[2] * fparams_in->F4->D[2]
+                       + fparams_in->metric->betaU[3] * fparams_in->F4->D[3];
+
   // Step 2: set min and max for xi
   double xi_low = 0;
   double xi_up = 1;
@@ -269,7 +275,11 @@ int ghl_radiation_rootSolve_closure(m1_root_params *restrict fparams_in) {
   double xi_root = rparams.root;
   // printf("root = %f residual = %f ", xi_root, rparams.residual);
   fparams_in->chi = ghl_m1_closure(xi_root);
+  get_PUD_and_PUU(fparams_in->adm_aux, fparams_in->P4);
+  
 
+  // ghl_radiation_apply_closure(fparams_in->metric, fparams_in->adm_aux, fparams_in->prims, fparams_in->E, fparams_in->F4, fparams_in->chi, fparams_in->P4);
+  
   // TODO: add error message when ghl_brent fails
   return 1;
 }

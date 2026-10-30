@@ -15,12 +15,12 @@ int ghl_m1_update(
     const ghl_ADM_aux_quantities *adm_aux,
     const ghl_primitive_quantities *prims,
     const ghl_m1_thc_params *thc_params,
-    const double abs_0[2],
-    const double abs_1[2],
-    const double eta_0[2],
-    const double eta_1[2],
-    const double scat_0[2],
-    const double scat_1[2],
+    const double abs_0[NGROUPS*NSPECIES],
+    const double abs_1[NGROUPS*NSPECIES],
+    const double eta_0[NGROUPS*NSPECIES],
+    const double eta_1[NGROUPS*NSPECIES],
+    const double scat_0[NGROUPS*NSPECIES],
+    const double scat_1[NGROUPS*NSPECIES],
     ghl_m1_conservative_quantities *rU,
     ghl_m1_conservative_quantities *rU_p,
     ghl_m1_conservative_quantities *rhs_flux,
@@ -75,11 +75,11 @@ int ghl_m1_update(
     // From function arguments store to local arrays
     // these variables will not be changed until update is done
     for (int ig = 0; ig < NGROUPS*NSPECIES; ++ig) {
-        rE[ig]  = rU->rE[ig];
-        rFx[ig] = rU->rF4[ig].D[1];
-        rFy[ig] = rU->rF4[ig].D[2];
-        rFz[ig] = rU->rF4[ig].D[3];
-        rN[ig]  = rU->rN[ig];
+        rE[ig]  = rU_p->rE[ig];
+        rFx[ig] = rU_p->rF4[ig].D[1];
+        rFy[ig] = rU_p->rF4[ig].D[2];
+        rFz[ig] = rU_p->rF4[ig].D[3];
+        rN[ig]  = rU_p->rN[ig];
 
         rE_p[ig]  = rU_p->rE[ig];
         rFx_p[ig] = rU_p->rF4[ig].D[1];
@@ -259,9 +259,10 @@ int ghl_m1_update(
                 F4.D[1] = rFx_p[ig];
                 F4.D[2] = rFy_p[ig];
                 F4.D[3] = rFz_p[ig];
-                F4.D[0] = -metric->lapse * (n4D[1] * F4.D[1] +
-                                        n4D[2] * F4.D[2] + 
-                                        n4D[3] * F4.D[3]); 
+                // F4.D[0] = -metric->lapse * (n4D[1] * F4.D[1] +
+                //                         n4D[2] * F4.D[2] + 
+                //                         n4D[3] * F4.D[3]); 
+                F4.D[0] = metric->betaU[1] * F4.D[1] + metric->betaU[2] * F4.D[2] + metric->betaU[3] * F4.D[3];
                 closure_params.E   = E;
                 closure_params.F4  = &F4;
                 closure_params.P4  = &P4;
@@ -328,13 +329,10 @@ int ghl_m1_update(
                 F4_star.D[1] = rFx_p[ig] + cdt*rFx_rhs[ig];
                 F4_star.D[2] = rFy_p[ig] + cdt*rFy_rhs[ig];
                 F4_star.D[3] = rFz_p[ig] + cdt*rFz_rhs[ig];
-                // double rad_eps = 1.0e-15; // default value in THC
-                // double rad_E_floor = 1.0e-15;
-                // apply_floor(adm_aux, &E, &F4, rad_E_floor, rad_eps); // TODO: what does this step do?
-                
-                apply_floor(adm_aux, &E_star, &F4_star, rad_E_floor, rad_eps);
-                // printf("E_star[%d] = %f, F4_star[%d] = {%f, %f, %f}\n", ig, E_star, ig, F4_star.D[1], F4_star.D[2], F4_star.D[3]);  
 
+                apply_floor(adm_aux, &E_star, &F4_star, rad_E_floor, rad_eps); 
+                // printf("E_star[%d] = %f, F4_star[%d] = {%f, %f, %f}\n", ig, E_star, ig, F4_star.D[1], F4_star.D[2], F4_star.D[3]);  
+                
                 double N_star = fmax(rN_p[ig] + cdt*rN_rhs[ig], rad_N_floor);
 
                 //
@@ -346,14 +344,6 @@ int ghl_m1_update(
                 ghl_radiation_rootSolve_closure(&closure_params);
                 assemble_rT_lab_frame(n4D, E_star, &F4_star, &P4, &rT4DD);
                 // Need to calculate if P4 is inf
-                // printf("after closure closure.E = %f\n", closure_params.E);
-                // printf("after closure closure.F4 = {%f, %f, %f, %f}\n", closure_params.F4->D[0], closure_params.F4->D[1], closure_params.F4->D[2], closure_params.F4->D[3]);
-                // printf("after closure closure.P4 = {%f, %f, %f, %f}\n", closure_params.P4->DD[0][0], closure_params.P4->DD[0][1], closure_params.P4->DD[0][2], closure_params.P4->DD[0][3]);
-                // printf("after closure rT4DD.T4 = \n{%f, %f, %f, %f},\n{%f, %f, %f, %f},\n{%f, %f, %f, %f},\n{%f, %f, %f, %f}\n",
-                //     rT4DD.T4[0][0], rT4DD.T4[0][1], rT4DD.T4[0][2], rT4DD.T4[0][3],
-                //     rT4DD.T4[1][0], rT4DD.T4[1][1], rT4DD.T4[1][2], rT4DD.T4[1][3],
-                //     rT4DD.T4[2][0], rT4DD.T4[2][1], rT4DD.T4[2][2], rT4DD.T4[2][3],
-                //     rT4DD.T4[3][0], rT4DD.T4[3][1], rT4DD.T4[3][2], rT4DD.T4[3][3]);
 
                 double const Jstar = calc_J_from_rT(u4U, &proj4, &rT4DD);
                 ghl_radiation_flux_vector H4_star = {0};
@@ -418,7 +408,7 @@ int ghl_m1_update(
                 E_new = calc_J_from_rT(n4U, &proj4, &rT4DD);
                 // calc_H4D_from_rT(u4U, &proj4, &rT4DD, &H4_star);
                 calc_H4D_from_rT(n4U, &proj4, &rT4DD, &F4_new);
-                apply_floor(adm_aux, &E_new, &F4_new, rad_E_floor, rad_eps);
+                apply_floor(adm_aux, &E_new, &F4_new, rad_E_floor, rad_eps); 
                 // printf("Initial guess E_new[%d] = %f, F4_new[%d] = {%f, %f, %f}\n", ig, E_new, ig, F4_new.D[1], F4_new.D[2], F4_new.D[3]);  
 
                 //
@@ -435,7 +425,7 @@ int ghl_m1_update(
                     closure, gsl_solver_1d, gsl_solver_nd,
                     &E_new, &F4_new);
                 int souce_err = 0;
-                apply_floor(adm_aux, &E_new, &F4_new, rad_E_floor, rad_eps);
+                apply_floor(adm_aux, &E_new, &F4_new, rad_E_floor, rad_eps); 
 
 
                 //

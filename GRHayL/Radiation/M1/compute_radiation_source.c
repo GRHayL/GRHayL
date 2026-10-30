@@ -421,18 +421,6 @@ int impl_func_val(const gsl_vector *q, void *params, gsl_vector *f) {
   if(ierr != GSL_SUCCESS) {
     return ierr;
   }
-// #define EVALUATE_ZFUNC \
-//     gsl_vector_set(f, 0, gsl_vector_get(q, 0) - p->E_star        - p->cdt * p->rE_source); \
-//     gsl_vector_set(f, 1, gsl_vector_get(q, 1) - p->F4_star->D[1] - p->cdt * p->rF_source->D[1]); \
-//     gsl_vector_set(f, 2, gsl_vector_get(q, 2) - p->F4_star->D[2] - p->cdt * p->rF_source->D[2]); \
-//     gsl_vector_set(f, 3, gsl_vector_get(q, 3) - p->F4_star->D[3] - p->cdt * p->rF_source->D[3]);
-//     printf("f= {%f, %f, %f, %f}\n",
-//            gsl_vector_get(f, 0), gsl_vector_get(f, 1),
-//            gsl_vector_get(f, 2), gsl_vector_get(f, 3));
-//     printf("q= {%f, %f, %f, %f}\n",
-//            gsl_vector_get(q, 0), gsl_vector_get(q, 1),
-//            gsl_vector_get(q, 2), gsl_vector_get(q, 3));
-//   EVALUATE_ZFUNC
   evaluate_zfunc(q, p, f);
 
   return GSL_SUCCESS;
@@ -446,15 +434,11 @@ int impl_func_val_jac(gsl_vector const * q, void * params, gsl_vector * f, gsl_m
     if (ierr != 0) {
         return ierr;
     }
-  // EVALUATE_ZFUNC
-  // EVALUATE_ZJAC
   evaluate_zjac(p, J);
   evaluate_zfunc(q, p, f);
 
   return GSL_SUCCESS;
 }
-// #undef EVALUATE_ZFUNC
-// #undef EVALUATE_ZJAC
 
 
 // Explicit update
@@ -464,31 +448,12 @@ void explicit_update(
         ghl_m1_powell_params * p,
         double *E_new,
         ghl_radiation_flux_vector *F4_new) {
-    // printf("Begin explicit_update\n");
-    // printf("E_star = %f, F4_star = {%f, %f, %f, %f}\n", p->E_star, p->F4_star->D[0], p->F4_star->D[1], p->F4_star->D[2], p->F4_star->D[3]);
-    // printf("rE_source = %f, rF_source = {%f, %f, %f, %f}\n", p->rE_source, p->rF_source->D[0], p->rF_source->D[1], p->rF_source->D[2], p->rF_source->D[3]);
-    // double alp = p->metric->lapse;
-    // double n4U[4] = {p->metric->lapseinv, 
-    //                 -p->metric->betaU[0]*p->metric->lapseinv,
-    //                 -p->metric->betaU[1]*p->metric->lapseinv,
-    //                 -p->metric->betaU[2]*p->metric->lapseinv};
     *E_new      = p->E_star       + p->cdt * p->rE_source;
     
-    // rF_source only has U, need to lower indicies
-    // double rF_source_D[4] = {0.0,0.0,0.0,0.0};
-    // for(int a = 0; a < 4; ++a) {
-    //   for (int b = 0; b < 4; ++b) {
-    //     rF_source_D[a] = p->rF_source->U[b] * p->adm_aux->g4DD[a][b];
-    //   }
-    // }
     F4_new->D[1] = p->F4_star->D[1] + p->cdt * p->rF_source->D[1];
     F4_new->D[2] = p->F4_star->D[2] + p->cdt * p->rF_source->D[2];
     F4_new->D[3] = p->F4_star->D[3] + p->cdt * p->rF_source->D[3];
 
-    // F_0 = g_0i F^i = beta_i F^i = beta^i F_i
-    // F4_new->D[0] = - alp * n4U[1] * F4_new->D[1]
-    //                - alp * n4U[2] * F4_new->D[2]
-    //                - alp * n4U[3] * F4_new->D[3];
     F4_new->D[0] = p->metric->betaU[0] * F4_new->D[1]\
                  + p->metric->betaU[1] * F4_new->D[2]\
                  + p->metric->betaU[2] * F4_new->D[3];
@@ -546,7 +511,6 @@ int ghl_source_update(
   p_powell.gsl_solver_1d  = gsl_solver_1d;
   p_powell.gsl_solver_nd  = gsl_solver_nd;
 
-  // printf("Begin ghl_source_update\n");
   init_params(&p_powell);
 
   gsl_multiroot_function_fdf zfunc
@@ -562,11 +526,8 @@ int ghl_source_update(
   gsl_vector_view xold = gsl_vector_view_array(qold, 4);
   // Non stiff limit, use explicit update
   if(p_powell.cdt * p_powell.kabs < 1 && p_powell.cdt * p_powell.kscat < 1) {
-    // printf("Non stiff limit, use explicit update\n");
     prepare(&xold.vector, &p_powell);
     explicit_update(&p_powell, E_new, F4_new);
-    // printf("After explicit_update: E_new = %f, F4_new = {%f, %f, %f, %f}\n",
-    //        *E_new, F4_new->D[0], F4_new->D[1], F4_new->D[2], F4_new->D[3]);
 
     double q[4] = { *E_new, F4_new->D[1], F4_new->D[2], F4_new->D[3] };
     gsl_vector_view x = gsl_vector_view_array(q, 4);
@@ -634,15 +595,12 @@ int ghl_source_update(
           p_powell.gsl_solver_nd->dx, p_powell.gsl_solver_nd->x, thc_params->source_epsabs, thc_params->source_epsrel);
     printf("\n");
   } while(ierr == GSL_CONTINUE);
-  // printf("After gsl_multiroot_test_delta\n");
+  
   *E_new       = gsl_vector_get(p_powell.gsl_solver_nd->x, 0);
   F4_new->D[1] = gsl_vector_get(p_powell.gsl_solver_nd->x, 1);
   F4_new->D[2] = gsl_vector_get(p_powell.gsl_solver_nd->x, 2);
   F4_new->D[3] = gsl_vector_get(p_powell.gsl_solver_nd->x, 3);
-  // F_0 = g_0i F^i = beta_i F^i = beta^i F_i
-  // F4_new->D[0] = - alp * n4U[1] * F4_new->D[1]
-  //                - alp * n4U[2] * F4_new->D[2]
-  //                - alp * n4U[3] * F4_new->D[3];
+
   F4_new->D[0] = p_powell.metric->betaU[0] * F4_new->D[1] \
                + p_powell.metric->betaU[1] * F4_new->D[2] \
                + p_powell.metric->betaU[2] * F4_new->D[3];

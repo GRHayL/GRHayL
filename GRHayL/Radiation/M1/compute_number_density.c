@@ -37,7 +37,7 @@ double compute_Gamma(
     double f_dot_v;
     double f_dot_v_sum = 0;
     for(int a = 0; a < 4; a++) {
-      f_dot_v_sum += F4->D[a] * v4U[a];
+      f_dot_v_sum += F4->D[a] * v4U[a] / E;
     }
     f_dot_v = fmin(f_dot_v_sum, 1 - rad_eps);
     return W * (E / J) * (1 - f_dot_v);

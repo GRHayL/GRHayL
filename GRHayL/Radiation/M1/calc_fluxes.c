@@ -45,8 +45,8 @@ int ghl_m1_calc_flux(
     const ghl_radiation_pressure_tensor stencil_rP4[STENCIL_CONS_SIZE],
     const double stencil_rN[STENCIL_CONS_SIZE],
     const double delta[3], // [dx,dy,dz]
-    const double abs_1[2],
-    const double scat_1[2],
+    const double abs_1[NSTENCIL_FLUX],
+    const double scat_1[NSTENCIL_FLUX],
     const int dir,
     ghl_m1_conservative_quantities *rhs_flux // output
     ){
@@ -94,7 +94,6 @@ int ghl_m1_calc_flux(
             stencil_cons[IDX_CONS(ig, __k, 3)] = cur_rF4.D[3];
             stencil_cons[IDX_CONS(ig, __k, 4)] =  stencil_rE[i4D];
         } // k=4 stencil for cons
-
         //      |  .  |  .  |  .  |  .  |  .  |
         // __k           0     1     2      
         // i4D     0     1     2     3     4
@@ -148,27 +147,32 @@ int ghl_m1_calc_flux(
             assemble_fnu(&stencil_adm_aux[__k], &u4U, J, &H4, &fnu4);
 
             // Note that nnu is densitized here
-            double nnu = stencil_rN[__k]/Gamma;
+            double nnu = stencil_rN[i4D]/Gamma;
             // calc_F_flux uses F4.U
             get_FU(&stencil_adm_aux[__k], &cur_rF4);
-            stencil_flux[IDX_FLUX(ig, __k, 0)] = stencil_metric[__k].lapse * nnu * fnu4.U[dir+1];
-            stencil_flux[IDX_FLUX(ig, __k, 1)] = calc_F_flux(&stencil_metric[__k], &cur_rF4, &cur_rP4, dir+1, 1);
-            stencil_flux[IDX_FLUX(ig, __k, 2)] = calc_F_flux(&stencil_metric[__k], &cur_rF4, &cur_rP4, dir+1, 2);
-            stencil_flux[IDX_FLUX(ig, __k, 3)] = calc_F_flux(&stencil_metric[__k], &cur_rF4, &cur_rP4, dir+1, 3);
-            stencil_flux[IDX_FLUX(ig, __k, 4)] = calc_E_flux(&stencil_metric[__k], cur_rE, &cur_rF4, dir+1);
+            int dir4 = dir + 1;
+            stencil_flux[IDX_FLUX(ig, __k, 0)] = stencil_metric[__k].lapse * nnu * fnu4.U[dir4];
+            stencil_flux[IDX_FLUX(ig, __k, 1)] = calc_F_flux(&stencil_metric[__k], &cur_rF4, &cur_rP4, dir4, 1);
+            stencil_flux[IDX_FLUX(ig, __k, 2)] = calc_F_flux(&stencil_metric[__k], &cur_rF4, &cur_rP4, dir4, 2);
+            stencil_flux[IDX_FLUX(ig, __k, 3)] = calc_F_flux(&stencil_metric[__k], &cur_rF4, &cur_rP4, dir4, 3);
+            stencil_flux[IDX_FLUX(ig, __k, 4)] = calc_E_flux(&stencil_metric[__k], cur_rE, &cur_rF4, dir4);
             
-
             // Speed of light -- note that gammaUU has NDIM not 3 from THC but 4 here
-            double clam_1 =  stencil_metric[__k].lapse*sqrt(stencil_metric[__k].gammaUU[dir+1][dir+1]) - stencil_metric[__k].betaU[dir+1];
-            double clam_2 = -stencil_metric[__k].lapse*sqrt(stencil_metric[__k].gammaUU[dir+1][dir+1]) - stencil_metric[__k].betaU[dir+1];
+            double clam_1 =  stencil_metric[__k].lapse*sqrt(stencil_metric[__k].gammaUU[dir4][dir4]) - stencil_metric[__k].betaU[dir4];
+            double clam_2 = -stencil_metric[__k].lapse*sqrt(stencil_metric[__k].gammaUU[dir4][dir4]) - stencil_metric[__k].betaU[dir4];
             // In some cases the eigenvalues in the thin limit
             // overestimate the actual characteristic speed and can
             // become larger than c
             double clight = fmax(fabs(clam_1), fabs(clam_2));
             stencil_cmax[IDX_CMAX(ig, __k)] = clight;
                                                  // = std::min(clight, cM1);
+            
+
+
         } // k=2 stencil for flux and cmax
 
+            
+            
         // ----------------------------------------------
         // 2nd pass update the RHS
         for (int iv = 0; iv < NSTENCIL_CONS; ++iv) {
@@ -185,20 +189,29 @@ int ghl_m1_calc_flux(
             double const ccm  =  stencil_cmax[IDX_CMAX(ig, 0)];
             double const cc   =  stencil_cmax[IDX_CMAX(ig, 1)];
             double const ccp  =  stencil_cmax[IDX_CMAX(ig, 2)];
-            double const cmx =  fmax(cc, ccp);
+            double const cmxp =  fmax(cc, ccp);
+            double const cmxm =  fmax(cc, ccm);
 
             double const dupp = ujpp - ujp;
-            double const dupc = ujp - uj;
-            double const ducm = uj - ujm;
-            double const dumm = uj - ujm;
+            double const dupc = ujp  - uj;
+            double const ducm = uj   - ujm;
+            double const dumm = ujm  - ujmm;
 
             // Remove dissipation at high Peclet numbers
-            double kapa = 0.5*(abs_1[1] + abs_1[0] +
+            double kapam = 0.5*(abs_1[1] + abs_1[0] +
                     scat_1[1] + scat_1[0]);
-            double A = 1.0;
-            if (kapa*delta[dir] > 1.0) {
-                A = fmin(1.0, 1.0/(delta[dir]*kapa));
-                A = fmax(A, thc_params->mindiss);
+            double Am = 1.0;
+            if (kapam*delta[dir] > 1.0) {
+                Am = fmin(1.0, 1.0/(delta[dir]*kapam));
+                Am = fmax(Am, thc_params->mindiss);
+            }
+
+            double kapap = 0.5*(abs_1[2] + abs_1[1] +
+                    scat_1[2] + scat_1[1]);
+            double Ap = 1.0;
+            if (kapap*delta[dir] > 1.0) {
+                Ap = fmin(1.0, 1.0/(delta[dir]*kapap));
+                Ap = fmax(Ap, thc_params->mindiss);
             }
 
             // Instead of rotating pointers like THC, we just calculate both flux_jm and flux_jp here
@@ -206,51 +219,80 @@ int ghl_m1_calc_flux(
             bool sawtooth_p = false;
             double phi_p = 0;
             if (dupc*dupp > 0 && dupc*ducm > 0) {
-                phi_p = minmod2(dumm/ducm, dupc/dupp, thc_params->minmod_theta);
+                phi_p = minmod2(ducm/dupc, dupp/dupc, thc_params->minmod_theta);
             }
             else if (dupc*dupp < 0 && dupc*ducm < 0) {
                 sawtooth_p = true;
             }
+            // phi_p = 0.0;
             //assert(isfinite(phi));
-            double const flux_p_low =
-            0.5*(fj + fjp - cmx*(ujp - uj));
+            double const flux_p_low = 0.5*(fj + fjp - cmxp*(ujp - uj));
             double const flux_p_high = 0.5*(fj + fjp);
-
             double flux_p_num = flux_p_high -
-                (sawtooth_p ? 1 : A)*(1 - phi_p)*(flux_p_high - flux_p_low);
+                (sawtooth_p ? 1 : Ap)*(1 - phi_p)*(flux_p_high - flux_p_low);
+            // double flux_p_num = flux_p_high -
+            //     (sawtooth_p ? 1 : Ap)*phi_p*(flux_p_high - flux_p_low);
 
             // flux_jm
             bool sawtooth_m = false;
             double phi_m = 0;
             if (ducm*dupc > 0 && ducm*dumm > 0) {
-                phi_m = minmod2(dumm/ducm, dupc/dupp, thc_params->minmod_theta);
+                phi_m = minmod2(dumm/ducm, dupc/ducm, thc_params->minmod_theta);
             }
             else if (ducm*dupc < 0 && ducm*dumm < 0) {
                 sawtooth_m = true;
             }
+            // phi_m = 0.0;
             //assert(isfinite(phi));
-            double const flux_m_low =
-            0.5*(fjm + fj - cmx*(uj - ujm));
+            double const flux_m_low = 0.5*(fjm + fj - cmxm*(uj - ujm));
             double const flux_m_high = 0.5*(fjm + fj);
-
             double flux_m_num = flux_m_high -
-                (sawtooth_m ? 1 : A)*(1 - phi_m)*(flux_m_high - flux_m_low);
+                (sawtooth_m ? 1 : Am)*(1 - phi_m)*(flux_m_high - flux_m_low);
+            // double flux_m_num = flux_m_high -
+            //     (sawtooth_m ? 1 : Am)*phi_m*(flux_m_high - flux_m_low);
+
+            // is it phi_m or 1-phi_m? THC paper is former but the code is latter
 
             int i4D_rhs = ig*5 + iv;
             flux_jp[i4D_rhs] = flux_p_num;
             flux_jm[i4D_rhs] = flux_m_num;
-
+            // if(iv == 1) {
+            //     printf("fm=%e, f=%e, fp=%e", fjm, fj, fjp);
+            //     // printf("flux_m_low = %e flux_m_high = %e flux_p_low = %e flux_p_high = %e\n", flux_m_low, flux_m_high, flux_p_low, flux_p_high);
+            // }
             rhs[i4D_rhs] += idelta[dir]*(
                 flux_jm[i4D_rhs] -
                 flux_jp[i4D_rhs]);
+            
+            // if(uj != ujm || uj != ujp) {
+            //     if(iv == 1) {
+            //         printf("stencil_Fx: ujmm = %e, ujm = %e, uj = %e,ujp = %e, ujpp = %e\n", ujmm, ujm, uj, ujp, ujpp);
+            //         printf("fjm = %e, fj = %e, fjp = %e\n", fjm, fj, fjp);
+            //         printf("Fx: flux_jm[%d] = %e, flux_jp[%d] = %e\n", i4D_rhs, flux_jm[i4D_rhs], i4D_rhs, flux_jp[i4D_rhs]);
+            //         printf("Fx: flux_m_low = %e, flux_m_high = %e\n", flux_m_low, flux_m_high);
+            //         printf("Fx: flux_p_low = %e, flux_p_high = %e\n", flux_p_low, flux_p_high);
+            //         printf("phi_m = %e, phi_p = %e\n", phi_m, phi_p);
+            //         printf("cmxp = %e, cmxm = %e\n", cmxp, cmxm);
+            //         printf("rhs[%d] = %e\n", i4D_rhs, rhs[i4D_rhs]);
+            //     } else if (iv == 4){
+            //         printf("stencil_E: ujmm = %e, ujm = %e, uj = %e,ujp = %e, ujpp = %e\n", ujmm, ujm, uj, ujp, ujpp);
+            //         printf("fjm = %e, fj = %e, fjp = %e\n", fjm, fj, fjp);
+            //         printf("E: flux_jm[%d] = %e, flux_jp[%d] = %e\n", i4D_rhs, flux_jm[i4D_rhs], i4D_rhs, flux_jp[i4D_rhs]);
+            //         printf("E: flux_m_low = %e, flux_m_high = %e\n", flux_m_low, flux_m_high);
+            //         printf("E: flux_p_low = %e, flux_p_high = %e\n", flux_p_low, flux_p_high);
+            //         printf("phi_m = %e, phi_p = %e\n", phi_m, phi_p);
+            //         printf("cmxp = %e, cmxm = %e\n", cmxp, cmxm);
+            //         printf("rhs[%d] = %e\n", i4D_rhs, rhs[i4D_rhs]);
+            //     }
+            // }
         } // for iv
 
-        rhs_flux->rN[ig]  = rhs[ig*5 + 0];
+        rhs_flux->rN[ig]       = rhs[ig*5 + 0];
         rhs_flux->rF4[ig].D[0] = 0.0; // No source for rF4[ig].D[0] in fluxes
         rhs_flux->rF4[ig].D[1] = rhs[ig*5 + 1];
         rhs_flux->rF4[ig].D[2] = rhs[ig*5 + 2];
         rhs_flux->rF4[ig].D[3] = rhs[ig*5 + 3];
-        rhs_flux->rE[ig]  = rhs[ig*5 + 4];
+        rhs_flux->rE[ig]       = rhs[ig*5 + 4];
     } // for ig
     return 1;
 } // ghl_m1_calc_flux
