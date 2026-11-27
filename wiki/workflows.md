@@ -24,7 +24,7 @@ Start at [AGENTS.md](../AGENTS.md), follow branch and sub-branch `index.md` rout
 2. Select the single defining leaf for the topic under the appropriate branch router.
 3. Synthesize durable facts in direct computational-physics prose, add `<= 300` B `Evidence (<role>):` lines using shortest-unambiguous `` `subpath.c::symbol` `` tags for high-risk claims (C struct members as `struct.field`, binary `.h5` by path only), and list each cited file or URL once in `## Sources`.
 4. Partition `## Detail` with descriptive `###` headings whenever `## Detail` exceeds `4,000` B (`<= 6,000` B per chunk, `<= 20,000` B per leaf) and keep `1` to `6` relation-prefixed non-parent `## See Also` bullets.
-5. Update the immediate parent `index.md` and [catalog.md](catalog.md) only when adding, moving, renaming, or deleting a leaf; update [source-map.md](source-map.md) only when an aggregate's scope changes.
+5. Update the immediate parent `index.md` and [catalog.md](catalog.md) only when adding, moving, renaming, or deleting a leaf; when an aggregate's scope changes, update its [source-map.md](source-map.md) row and its `raw/SOURCES.md` provenance in the same edit.
 
 ## Query Filing
 
@@ -50,7 +50,7 @@ When sources conflict or living-source drift cannot be reconciled in the same ch
 
 ## Safe Reproduction
 
-In the shared repository checkout, run only side-effect-free scoped checks (`PYTHONDONTWRITEBYTECODE=1 python3 -B tools/kb_lint.py`, `git diff --check`, `./configure --help`, `./scripts/parser`, `sh -n`/`bash -n`, read-only YAML parsing). Run `./configure`, `make`, `make tests`, `make datagen`, `.github/run_tests.sh`, `generate_makefile.sh`, CompOSE converters, and Doxygen builds inside a unique disposable copy with redirected output paths (`OUTPUT_DIRECTORY` for Doxygen, never beside `docs/raw/`). Inspect scripts for downloads, cleanup globs, and failure leftovers before execution; never run `make` on broken `generate_makefile.sh` output, never edit `docs/raw/Reconstruction.dox` during KB work, and never add or enable tests or CI test executions without explicit user permission.
+In the shared repository checkout, run only side-effect-free scoped checks (`PYTHONDONTWRITEBYTECODE=1 python3 -B tools/kb_lint.py`, `git diff HEAD --check`, `./configure --help`, `./scripts/parser`, `sh -n`/`bash -n`, read-only YAML parsing). Run `./configure`, `make`, `make tests`, `make datagen`, `.github/run_tests.sh`, `generate_makefile.sh`, CompOSE converters, and Doxygen builds inside a unique disposable copy with redirected output paths (`OUTPUT_DIRECTORY` for Doxygen, never beside `docs/raw/`). Inspect scripts for downloads, cleanup globs, and failure leftovers before execution; never run `make` on broken `generate_makefile.sh` output, never edit `docs/raw/Reconstruction.dox` during KB work, and never add or enable tests or CI test executions without explicit user permission.
 
 ## Evidence-First Debugging
 
@@ -62,8 +62,10 @@ Run before completing KB edits:
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 python3 -B tools/kb_lint.py
-git diff --check
+git diff HEAD --check
 ```
+
+`git diff HEAD --check` covers staged and unstaged edits; run `git add -N` on new pages first so it sees them.
 
 `tools/kb_lint.py` must exit `0` and print `KB lint passed.`
 

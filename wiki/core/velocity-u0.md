@@ -5,7 +5,7 @@
 
 ## Summary
 
-`ghl_limit_v_and_compute_u0` enforces the maximum Lorentz-factor speed cap from `params->inv_sq_max_Lorentz_factor` on transport velocities `prims->vU[0..2]` and computes `prims->u0`, returning `ghl_error_u0_singular` when a required cap is non-subluminal or yields a nonfinite or superluminal `u0`. EOS-dependent primitive floors belong separately to Con2Prim's `ghl_enforce_primitive_limits_and_compute_u0`.
+`ghl_limit_v_and_compute_u0` enforces the maximum Lorentz-factor speed cap from `params->inv_sq_max_Lorentz_factor` on transport velocities `prims->vU[0..2]` and computes `prims->u0`, returning `ghl_error_u0_singular` when a required cap is non-subluminal, when the final Eulerian speed squared is nonfinite, luminal/superluminal, or above the cap, or when `u0` is nonfinite. EOS-dependent primitive floors belong separately to Con2Prim's `ghl_enforce_primitive_limits_and_compute_u0`.
 
 ## Detail
 

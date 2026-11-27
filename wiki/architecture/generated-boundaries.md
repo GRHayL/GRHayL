@@ -5,7 +5,7 @@
 
 ## Summary
 
-GRHayL distinguishes hand-authored sources (`GRHayL/`, `docs/raw/`, `implementations/GRHayLib/`, `Unit_Tests/`, `tools/compose/`) from generated build and documentation outputs (`Makefile`, `build/`, `test/`, `lib/`, `docs/html/`, `docs/latex/`), downloaded reference data, and NRPy-derived C code in `Flux_Source/` and `Neutrinos/NRPyLeakage/`. Always validate Doxygen in a unique temporary `OUTPUT_DIRECTORY` and verify staged code generation before touching checked-in C files.
+GRHayL distinguishes hand-authored sources (`GRHayL/`, `docs/raw/`, `implementations/GRHayLib/`, `Unit_Tests/`, `tools/compose/`) from generated build and documentation outputs (`Makefile`, `build/`, `test/`, `lib/`, `docs/html/`, `docs/latex/`), downloaded reference data, and NRPy-derived C code in `Flux_Source/` and `Neutrinos/NRPyLeakage/`. Always validate Doxygen in a unique temporary `OUTPUT_DIRECTORY`, verify staged `Flux_Source` generator output before replacing its checked-in C, and edit `NRPyLeakage` C as described in [Generator Provenance](../gems/neutrinos/generator-provenance.md).
 
 ## Detail
 

@@ -63,7 +63,7 @@ KB-only scope does not authorize source, Doxygen, workflow, or downstream repair
 retain path-specific read-only boundaries, including Reconstruction documentation.
 
 Check agent metadata, links/anchors, activation, precedence, coverage, budgets, and
-exit/delivery paths. Use affected link/policy checks and `git diff --check` when Git
+exit/delivery paths. Use affected link/policy checks and `git diff HEAD --check` when Git
 is available, not unrelated numerical suites. Keep repo-relative KB links and the
 runtime-path exception in [AGENTS.md](../AGENTS.md#agent-working-rules).
 Volatile information is forbidden in the KB ([policy](../wiki/SCHEMA.md#volatile-information-policy)):

@@ -111,9 +111,11 @@ def _heading_anchors(path: Path) -> Set[str]:
         base = re.sub(r"\s", "-", re.sub(r"[^\w\s-]", "", title))
         if not base:
             continue
-        occurrence = counts.get(base, 0)
-        counts[base] = occurrence + 1
-        anchors.add(base if occurrence == 0 else f"{base}-{occurrence}")
+        slug = base
+        while slug in anchors:
+            counts[base] = counts.get(base, 0) + 1
+            slug = f"{base}-{counts[base]}"
+        anchors.add(slug)
     return anchors
 
 
@@ -242,7 +244,14 @@ def _symbol_problem(symbol: str, source_rel: str) -> Optional[str]:
         source_text = (ROOT / source_rel).read_text(encoding="utf-8")
     except UnicodeDecodeError:
         return f"cannot check Evidence symbol {symbol!r} in binary file {source_rel}"
-    missing = [seg for seg in segments if seg not in source_text]
+    if source_rel.endswith(CODE_SUFFIXES):
+        missing = [
+            seg
+            for seg in segments
+            if not re.search(rf"(?<!\w){re.escape(seg)}(?!\w)", source_text)
+        ]
+    else:
+        missing = [seg for seg in segments if seg not in source_text]
     return (
         f"Evidence symbol {missing[0]!r} not found in {source_rel}" if missing else None
     )

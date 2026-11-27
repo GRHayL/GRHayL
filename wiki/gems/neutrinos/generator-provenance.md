@@ -30,7 +30,7 @@ Evidence (generated evidence): `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute
 
 GRHayL adapts the ancestral outputs into struct-based public calls with `ghl_error_codes_t` returns, tabulated EOS dispatch, `GHL_DISABLE_HDF5` returns, `NRPYLEAKAGE_FD_OR_RETURN`, and final sanitizers:
 
-- `NRPyLeakage_Fermi_Dirac_integrals.c` returns `ghl_error_codes_t` via output pointer instead of aborting on unsupported keys.
+- `NRPyLeakage_Fermi_Dirac_integrals.c` returns `ghl_error_codes_t` directly and writes the integral through a `double *` output pointer instead of aborting on unsupported orders ([API And Data](api-and-data.md)).
 - `NRPyLeakage_compute_neutrino_opacities.c` and `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c` retain recognizable `tmp_*` blocks from the standalone NRPy-constant kernels.
 - `NRPyLeakage_compute_neutrino_luminosities.c` corresponds to upstream `NRPyLeakageET_compute_neutrino_luminosities_nrpy_constants.c` (no luminosity generator notebook exists upstream).
 - `NRPyLeakage_optical_depths_PathOfLeastResistance.c` extracts the pointwise face-average minimum-path calculation from the ET routine.

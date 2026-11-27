@@ -5,13 +5,13 @@
 
 ## Summary
 
-Core provides `ghl_compute_smallb_and_b2`, `ghl_compute_TDNmunu`, `ghl_compute_TUPmunu`, `ghl_initialize_stress_energy`, and `ghl_return_stress_energy`. All return `void` without input validation, assume rescaled `BU` (`B / sqrt(4*pi)`), valid `u0`, nonzero `rho`, and initialized ADM auxiliaries, and the two `Tmunu` compute routines write only the ten upper-triangle components of `T4[4][4]`.
+Core provides `ghl_compute_smallb_and_b2`, `ghl_compute_TDNmunu`, `ghl_compute_TUPmunu`, `ghl_initialize_stress_energy`, and `ghl_return_stress_energy`. All return `void` without input validation. `ghl_compute_smallb_and_b2` assumes rescaled `BU` (`B / sqrt(4*pi)`) and valid `u0`; the two `Tmunu` compute routines also need nonzero `rho` and initialized ADM auxiliaries and write only the ten upper-triangle components of `T4[4][4]`; the packing helpers only copy components.
 
 ## Detail
 
 ### Prerequisites And `smallb` / `b2`
 
-Callers must supply valid `prims->u0`, `prims->eps`, nonzero `prims->rho` (enthalpy divides by `rho`), initialized `ghl_metric_quantities`, and initialized `ghl_ADM_aux_quantities` (`g4DD`, `g4UU`).
+`ghl_compute_smallb_and_b2` needs valid `prims->u0`, `prims->vU`, rescaled `prims->BU`, lowered `uDN`, and the lapse, shift, and `gammaDD` in `ghl_metric_quantities`; it reads no `ghl_ADM_aux_quantities`, `rho`, or `eps`. `ghl_compute_TDNmunu` and `ghl_compute_TUPmunu` additionally need finite `prims->press` and `prims->eps`, nonzero `prims->rho` (enthalpy divides by `rho`), and `ghl_ADM_aux_quantities` (`g4DD` for `TDNmunu`; `g4DD` and `g4UU` for `TUPmunu`). `ghl_initialize_stress_energy` and `ghl_return_stress_energy` only copy components.
 
 `ghl_compute_smallb_and_b2` (`compute_smallb_and_b2.c`) takes caller-supplied lowered four-velocity `uDN` (trusted without validation) and already-rescaled `prims->BU` (divided by `sqrt(4*pi)`, matching `ONE_OVER_SQRT_4PI` and `docs/raw/derivation.md`), overwriting all four entries of `smallb[0..3]` (`b^\mu`) and scalar `smallb2` (`b^2`).
 

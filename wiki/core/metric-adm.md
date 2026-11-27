@@ -5,7 +5,7 @@
 
 ## Summary
 
-Core provides `ghl_initialize_metric`, `ghl_compute_ADM_auxiliaries`, `ghl_enforce_detgtij_and_initialize_ADM_metric`, and header-only 3D/4D vector raise/lower and inner-product helpers in `ghl_metric_helpers.h`. All return `void` without input validation, and current determinant handling divides by `fabs(detgamma)` while preserving negative determinant signs after warning.
+Core provides `ghl_initialize_metric`, `ghl_compute_ADM_auxiliaries`, `ghl_enforce_detgtij_and_initialize_ADM_metric`, and header-only 3D/4D vector raise/lower and inner-product helpers in `ghl_metric_helpers.h`. `ghl_compute_vec2_from_vec3D` and `ghl_compute_vec2_from_vec4D` return the `double` contraction; the others return `void`. None validates inputs, and current determinant handling divides by `fabs(detgamma)` while preserving negative determinant signs after warning.
 
 ## Detail
 
