@@ -1,6 +1,6 @@
 # EOS Dispatch
 
-> Core EOS setup wrappers, process-wide function-pointer globals, initialization ordering, `GHL_DISABLE_HDF5` behavior, and family-specific atmosphere/bound rules. · Status: confirmed
+> Core EOS setup wrappers, process-wide function-pointer globals, initialization ordering, and `GHL_DISABLE_HDF5` dispatch behavior. · Status: confirmed
 > Up: [GRHayL Core](index.md)
 
 ## Summary
@@ -22,22 +22,20 @@ EOS dispatch uses process-wide mutable function-pointer globals rather than memb
 
 An unrecognized `ghl_eos_t` has no `else` error path: `ghl_initialize_eos_functions` returns `void`, leaves `ghl_con2prim_multi_method` unchanged, and leaves `ghl_compute_h_and_cs2` pointing to hybrid (no-HDF5) or tabulated (HDF5). The deprecated generic `ghl_calculate_HLLE_fluxes_dirn*` pointer globals remain zero-initialized and unassigned; call direct named Flux_Source variants instead.
 
-Direct parameter initializers (`ghl_initialize_simple_eos`, `ghl_initialize_hybrid_eos`, `ghl_initialize_tabulated_eos`) call those global pointers internally, so callers must call `ghl_initialize_eos_functions` first or use a `*_functions_and_params` wrapper. Wrappers mutate global dispatch before parameter validation (no rollback on error): simple/hybrid leave the destination struct untouched on error; tabulated frees any candidate and publishes an empty tagged aggregate on failure (callers must free live tables before reinitialization). The tabulated convenience wrapper hard-codes `ghl_eos_table_stellarcollapse`, `clean_sound_speed = false`, and NN Con2Prim disabled; use the direct initializer for other options.
+Direct parameter initializers (`ghl_initialize_simple_eos`, `ghl_initialize_hybrid_eos`, `ghl_initialize_tabulated_eos`) call those global pointers internally, so callers must call `ghl_initialize_eos_functions` first or use a `*_functions_and_params` wrapper. Wrappers mutate global dispatch before parameter validation (no rollback on error): simple/hybrid leave the destination struct untouched on error; tabulated frees any candidate and publishes an empty tagged aggregate on failure (callers must free live tables before reinitialization). For family-specific parameter validation, rectangular extrema, `tau_atm`, and tabulated wrapper defaults, see [EOS Initialization And Dispatch](../gems/eos/initialization-and-dispatch.md).
 
 Evidence (descriptive behavior): `GRHayL/GRHayL_Core/initialize_eos.c::ghl_initialize_eos_functions`; corroboration: `GRHayL/include/ghl_eos_functions_declaration.h`.
 
-### `GHL_DISABLE_HDF5`, Bounds Setup, And `tau_atm`
+### `GHL_DISABLE_HDF5` Dispatch Divergence And Core Test Coverage
 
 - **No-HDF5 divergence:** Under `GHL_DISABLE_HDF5`, `ghl_initialize_tabulated_eos` and `ghl_initialize_tabulated_eos_functions_and_params` return `ghl_error_used_disabled_hdf5` (publishing an empty `ghl_eos_tabulated` aggregate on valid non-live storage) without modifying dispatch. In contrast, calling `ghl_initialize_eos_functions(ghl_eos_tabulated)` directly hits `GHL_HDF5_ERROR_IF_USED` (`ghl_error`), terminating the process.
-- **Simple & hybrid bounds:** Both reject null output, nonfinite scalars, nonpositive `rho_atm`, singular cold gammas, and inverted min/max bounds; disabled density floors normalize `rho_min = 0.0`. For simple EOS (`Gamma > 1`), rectangular-domain `eps` and `entropy` extrema pair `press_min` with `rho_max` and `press_max` with `rho_min` (with zero `rho_min` or `1e300` pressure ceiling yielding `DBL_MAX` positive-pressure maxima, and zero pressure ceiling yielding zero maxima). Hybrid additionally validates `neos`, used gamma/coefficient entries, and strictly increasing positive density breakpoints.
-- **Tabulated bounds & `tau_atm`:** Tabulated initialization validates `rho_atm`, `Y_e_atm`, and `T_atm`, clamps min/max bounds to table limits, and interpolates atmosphere `press`, `eps`, and `entropy`. `tau_atm` is `rho_atm * eps_atm` for simple/hybrid versus `rho_min * eps_min` for tabulated.
 - **Test coverage:** `unit_test_grhayl_core_test_suite.c` tests simple/hybrid bounds, rectangular extrema, and constant atmosphere; its tabulated setup/atmosphere checks remain commented out (`TODO`). Error paths live in `unit_test_code_error.c`.
 
 Evidence (descriptive behavior): `GRHayL/GRHayL_Core/initialize_eos.c::ghl_initialize_tabulated_eos`; corroboration: `GRHayL/include/ghl_nrpyeos_tabulated.h::GHL_HDF5_ERROR_IF_USED`.
 
 ## Sources
 
-- [GRHayL/GRHayL_Core/initialize_eos.c](../../GRHayL/GRHayL_Core/initialize_eos.c) - EOS wrappers, global pointer storage, dispatch, and bounds
+- [GRHayL/GRHayL_Core/initialize_eos.c](../../GRHayL/GRHayL_Core/initialize_eos.c) - EOS wrappers, global pointer storage, and dispatch
 - [GRHayL/include/ghl.h](../../GRHayL/include/ghl.h) - `ghl_eos_parameters`, `ghl_error_used_disabled_hdf5`
 - [GRHayL/include/ghl_eos_functions.h](../../GRHayL/include/ghl_eos_functions.h) - `extern` EOS function-pointer declarations
 - [GRHayL/include/ghl_eos_functions_declaration.h](../../GRHayL/include/ghl_eos_functions_declaration.h) - internal storage definitions

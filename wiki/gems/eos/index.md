@@ -4,7 +4,7 @@
 
 | Page | Go here when... |
 | --- | --- |
-| [EOS Initialization And Dispatch](initialization-and-dispatch.md) | You need simple/hybrid/tabulated setup, parameter validation rules, global function-pointer dispatch, or `GHL_DISABLE_HDF5` behavior. |
+| [EOS Initialization And Dispatch](initialization-and-dispatch.md) | You need simple/hybrid/tabulated parameter setup, caller validation rules, rectangular extrema, or family-specific `tau_atm`. |
 | [Hybrid Piecewise-Polytrope EOS](hybrid-piecewise-polytrope.md) | You need piecewise-polytrope continuity constants (`K_ppoly`, `eps_integ_const`, `p_ppoly`), cold/thermal helpers, or breakpoint bounds. |
 | [Tabulated Table Layout](tabulated-table-layout.md) | You need HDF5 table loading flow, `NRPyEOS_keys`, loader acceptance checks, energy shift, sound-speed adjustment, or `NRPyEOS_free_memory`. |
 | [StellarCollapse Table Adapter](stellarcollapse-table-adapter.md) | You need `ghl_eos_table_stellarcollapse`, HDF5 helpers, producer chemical-potential references (legacy SLy4 vs. SRO-141), or CompOSE regularization interface. |

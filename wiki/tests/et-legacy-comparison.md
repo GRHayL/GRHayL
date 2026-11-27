@@ -11,11 +11,11 @@ The `Unit_Tests/unit_test_ET_Legacy_*.c` binaries compare standalone GRHayL C ro
 
 ### Replay Semantics And Special Compatibility Bounds
 
-Claim status: stale; contradiction: CONTR-0003. See [CONTR-0003](../contradictions.md#contr-0003).
+Claim status: contested; contradiction: CONTR-0003. See [CONTR-0003](../contradictions.md#contr-0003).
 
 Claim status: contested; contradiction: CONTR-0004. See [CONTR-0004](../contradictions.md#contr-0004).
 
-Claim status: stale; contradiction: CONTR-0012. See [CONTR-0012](../contradictions.md#contr-0012).
+Claim status: contested; contradiction: CONTR-0012. See [CONTR-0012](../contradictions.md#contr-0012).
 
 Scripted and workflow runs download `ET_Legacy_*_{input,output,output_pert}.bin` and compare GRHayL outputs via `ghl_pert_test_fail` or typed wrappers:
 - **`ET_Legacy_conservs`:** its input generator targets ADM Lorentz factors in `1.2`–`5` (below `W_max = 10`) and rejects any row where speed limiting fires, keeping the IllinoisGRMHD comparison off the speed-limiter branch while direct Core limiter tests cover the cap boundary.

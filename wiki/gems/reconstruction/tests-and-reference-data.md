@@ -11,7 +11,7 @@ Reconstruction tests comprise `unit_test_PLM_reconstruction.c`, `unit_test_WENOZ
 
 ### Test Binaries, Reference Files, And Stencil Guards
 
-Claim status: stale; contradiction: CONTR-0012. See [CONTR-0012](../../contradictions.md#contr-0012).
+Claim status: contested; contradiction: CONTR-0012. See [CONTR-0012](../../contradictions.md#contr-0012).
 
 | Test & generator | Binary files | Valid range, guards & limits |
 | --- | --- | --- |

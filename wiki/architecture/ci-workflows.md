@@ -45,7 +45,7 @@ Evidence (CI behavior): `.github/workflows/github-actions-Ubuntu-gcc.yml::paths-
 - `.github/actions/code-coverage/action.yml` selects compiler/OS collection commands—Linux GCC uses `gcovr`; Linux clang notes expected coverage files are missing; Linux Intel and macOS bodies are commented out—then invokes `codecov/codecov-action@v5` unconditionally whenever called.
 - `codecov.yml` defines per-gem components, ignores test paths, targets 100% global patch coverage and 100% zero-threshold CompOSE project/patch coverage, defers notifications until explicit finalization, and documents validation via `curl -X POST --data-binary @codecov.yml https://codecov.io/validate`. The Ubuntu-GCC `compose-regularized-eos` job uploads only `compose-coverage.xml` under flag `compose` with search disabled and fail-on-error enabled.
 
-Claim status: stale; contradiction: CONTR-0006. See [CONTR-0006](../contradictions.md#contr-0006).
+Claim status: contested; contradiction: CONTR-0006. See [CONTR-0006](../contradictions.md#contr-0006).
 
 Claim status: contested; contradiction: CONTR-0007. See [CONTR-0007](../contradictions.md#contr-0007).
 

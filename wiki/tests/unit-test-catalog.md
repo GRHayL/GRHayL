@@ -11,7 +11,7 @@ Every standalone C unit-test driver (`Unit_Tests/unit_test_*.c`) and CompOSE Pyt
 
 ### Core, Con2Prim, EOS, Flux, And Induction Tests
 
-Claim status: stale; contradiction: CONTR-0003. See [CONTR-0003](../contradictions.md#contr-0003).
+Claim status: contested; contradiction: CONTR-0003. See [CONTR-0003](../contradictions.md#contr-0003).
 
 | Test | Subsystem & scope | Mode & defining route |
 | --- | --- | --- |

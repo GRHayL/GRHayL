@@ -22,7 +22,7 @@
 
 ### `.github/run_tests.sh`, Reference Selectors, And Matrix Differences
 
-Claim status: stale; contradiction: CONTR-0003. See [CONTR-0003](../contradictions.md#contr-0003).
+Claim status: contested; contradiction: CONTR-0003. See [CONTR-0003](../contradictions.md#contr-0003).
 
 `.github/run_tests.sh` executes `./configure -r`, `make tests datagen`, exports `LD_LIBRARY_PATH`, downloads missing root-level `*.bin` and EOS `.h5.bz2` files (reusing any preexisting regular files without checking provenance), decompresses `.bz2` archives, runs compiled tests including `unit_test_c2p_nn_guess`, runs `unit_test_code_error` over keys `0`–`90` inside its private `code_error_workdir`, runs `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before `./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1`, and cleans tracked downloads on `EXIT`. Always run `.github/run_tests.sh` inside a disposable checkout: `pyghl append` mutates a reused SLy4 table (while key `85` requires an unmodified SLy4 table without `grhayl_nn_c2p`), and `unit_test_nrpyleakage_optically_thin_gas` writes and removes a fixed marker filename in cwd. In HDF5 mode, `unit_test_c2p_nn_guess` manages and removes its own private temporary directory.
 

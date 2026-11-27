@@ -15,17 +15,17 @@ Active source discrepancies and unreconciled drift are tracked below. Recording 
 | ID | Claim status | Affected pages | Summary |
 | --- | --- | --- | --- |
 | CONTR-0001 | contested | [Build And Configure](architecture/build-and-configure.md) | `configure` help advertises `nocflags` (rejected); parser accepts undocumented `plain`. |
-| CONTR-0002 | stale | [Build](architecture/build-and-configure.md); [Generated](architecture/generated-boundaries.md) | `generate_makefile.sh` scans outside `GRHayL/`, includes GRHayLib, emits `-I./include`. |
-| CONTR-0003 | stale | [Ref](tests/reference-data-and-test-drivers.md), [Run](tests/runner-and-build-outputs.md), [ET](tests/et-legacy-comparison.md), [Cat](tests/unit-test-catalog.md) | `Test_Data` vs `TestData`. |
+| CONTR-0002 | contested | [Build](architecture/build-and-configure.md); [Generated](architecture/generated-boundaries.md) | `generate_makefile.sh` scans outside `GRHayL/`, includes GRHayLib, emits `-I./include`. |
+| CONTR-0003 | contested | [Ref](tests/reference-data-and-test-drivers.md), [Run](tests/runner-and-build-outputs.md), [ET](tests/et-legacy-comparison.md), [Cat](tests/unit-test-catalog.md) | `Test_Data` vs `TestData`. |
 | CONTR-0004 | contested | [RefData](tests/reference-data-and-test-drivers.md); [ET](tests/et-legacy-comparison.md) | `README.md` states fixed `input * (1 + 1e-14)`; `data_gen/*.c` use test-specific random scales. |
 | CONTR-0005 | contested | [CI](architecture/ci-workflows.md); [GRHayLib](implementations/grhaylib-verification.md) | Ubuntu-GCC `paths-ignore` omits `implementations/**` unlike peers; ignores absent `Makefile_old`. |
-| CONTR-0006 | stale | [CI Workflows](architecture/ci-workflows.md) | Coverage action runs on clang, Intel, and macOS-GCC jobs where collection is commented or files are absent. |
+| CONTR-0006 | contested | [CI Workflows](architecture/ci-workflows.md) | Coverage action runs on clang, Intel, and macOS-GCC jobs where collection is commented or files are absent. |
 | CONTR-0007 | contested | [CI Workflows](architecture/ci-workflows.md) | `compile_GRHayL/action.yml` has unmatched macOS GCC quote and repeated clang `--cflags` overwritten by `configure`. |
 | CONTR-0008 | contested | [CI Workflows](architecture/ci-workflows.md) | Ubuntu-GCC `codecov-finalize` polls recent peer runs without checking peer presence, conclusions, or uploads. |
-| CONTR-0009 | stale | [Atmosphere](gems/atmosphere.md); [API](architecture/public-api-map.md) | `ghl_set_prims_to_radial_falloff_atm` is declared with incomplete source, omitted from manifest/tests. |
+| CONTR-0009 | contested | [Atmosphere](gems/atmosphere.md); [API](architecture/public-api-map.md) | `ghl_set_prims_to_radial_falloff_atm` is declared with incomplete source, omitted from manifest/tests. |
 | CONTR-0010 | contested | [TabLayout](gems/eos/tabulated-table-layout.md); [Errors](tests/expected-failure-and-error-keys.md) | `unit_test_code_error.c` reinitializes one live `tab_eos` without freeing table memory. |
 | CONTR-0011 | contested | [Metric ADM](core/metric-adm.md) | `ghl_initialize_metric` divides by `fabs(detgamma)`; determinant-enforced init warns (`void`) on negative det. |
-| CONTR-0012 | stale | [Recon](gems/reconstruction/tests-and-reference-data.md); [ET](tests/et-legacy-comparison.md) | ET_Legacy reconstruction generator writes perturbed input unused by replay; outputs are external. |
+| CONTR-0012 | contested | [Recon](gems/reconstruction/tests-and-reference-data.md); [ET](tests/et-legacy-comparison.md) | ET_Legacy reconstruction generator writes perturbed input unused by replay; outputs external. |
 
 ### CONTR-0001
 
@@ -93,7 +93,7 @@ Evidence (CI behavior): `.github/workflows/github-actions-Ubuntu-gcc.yml::codeco
 
 ### CONTR-0009
 
-- Competing sources & authority: `GRHayL/include/ghl_atmosphere.h` declaring `ghl_set_prims_to_radial_falloff_atm` and `GRHayL/Atmosphere/set_prims_to_radial_falloff_atm.c` leaving density/pressure/energy assignments commented versus `GRHayL/Atmosphere/make.code.defn` omitting that C file from built sources. Build manifest and C body decide current runtime availability; [Atmosphere](gems/atmosphere.md) is `stale` while [Public API Map](architecture/public-api-map.md) stays `confirmed`.
+- Competing sources & authority: `GRHayL/include/ghl_atmosphere.h` declaring `ghl_set_prims_to_radial_falloff_atm` and `GRHayL/Atmosphere/set_prims_to_radial_falloff_atm.c` leaving density/pressure/energy assignments commented versus `GRHayL/Atmosphere/make.code.defn` omitting that C file from built sources. Build manifest and C body decide current runtime availability; [Atmosphere](gems/atmosphere.md) is `contested` while [Public API Map](architecture/public-api-map.md) stays `confirmed`.
 - Recheck trigger: edits to `ghl_atmosphere.h`, `set_prims_to_radial_falloff_atm.c`, or `GRHayL/Atmosphere/make.code.defn`.
 - Resolution check: confirm either that `set_prims_to_radial_falloff_atm.c` is completed, listed in `make.code.defn`, documented, and tested, or that the unfinished declaration and file are removed.
 

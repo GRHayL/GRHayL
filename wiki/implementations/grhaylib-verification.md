@@ -13,7 +13,7 @@ This repository supports static source, CCL, header-aggregation, symlink, and pa
 
 Claim status: contested; contradiction: CONTR-0005. See [CONTR-0005](../contradictions.md#contr-0005).
 
-Ubuntu-GCC's `paths-ignore` no longer excludes `implementations/**`, so non-Markdown implementation edits (including `README` and `doc/documentation.tex`) can trigger normal GRHayL library jobs on `push` to `main` or pull requests, while peer compiler workflows still ignore `implementations/**`. Those library jobs and `.github/run_tests.sh` neither inspect GRHayLib symlinks nor compile the Cactus thorn.
+For compiler-workflow `paths-ignore` selection on `implementations/**`, see [CI Workflows](../architecture/ci-workflows.md#compiler-and-os-workflow-matrix); those standalone library jobs and `.github/run_tests.sh` neither inspect GRHayLib symlinks nor compile the Cactus thorn.
 
 | Claim | Verification boundary in this repository |
 | --- | --- |
@@ -21,8 +21,6 @@ Ubuntu-GCC's `paths-ignore` no longer excludes `implementations/**`, so non-Mark
 | Upstream source/header paths resolve under `src/` | Verified locally via tracked symlinks; does not prove Cactus build compatibility. (Ev: `implementations/GRHayLib/src/GRHayLib.h`) |
 | Cactus compile, link, schedule, parameter steering, and runtime cleanup | Unverified here; requires an external Cactus/Einstein Toolkit checkout and build command. (Ev: `implementations/GRHayLib/schedule.ccl`) |
 | Upstream `Unit_Tests/` or `ET_Legacy` prove GRHayLib | Inapplicable; they test standalone GRHayL C routines, not thorn integration. |
-
-Evidence (CI behavior): `.github/workflows/github-actions-Ubuntu-gcc.yml::paths-ignore`; corroboration: `.github/workflows/github-actions-Ubuntu-clang.yml::implementations/**`.
 
 ### Static Parity And Drift Checklist
 
@@ -47,8 +45,6 @@ Evidence (descriptive behavior): `implementations/GRHayLib/src/initialize_and_sh
 - [implementations/GRHayLib/src/initialize_and_shutdown.c](../../implementations/GRHayLib/src/initialize_and_shutdown.c) - parameter validation, initialization, and cleanup code
 - [implementations/GRHayLib/src/make.code.defn](../../implementations/GRHayLib/src/make.code.defn) - `SUBDIRS` manifest
 - [GRHayL/include/make.code.defn](../../GRHayL/include/make.code.defn) - upstream `install_headers`
-- [.github/workflows/github-actions-Ubuntu-gcc.yml](../../.github/workflows/github-actions-Ubuntu-gcc.yml) - `paths-ignore` policy
-- [.github/workflows/github-actions-Ubuntu-clang.yml](../../.github/workflows/github-actions-Ubuntu-clang.yml) - peer `implementations/**` ignore
 
 ## See Also
 

@@ -35,7 +35,7 @@ Evidence (descriptive behavior): `Doxyfile::OUTPUT_DIRECTORY`; corroboration: `D
 | `generate_makefile.sh` | `Makefile`, `build/`, `lib/libgrhayl.a` (broken) | Emits GRHayLib source and invalid `-I./include`; reproduce only in a disposable checkout and never run `make`. (Ev: `generate_makefile.sh::libgrhayl.a`) |
 | `implementations/GRHayLib/src/` | Tracked `make.code.defn` + symlinks to `GRHayL/` modules and `GRHayL/include` | Repository inputs, not generated copies; see [GRHayLib Cactus Build](../implementations/grhaylib-cactus-build.md). (Ev: `implementations/GRHayLib/src/make.code.defn::SUBDIRS`) |
 
-Claim status: stale; contradiction: CONTR-0002. See [CONTR-0002](../contradictions.md#contr-0002).
+Claim status: contested; contradiction: CONTR-0002. See [CONTR-0002](../contradictions.md#contr-0002).
 
 ### Test Binaries, Downloaded Data, And Sample Tables
 

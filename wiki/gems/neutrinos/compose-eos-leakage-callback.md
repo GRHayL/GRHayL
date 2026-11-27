@@ -23,21 +23,23 @@ Evidence (descriptive behavior): `GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_s
 
 ### Building The Six Leakage Outputs
 
+For the six-output ABI order, rest-mass-inclusive `mu_e` requirement, and free-nucleon `X_n`/`X_p` definitions, see [EOS Inputs And Chemical Potentials](eos-inputs-and-chemical-potentials.md).
+
 From decoded CompOSE conserved-charge potentials $(\mu_b, \mu_q, \mu_l)$, nucleon chemical potentials are $\mu_n^{\rm C} = \mu_b$ and $\mu_p^{\rm C} = \mu_b + \mu_q$. To match the O'Connor-Ott `EOSmaker` common-reference convention, subtract one explicit shared reference $m_{\rm ref}^{E}$ from both nucleons (e.g., Hempel SFHo `EOSmaker` sets $m_{\rm ref}^{E} =$ `amu_mev` and $m_{\rm ref}^{\rho} =$ `amu_cgs`, though other tables can choose differently and $m_{\rm ref}^{E}$ need not equal $m_{\rm ref}^{\rho}$):
 
 $$\mu_n = \mu_b - m_{\rm ref}^{E}, \qquad \mu_p = \mu_b + \mu_q - m_{\rm ref}^{E}, \qquad \widehat\mu = \mu_n - \mu_p = -\mu_q.$$
 
 Equivalently, from raw `eos.thermo`: $\mu_n = m_n(1 + Q_3) - m_{\rm ref}^{E}$, $\mu_p = m_n(1 + Q_3 + Q_4) - m_{\rm ref}^{E}$, $\widehat\mu = -m_n Q_4$; from generated identifiers `3`, `4`, `5` (`bshift`, `q`, `l`): $\mu_n = \texttt{bshift} + m_n - m_{\rm ref}^{E}$, $\mu_p = \texttt{bshift} + m_n + q - m_{\rm ref}^{E}$, $\widehat\mu = -q$. If an intermediate table removes each particle's own rest mass, restore $m_n$ and $m_p$ using the table's exact model masses before subtracting $m_{\rm ref}^{E}$. Subtracting $m_n$ from $\mu_n$ and $m_p$ from $\mu_p$ shifts $\widehat\mu$ by $-(m_n - m_p) \approx -1.293\,\mathrm{MeV}$; choosing the wrong common $m_{\rm ref}^{E}$ leaves $\widehat\mu$ and density-derived blocking unchanged but violates the six-output ABI for other callers. Do not inject ad hoc reaction shifts in the adapter.
 
-Relativistic electron chemical potential is $\mu_e = \mu_{l_e} - \mu_q$ (retaining electron rest mass; never subtract $m_{\rm ref}^{E}$ or $m_e$, and note CompOSE tables never store neutrinos):
+In CompOSE tables (which never store neutrinos), the relativistic electron chemical potential is $\mu_e = \mu_{l_e} - \mu_q$ (never subtracting $m_{\rm ref}^{E}$ or $m_e$):
 
 - Electron-only table with local neutrality (or electron-muon table documenting $\mu_{l_e} = \mu_{l_\mu}$): $\mu_e = \mu_l - \mu_q$ ($m_n(Q_5 - Q_4)$ raw; `l - q` generated).
 - Electron-muon table with unequal lepton potentials: stored effective $\mu_l$ is a density-weighted average that cannot recover $\mu_e$; reject or supply extra data.
 - No-lepton table ($I_l \ne 1$): CompOSE sets $\mu_l = 0$; supply $\mu_e$ from a thermodynamically consistent external electron-positron EOS (preserving Coulomb/phase assumptions), never interpreting zero $\mu_l$ as physical $\mu_e$.
 
-For free nucleons ($B_i = 1$), $X_n = Y_n^{\rm C}$ and $X_p = Y_p^{\rm C}$ using net-particle indices `10` (neutrons) and `11` (protons) assuming negligible antinucleons. Never substitute grouped nuclear fractions, total nucleons, `Y_q`, or `1 - Y_e`/`Y_e`. Map an omitted species at a grid node to zero only when format metadata establish that omission denotes zero.
+For free nucleons ($B_i = 1$), extract $X_n = Y_n^{\rm C}$ and $X_p = Y_p^{\rm C}$ from CompOSE net-particle indices `10` (neutrons) and `11` (protons) assuming negligible antinucleons, rather than grouped nuclear fractions or $Y_q$. Map an omitted species at a grid node to zero only when format metadata establish that omission denotes zero.
 
-Evidence (scientific/interface requirement): `GRHayL/include/ghl_eos_functions_declaration.h::ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T`; corroboration: `GRHayL/EOS/Tabulated/interpolators/NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T.c`.
+Evidence (descriptive behavior): `tools/compose/compose_to_grhayl.py::_regularize_plane`; corroboration: `tools/compose/compose_to_grhayl.py::_read_raw_plane` and `Unit_Tests/unit_test_tabulated_eos_compose.c::check_six_value_interpolator`.
 
 ### Safe Callback Execution, Registration, And Grid Rules
 
@@ -75,6 +77,7 @@ Evidence (descriptive behavior): `Unit_Tests/compose/test_compose_to_grhayl.py::
 - [GRHayL/EOS/Tabulated/interpolators/NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T.c](../../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T.c) - current six-field interpolator
 - [GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse_to_ghl.c](../../../GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse_to_ghl.c) - `CGS_TO_CODE_DENSITY`
 - [GRHayL/EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h](../../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h) - `NRPyEOS_get_interp_spots`
+- [tools/compose/compose_to_grhayl.py](../../../tools/compose/compose_to_grhayl.py) - CompOSE raw decoding and common-reference chemical-potential mapping
 - [Unit_Tests/compose/test_compose_to_grhayl.py](../../../Unit_Tests/compose/test_compose_to_grhayl.py) - offline converter verification
 - [Unit_Tests/compose/test_compose_failure_coverage.py](../../../Unit_Tests/compose/test_compose_failure_coverage.py) - converter failure-path verification
 - [Unit_Tests/unit_test_tabulated_eos_compose.c](../../../Unit_Tests/unit_test_tabulated_eos_compose.c) - C runtime integration test
@@ -85,6 +88,7 @@ Evidence (descriptive behavior): `Unit_Tests/compose/test_compose_to_grhayl.py::
 
 ## See Also
 
+- Depends on: [EOS Inputs And Chemical Potentials](eos-inputs-and-chemical-potentials.md)
 - Depends on: [CompOSE EOS Conversion And Regularization](compose-eos-conversion-and-regularization.md)
 - Depends on: [Tabulated Table Layout](../eos/tabulated-table-layout.md)
 - Depends on: [Tabulated Interpolation And Bounds](../eos/tabulated-interpolation-and-bounds.md)

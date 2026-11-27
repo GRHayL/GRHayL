@@ -19,7 +19,7 @@ Evidence (descriptive behavior): `GRHayL/include/ghl_unit_tests.h::ghl_pert_test
 
 ### Reference-Data Source Classes And Module Families
 
-Claim status: stale; contradiction: CONTR-0003. See [CONTR-0003](../contradictions.md#contr-0003).
+Claim status: contested; contradiction: CONTR-0003. See [CONTR-0003](../contradictions.md#contr-0003).
 
 Claim status: contested; contradiction: CONTR-0004. See [CONTR-0004](../contradictions.md#contr-0004).
 

@@ -105,9 +105,15 @@ def _heading_anchors(path: Path) -> Set[str]:
     :return: Anchor slugs.
     """
     anchors: Set[str] = set()
+    counts: Dict[str, int] = {}
     for match in re.finditer(r"^#{1,6}[ \t]+(.+?)[ \t]*$", _prose(path), re.MULTILINE):
         title = re.sub(r"\s+#+\s*$", "", match.group(1)).strip().lower()
-        anchors.add(re.sub(r"\s+", "-", re.sub(r"[^\w\s-]", "", title)))
+        base = re.sub(r"\s", "-", re.sub(r"[^\w\s-]", "", title))
+        if not base:
+            continue
+        occurrence = counts.get(base, 0)
+        counts[base] = occurrence + 1
+        anchors.add(base if occurrence == 0 else f"{base}-{occurrence}")
     return anchors
 
 
@@ -144,8 +150,7 @@ def _check_links(files: List[Path], failures: List[str]) -> Dict[Path, List[Path
                 _fail(failures, path, line, f"link target missing: {target}")
             elif anchor and (
                 resolved.suffix != ".md"
-                or re.sub(r"\s+", "-", re.sub(r"[^\w\s-]", "", anchor.lower()))
-                not in _heading_anchors(resolved)
+                or anchor not in _heading_anchors(resolved)
             ):
                 _fail(failures, path, line, f"link anchor missing: {target}")
             else:

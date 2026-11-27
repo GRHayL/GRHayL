@@ -38,7 +38,7 @@ Evidence (descriptive behavior): `GRHayL/include/make.code.defn::install_headers
 | [ghl_radiation.h](../../GRHayL/include/ghl_radiation.h) & [ghl_nrpyleakage.h](../../GRHayL/include/ghl_nrpyleakage.h) | Neutrinos / NRPyLeakage (both installed). (Ev: `GRHayL/include/ghl_radiation.h`) | `GRHayL/Neutrinos/NRPyLeakage/`, inline Doxygen group in `ghl_radiation.h` (no `.dox` file), NRPyLeakage tests. | `ghl_radiation.h` defines structs then includes `ghl_nrpyleakage.h`; table-backed tests couple to EOS/HDF5. |
 | [ghl_reconstruction.h](../../GRHayL/include/ghl_reconstruction.h) | Reconstruction (installed). (Ev: `GRHayL/include/ghl_reconstruction.h`) | `GRHayL/Reconstruction/{PLM,PPM,WENOZ}/`, `docs/raw/Reconstruction.dox` (read-only), PLM/WENOZ/ET_Legacy tests. | Built public API with no in-repo production caller; caller supplies stencils and face conventions. |
 
-Claim status: stale; contradiction: CONTR-0009. See [CONTR-0009](../contradictions.md#contr-0009).
+Claim status: contested; contradiction: CONTR-0009. See [CONTR-0009](../contradictions.md#contr-0009).
 
 ### Header Aggregation And GRHayLib Boundary
 

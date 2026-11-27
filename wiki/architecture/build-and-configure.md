@@ -53,7 +53,7 @@ Evidence (descriptive behavior): `configure::GHL_DISABLE_HDF5`; corroboration: `
 
 ### Legacy `generate_makefile.sh`, Style Configs, And Read-Only Checks
 
-Claim status: stale; contradiction: CONTR-0002. See [CONTR-0002](../contradictions.md#contr-0002).
+Claim status: contested; contradiction: CONTR-0002. See [CONTR-0002](../contradictions.md#contr-0002).
 
 `generate_makefile.sh` scans every repository `make.code.defn` outside `ET/`, pulls `implementations/GRHayLib/src/initialize_and_shutdown.c` into library sources, emits checkout-invalid `-I./include` (public headers live under `GRHayL/include/`), lacks a shebang despite Bash `[[ ... ]]` syntax, and performs no `--disable-hdf5` filtering. Inspect it only inside a disposable tree and never invoke `make` on its output.
 

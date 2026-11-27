@@ -14,9 +14,9 @@ Use these spellings when routing, citing, or writing KB leaves. Terms link to th
 | chalice | Shared core module (`GRHayL/GRHayL_Core/`) defining structs, metrics, stress-energy helpers, EOS dispatch, errors, and I/O; see [Core](core/index.md). |
 | gem | Modular physics subdirectory under `GRHayL/` (`Atmosphere`, `Con2Prim`, `EOS`, `Flux_Source`, `Induction`, `Neutrinos`, `Reconstruction`); see [Gems](gems/index.md). |
 | ADM | Arnowitt-Deser-Misner 3+1 spatial metric $\gamma_{ij}$, lapse $\alpha$, shift $\beta^i$, and extrinsic curvature $K_{ij}$; see [Metric And ADM Helpers](core/metric-adm.md). |
-| Valencia formulation | Flux-conservative GRMHD equations for densitized $\rho_*$, $\tilde{\tau}$, $\tilde{S}_i$, and $Y_e$; see [Evolution Equation Map](physics/evolution-equation-map.md). |
-| `BU` | Unrescaled magnetic field $B^i$ in `ghl_primitive_quantities`; related to `Btilde` by $\tilde{B}^i = \sqrt{\gamma} B^i$; see [Variables](physics/variables-and-conventions.md). |
-| `Btilde` | Densitized magnetic field $\tilde{B}^i = \sqrt{\gamma} B^i$ used in induction and conservative conversions; see [Variables](physics/variables-and-conventions.md). |
+| Valencia formulation | Flux-conservative GRMHD equations for $\rho_*$, $\tilde{\tau}$, $\tilde{S}_i$, and $\tilde{Y}_e = \rho_* Y_e$; see [Evolution Equation Map](physics/evolution-equation-map.md). |
+| `BU` | Undensitized, $1/\sqrt{4\pi}$-rescaled $B^i$ in `ghl_primitive_quantities` ($\tilde{B}^i = \sqrt{\gamma} B^i$); see [Variables](physics/variables-and-conventions.md). |
+| `Btilde` | Densitized magnetic field $\tilde{B}^i = \sqrt{\gamma} B^i$ used in Induction (`ghl_HLL_flux_with_Btilde`); see [Variables](physics/variables-and-conventions.md). |
 | `smallb` | Fluid-frame magnetic four-vector $b^\mu$ and norm $b^2 = b_\mu b^\mu$ computed by Core helpers; see [Stress-Energy And Smallb](core/stress-energy-smallb.md). |
 | `phitilde` | Densitized scalar electromagnetic gauge variable $\tilde{\Phi} = \sqrt{\gamma}\,\Phi$ in generalized Lorenz gauge; see [Gauge RHS](gems/induction/gauge-rhs.md). |
 | `vU` | Transport three-velocity $v^i = u^i / u^0$ stored in `ghl_primitive_quantities`, distinct from Eulerian velocity; see [Velocity u0](core/velocity-u0.md). |
