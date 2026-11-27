@@ -17,7 +17,7 @@
 - `ghl_neutrino_opacities` holds two-element arrays `nue[2]`, `anue[2]`, and `nux[2]`.
 - `ghl_neutrino_optical_depths` is a `typedef` alias of `ghl_neutrino_opacities`.
 
-Public headers do not assign named labels to slots `[0]` and `[1]`. Implementation formulas pair slot `[0]` with `R_source` and equilibrium-degeneracy interpolation and pair slot `[1]` with `Q_source` and luminosity suppression; keep `[0]`/`[1]` indexing at caller boundaries. Binary luminosity reference files serialize `ghl_neutrino_luminosities` as a raw struct, making declaration order part of reference layout, whereas opacity and optical-depth reference files store twelve separate arrays in species-then-slot order.
+Public headers do not assign named labels to slots `[0]` and `[1]`. Implementation formulas pair slot `[0]` with `R_source` and equilibrium-degeneracy interpolation and pair slot `[1]` with `Q_source` and luminosity suppression; keep `[0]`/`[1]` indexing at caller boundaries. Binary luminosity reference files serialize both `ghl_neutrino_optical_depths` (unperturbed input records) and `ghl_neutrino_luminosities` as raw structs, making field declaration order in both `ghl_neutrino_opacities` and `ghl_neutrino_luminosities` part of luminosity reference layout, whereas constant-density-sphere opacity and optical-depth reference files store twelve separate arrays in species-then-slot order.
 
 Evidence (scientific/interface requirement): `GRHayL/include/ghl_radiation.h::ghl_neutrino_opacities`; corroboration: `GRHayL/include/ghl_radiation.h::ghl_neutrino_luminosities`.
 

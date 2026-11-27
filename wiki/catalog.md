@@ -15,13 +15,13 @@ Search this table with `rg -n -i -F '<term>' wiki/catalog.md` when router titles
 | [Evolution Equation Map](physics/evolution-equation-map.md) | Flux-conservative RHSs, induction, leakage closure. | flux, source terms, induction, Lorenz gauge, phitilde, leakage |
 | [Shared Parameters And Enums](core/shared-parameters-and-enums.md) | Core manifest, structs, enums, non-Core ghl.h audit. | ghl_parameters, ghl_eos_parameters, ghl_error_codes_t, GRHayL_Core |
 | [Struct Pack And Unpack](core/struct-pack-unpack.md) | Pack/unpack helpers for primitives, conservatives, K_ij, params. | ghl_initialize_primitives, ghl_initialize_extrinsic_curvature, ghl_return_primitives |
-| [Metric And ADM Helpers](core/metric-adm.md) | 3-metric, inverse, detgamma, ADM 4-metric auxiliaries, inline helpers. | ghl_initialize_metric, ghl_ADM_aux_quantities, detgamma, CONTR-0011 |
+| [Metric And ADM Helpers](core/metric-adm.md) | 3-metric, inverse, detgamma, ADM 4-metric auxiliaries, inline helpers. | ghl_initialize_metric, ghl_ADM_aux_quantities, detgamma |
 | [Velocity u0](core/velocity-u0.md) | Four-velocity u0, Lorentz factor, speed limiting. | ghl_limit_v_and_compute_u0, W_max, vU, speed_limited |
 | [Stress-Energy And Smallb](core/stress-energy-smallb.md) | Fluid-frame b^mu, b^2, T^{\mu\nu}, T_{\mu\nu}. | ghl_compute_smallb_and_b2, ghl_compute_TDNmunu, ghl_compute_TUPmunu, smallb, b2 |
 | [EOS Dispatch](core/eos-dispatch.md) | Core EOS initialization and function-pointer dispatch. | ghl_initialize_eos_functions, ghl_eos_t, eos_type, initialize_eos.c |
 | [Errors, IO, And Debug Utilities](core/errors-io-debug-utilities.md) | Error codes, abort macros, debug prints, info output. | ghl_error, ghl_abort_if_error, ghl_info, ghl_error_codes_t |
 | [Core Tests And Reference Data](core/tests-and-reference-data.md) | Unit tests covering Core metric, u0, Tmunu, errors. | unit_test_grhayl_core_test_suite, unit_test_compute_conservs_and_Tmunu, unit_test_code_error |
-| [Atmosphere](gems/atmosphere.md) | Density/pressure/velocity atmosphere reset and falloff. | ghl_set_prims_to_constant_atm, rho_atm, radial_falloff, CONTR-0009 |
+| [Atmosphere](gems/atmosphere.md) | Density/pressure/velocity atmosphere reset and falloff. | ghl_set_prims_to_constant_atm, rho_atm, radial_falloff |
 | [Con2Prim Solver Matrix](gems/con2prim/solver-matrix.md) | Solver methods, EOS compatibility, backup chains. | Noble2D, Noble1D, Palenzuela1D, Newman1D, Font1D, CerdaDuran |
 | [Con2Prim Recovery Flow](gems/con2prim/recovery-flow.md) | Primary/backup dispatch, diagnostics, entropy fallback. | ghl_con2prim_multi_method, ghl_con2prim_diagnostics, backup_routine |
 | [Con2Prim Limits And Conversions](gems/con2prim/limits-and-conversions.md) | Prim2Con, undensitize, S/tau bounds, atm check. | ghl_compute_conservs, ghl_undensitize_conservatives, ghl_enforce_primitive_limits_and_compute_u0 |
@@ -30,7 +30,7 @@ Search this table with `rg -n -i -F '<term>' wiki/catalog.md` when router titles
 | [Con2Prim Tests And Reference Data](gems/con2prim/tests-and-reference-data.md) | Con2Prim C unit tests, generators, Newman history. | unit_test_con2prim_multi_method_hybrid, unit_test_con2prim_tabulated, con2prim-testdata-ref |
 | [EOS Initialization And Dispatch](gems/eos/initialization-and-dispatch.md) | Simple, hybrid, tabulated EOS setup, bounds, tau_atm. | ghl_initialize_hybrid_eos, ghl_initialize_tabulated_eos, eos_type |
 | [Hybrid Piecewise Polytrope](gems/eos/hybrid-piecewise-polytrope.md) | Piecewise-polytropic cold + thermal Gamma_th EOS. | neos, rho_ppoly, Gamma_ppoly, K_ppoly, Gamma_th, P_min, P_max |
-| [Tabulated Table Layout](gems/eos/tabulated-table-layout.md) | Tabulated EOS structs, HDF5 guards, memory cleanup. | ghl_tabulated_free_memory, GHL_DISABLE_HDF5, energy_shift, CONTR-0010 |
+| [Tabulated Table Layout](gems/eos/tabulated-table-layout.md) | Tabulated EOS structs, HDF5 guards, memory cleanup. | ghl_tabulated_free_memory, GHL_DISABLE_HDF5, energy_shift |
 | [StellarCollapse Table Adapter](gems/eos/stellarcollapse-table-adapter.md) | 19-field HDF5 reader, cgs-to-code, energy conventions. | NRPyEOS_stellarcollapse_read_table, CGS_TO_CODE_DENSITY, SLy4, SRO-141 |
 | [Tabulated Interpolation And Bounds](gems/eos/tabulated-interpolation-and-bounds.md) | Trilinear log-grid lookup, T-inversion, domain errors. | NRPyEOS_get_interp_spots, T_from_eps, T_from_P, T_from_S, bounds |
 | [Tabulated Interpolator Catalog](gems/eos/tabulated-interpolator-catalog.md) | Complete map of NRPyEOS tabulated interpolator calls. | NRPyEOS_P_and_eps_from_rho_Ye_T, muhat, cs2, entropy, interpolators |
@@ -58,15 +58,15 @@ Search this table with `rg -n -i -F '<term>' wiki/catalog.md` when router titles
 | [PLM Limiters](gems/reconstruction/plm-limiters.md) | Minmod, MC, and superbee piecewise-linear limiters. | ghl_minmod, ghl_mc_reconstruction, ghl_superbee_reconstruction, PLM |
 | [PPM Flow](gems/reconstruction/ppm-flow.md) | Colella-Woodward PPM steepening, flattening, pressure. | ghl_ppm_reconstruction, steepen, flatten, ghl_compute_ftilde, ftilde, PPM |
 | [WENO-z Method](gems/reconstruction/wenoz-method.md) | Fifth-order WENO-z smoothness indicators and weights. | ghl_wenoz_reconstruction, WENO-z, smoothness indicator |
-| [Reconstruction Tests And Reference Data](gems/reconstruction/tests-and-reference-data.md) | PLM/PPM/WENO-z unit tests and ET_Legacy binaries. | unit_test_PLM_reconstruction, unit_test_WENOZ_reconstruction, CONTR-0012 |
+| [Reconstruction Tests And Reference Data](gems/reconstruction/tests-and-reference-data.md) | PLM/PPM/WENO-z unit tests and ET_Legacy binaries. | unit_test_PLM_reconstruction, unit_test_WENOZ_reconstruction |
 | [GRHayLib Cactus Build](implementations/grhaylib-cactus-build.md) | GRHayLib thorn symlinks, CCL build, CarpetX note. | implementations/GRHayLib, interface.ccl, make.code.defn, CarpetX |
 | [GRHayLib Runtime Parameters](implementations/grhaylib-runtime-parameters.md) | GRHayLib param.ccl, schedule.ccl, global EOS/params. | param.ccl, schedule.ccl, GRHayLib_initialize, GRHayLET |
-| [GRHayLib Verification](implementations/grhaylib-verification.md) | Static parity limits vs Cactus build/runtime proof. | GRHayLib verification, Cactus build, CONTR-0005 |
-| [Unit Test Catalog](tests/unit-test-catalog.md) | Index of C unit tests and Python CompOSE tests. | unit_test_, Unit_Tests/compose, CONTR-0003 |
+| [GRHayLib Verification](implementations/grhaylib-verification.md) | Static parity limits vs Cactus build/runtime proof. | GRHayLib verification, Cactus build |
+| [Unit Test Catalog](tests/unit-test-catalog.md) | Index of C unit tests and Python CompOSE tests. | unit_test_, Unit_Tests/compose |
 | [Data Generators And Helpers](tests/data-generators-and-helpers.md) | Data generators, shared test helpers, sample table. | Unit_Tests/data_gen, ghl_test_helpers, ghl_pert_test_fail, randomize |
-| [Runner And Build Outputs](tests/runner-and-build-outputs.md) | .github/run_tests.sh, TestData fetches, EXIT cleanup. | run_tests.sh, TestData, EXIT trap, CONTR-0003 |
-| [Reference Data And Test Drivers](tests/reference-data-and-test-drivers.md) | Perturbation tolerances, binary replay, driver rules. | ghl_pert_test_fail, TestData, CONTR-0003, CONTR-0004 |
+| [Runner And Build Outputs](tests/runner-and-build-outputs.md) | .github/run_tests.sh, TestData fetches, EXIT cleanup. | run_tests.sh, TestData, EXIT trap |
+| [Reference Data And Test Drivers](tests/reference-data-and-test-drivers.md) | Perturbation tolerances, binary replay, driver rules. | ghl_pert_test_fail, TestData |
 | [HDF5 Sample Tables](tests/hdf5-sample-tables.md) | Tracked Hempel SFHo, generated simple_table.h5, SLy4/LS220. | simple_table.h5, SLy4, LS220, HDF5 table |
-| [ET Legacy Comparison](tests/et-legacy-comparison.md) | ET_Legacy regression drivers and pinned TestData ref. | et-legacy-testdata-ref, ET_Legacy, CONTR-0003, CONTR-0004, CONTR-0012 |
-| [Expected Failure And Error Keys](tests/expected-failure-and-error-keys.md) | unit_test_code_error.c keys 0..90 and error paths. | unit_test_code_error, error keys, ghl_error_codes_t, CONTR-0010 |
+| [ET Legacy Comparison](tests/et-legacy-comparison.md) | ET_Legacy regression drivers and pinned TestData ref. | et-legacy-testdata-ref, ET_Legacy |
+| [Expected Failure And Error Keys](tests/expected-failure-and-error-keys.md) | unit_test_code_error.c keys 0..90 and error paths. | unit_test_code_error, error keys, ghl_error_codes_t |
 | [Unit Test Coverage And Gap Matrix](tests/unit-test-coverage-and-gap-matrix.md) | Module-by-module test coverage and unverified gaps. | coverage matrix, test gaps, untested paths, no-HDF5 |

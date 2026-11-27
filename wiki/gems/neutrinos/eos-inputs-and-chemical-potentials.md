@@ -56,7 +56,7 @@ Evidence (descriptive behavior): `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucle
 - [GRHayL/EOS/Tabulated/interpolators/NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T.c](../../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T.c) - six-field StellarCollapse interpolator
 - [GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c) - `munu` zero-crossing lookup
 - [GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse.h](../../../GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse.h) - StellarCollapse table reader declaration
-- [GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h) - `nrpyl_compute_nucleon_blocking`, Sterbenz subtraction, shifted moments
+- [GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h) - `NRPyLeakage_compute_nucleon_blocking`, Sterbenz subtraction, shifted moments
 - [StellarCollapse EOS Table Documentation](https://stellarcollapse.org/equationofstate.html) - `mu_e` rest-mass convention and LS `munu` warning
 - [O2scl eos_sn_oo Reference](https://awsteiner.org/code/o2scl/html/class/eos_sn_oo.html) - O'Connor-Ott table chemical-potential conventions
 
