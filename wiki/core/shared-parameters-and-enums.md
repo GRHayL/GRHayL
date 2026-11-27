@@ -5,7 +5,7 @@
 
 ## Summary
 
-`GRHayL/include/ghl.h` (with `ghl_io.h`, `ghl_debug.h`, and `ghl_metric_helpers.h`) defines GRHayL's shared public enums, parameter structs (`ghl_parameters`, `ghl_eos_parameters`), fluid/metric/stress-energy structs, and normalization macros (`SQR`, `ONE_OVER_SQRT_4PI`, `M_PI`, `MAX_EOS_PARAMS`). Most `ghl.h` declarations are implemented in `GRHayL/GRHayL_Core/`, except two Con2Prim-implemented declarations audited below.
+`GRHayL/include/ghl.h` (with `ghl_io.h`, `ghl_debug.h`, and `ghl_metric_helpers.h`) defines GRHayL's shared public enums, parameter structs (`ghl_parameters`, `ghl_eos_parameters`), fluid/metric/stress-energy structs, and normalization macros (`SQR`, `ONE_OVER_SQRT_4PI`, `M_PI`, `MAX_EOS_PARAMS`). Most `ghl.h` declarations are implemented in `GRHayL/GRHayL_Core/`, except the Con2Prim declarations audited below.
 
 ## Detail
 

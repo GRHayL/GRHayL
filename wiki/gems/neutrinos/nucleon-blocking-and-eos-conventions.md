@@ -17,7 +17,7 @@ $$n_N = N_A \rho X_N = C(T) F_{1/2}(\eta_N), \qquad C(T) = \frac{4\pi(2 m_N T)^{
 
 For ordered free fractions $X_h \ge X_l$ and $a = \eta_h - \eta_l \ge 0$, the same-energy transition overlaps are:
 
-$$Y_{h \to l} = \frac{X_h - X_l}{-\operatorname{expm1}(-a)}, \qquad Y_{l \to h} = e^{-a} Y_{h \to l},$$
+$$Y_{h \to l} = \frac{X_h - X_l}{-\mathrm{expm1}(-a)}, \qquad Y_{l \to h} = e^{-a} Y_{h \to l},$$
 
 using `expm1` and Sterbenz exact subtraction for close populations, plus the analytic equal-population limit $X F'_{1/2}(\eta) / F_{1/2}(\eta)$. At an exactly-one-zero endpoint, the occupied-to-empty overlap tends to the occupied fraction, the reverse overlap tends to zero, and every overlap-times-shifted-beta-moment product tends to zero exponentially; the implementation applies that zero-product limit directly without forming the divergent degeneracy difference or shift (this is the continuous extension of the ideal-gas closure, not a general interacting-EOS claim). A both-zero state returns a neutral result. Evaluated two-species states enforce $0 \le B_N, Y_{N \to N'} \le X_N$.
 

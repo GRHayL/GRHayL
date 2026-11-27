@@ -10,7 +10,7 @@ Use these spellings when routing, citing, or writing KB leaves. Terms link to th
 
 | Term | Meaning |
 | --- | --- |
-| GRHayL | General Relativistic Hydrodynamics Library: C99/C++ GRMHD library built from `GRHayL_Core` and physics gems; see [Public API Map](architecture/public-api-map.md). |
+| GRHayL | General Relativistic Hydrodynamic Library: C99 GRMHD library (`extern "C"` headers) of `GRHayL_Core` and physics gems; see [Public API Map](architecture/public-api-map.md). |
 | chalice | Shared core module (`GRHayL/GRHayL_Core/`) defining structs, metrics, stress-energy helpers, EOS dispatch, errors, and I/O; see [Core](core/index.md). |
 | gem | Modular physics subdirectory under `GRHayL/` (`Atmosphere`, `Con2Prim`, `EOS`, `Flux_Source`, `Induction`, `Neutrinos`, `Reconstruction`); see [Gems](gems/index.md). |
 | ADM | Arnowitt-Deser-Misner 3+1 spatial metric $\gamma_{ij}$, lapse $\alpha$, shift $\beta^i$, and extrinsic curvature $K_{ij}$; see [Metric And ADM Helpers](core/metric-adm.md). |
@@ -22,7 +22,7 @@ Use these spellings when routing, citing, or writing KB leaves. Terms link to th
 | `vU` | Transport three-velocity $v^i = u^i / u^0$ stored in `ghl_primitive_quantities`, distinct from Eulerian velocity; see [Velocity u0](core/velocity-u0.md). |
 | `Con2Prim` | Conservative-to-primitive root-finding gem (Noble, Palenzuela, Newman, Font, Cerda-Duran) for hybrid and tabulated EOS; see [Con2Prim](gems/con2prim/index.md). |
 | `GHL_NN_C2P` | Optional C neural-network primitive-guess interface (`grhayl_nn_c2p`); see [Neural-Network Guess](gems/con2prim/neural-network-primitive-guess.md). |
-| `NRPyEOS` | Tabulated nuclear EOS implementation under `GRHayL/EOS/Tabulated/` for StellarCollapse loading and 3D interpolation; see [EOS](gems/eos/index.md). |
+| `NRPyEOS` | Hybrid piecewise-polytrope and tabulated StellarCollapse EOS routines under `GRHayL/EOS/{Hybrid,Tabulated}/`; see [EOS](gems/eos/index.md). |
 | Hybrid EOS | Piecewise-polytropic cold component plus thermal $\Gamma_{\rm th}$ ideal-gas EOS; see [Hybrid Polytrope](gems/eos/hybrid-piecewise-polytrope.md). |
 | StellarCollapse | O'Connor-Ott 19-field HDF5 tabulated EOS format read by `NRPyEOS_stellarcollapse_read_table`; see [StellarCollapse Adapter](gems/eos/stellarcollapse-table-adapter.md). |
 | CompOSE | External nuclear EOS database (`(T, n_b, Y_q)`) converted via `compose_to_grhayl.py`; see [CompOSE Conversion](gems/neutrinos/compose-eos-conversion-and-regularization.md). |
@@ -32,7 +32,7 @@ Use these spellings when routing, citing, or writing KB leaves. Terms link to th
 | `PLM` | Piecewise linear reconstruction (`minmod`, `MC`, `superbee`) in `GRHayL/Reconstruction/`; see [PLM Limiters](gems/reconstruction/plm-limiters.md). |
 | `PPM` | Piecewise parabolic reconstruction with Colella-Woodward steepening and flattening in `GRHayL/Reconstruction/`; see [PPM Flow](gems/reconstruction/ppm-flow.md). |
 | `WENO-z` | Fifth-order weighted essentially non-oscillatory reconstruction in `GRHayL/Reconstruction/`; see [WENO-z Method](gems/reconstruction/wenoz-method.md). |
-| `HLLE` | Harten-Lax-van Leer-Einfeldt Riemann flux solver in `GRHayL/Flux_Source/` and `GRHayL/Induction/`; see [HLLE Matrix](gems/flux-source/hlle-flux-variant-matrix.md). |
+| `HLLE` | Harten-Lax-van Leer-Einfeldt 1D GRMHD flux solver in `GRHayL/Flux_Source/` (distinct from Induction 2D HLL); see [HLLE Matrix](gems/flux-source/hlle-flux-variant-matrix.md). |
 | `GHL_DISABLE_HDF5` | Preprocessor guard set by `./configure --disable-hdf5` excluding HDF5 table I/O and table tests; see [Build And Configure](architecture/build-and-configure.md). |
 | `make.code.defn` | Recursive Cactus-compatible source manifest (`SRCS`, `SUBDIRS`, `#! INCS`) parsed by `configure`; see [Build And Configure](architecture/build-and-configure.md). |
 | `GRHayLib` | Cactus / Einstein Toolkit thorn under `implementations/GRHayLib/` compiling GRHayL via symlinks; see [Implementations](implementations/index.md). |

@@ -19,7 +19,7 @@ Active source discrepancies and unreconciled drift are tracked below. Recording 
 | CONTR-0003 | contested | [Ref](tests/reference-data-and-test-drivers.md), [Run](tests/runner-and-build-outputs.md), [ET](tests/et-legacy-comparison.md), [Cat](tests/unit-test-catalog.md) | `Test_Data` vs `TestData`. |
 | CONTR-0004 | contested | [RefData](tests/reference-data-and-test-drivers.md); [ET](tests/et-legacy-comparison.md) | `README.md` states fixed `input * (1 + 1e-14)`; `data_gen/*.c` use test-specific random scales. |
 | CONTR-0005 | contested | [CI](architecture/ci-workflows.md); [GRHayLib](implementations/grhaylib-verification.md) | Ubuntu-GCC `paths-ignore` omits `implementations/**` unlike peers; ignores absent `Makefile_old`. |
-| CONTR-0006 | contested | [CI Workflows](architecture/ci-workflows.md) | Coverage action runs on clang, Intel, and macOS-GCC jobs where collection is commented or files are absent. |
+| CONTR-0006 | contested | [CI Workflows](architecture/ci-workflows.md) | Coverage action runs on Ubuntu clang (missing-file comment) and commented Intel/macOS-GCC collection bodies. |
 | CONTR-0007 | contested | [CI Workflows](architecture/ci-workflows.md) | `compile_GRHayL/action.yml` has unmatched macOS GCC quote and repeated clang `--cflags` overwritten by `configure`. |
 | CONTR-0008 | contested | [CI Workflows](architecture/ci-workflows.md) | Ubuntu-GCC `codecov-finalize` polls recent peer runs without checking peer presence, conclusions, or uploads. |
 | CONTR-0009 | contested | [Atmosphere](gems/atmosphere.md); [API](architecture/public-api-map.md) | `ghl_set_prims_to_radial_falloff_atm` is declared with incomplete source, omitted from manifest/tests. |
@@ -69,7 +69,7 @@ Evidence (CI behavior): `.github/workflows/github-actions-Ubuntu-gcc.yml::Makefi
 
 ### CONTR-0006
 
-- Competing sources & authority: `.github/workflows/github-actions-*.yml` invoking `.github/actions/code-coverage/action.yml` on Ubuntu clang, selected Ubuntu Intel, and macOS GCC jobs versus commented-out collection bodies and missing-file notes inside `code-coverage/action.yml`. Action shell steps decide actual collection; [CI Workflows](architecture/ci-workflows.md) is `contested`.
+- Competing sources & authority: `.github/workflows/github-actions-*.yml` invoking `.github/actions/code-coverage/action.yml` on Ubuntu clang, selected Ubuntu Intel, and macOS GCC jobs versus active Linux clang `llvm-profdata`/`llvm-cov` steps carrying a missing-file comment and commented-out Intel/macOS collection bodies inside `code-coverage/action.yml`. Action shell steps decide actual collection; [CI Workflows](architecture/ci-workflows.md) is `contested`.
 - Recheck trigger: edits to `.github/actions/code-coverage/action.yml` or coverage job steps in `.github/workflows/github-actions-*.yml`.
 - Resolution check: inspect `code-coverage/action.yml` and every workflow job invoking it, verifying active collection commands or removal of no-op invocations.
 

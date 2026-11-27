@@ -5,13 +5,13 @@
 
 ## Summary
 
-`GRHayL/Induction/Interpolators/` provides three public staggered metric/vector-potential interpolators (`ghl_interpolate_with_cell_centered_ADM`, `ghl_interpolate_with_cell_centered_BSSN`, `ghl_interpolate_with_vertex_centered_ADM`) receiving caller-packed `[z][y][x]` arrays without grid metadata or validation. Cell-centered wrappers write every field of `ghl_induction_interp_vars`; vertex-centered ADM writes only `sqrtg_Ai[3]` and `alpha_Phi_minus_betaj_A_j`, leaving `alpha` and `betai[3]` untouched.
+`GRHayL/Induction/Interpolators/` provides public staggered metric/vector-potential interpolators (`ghl_interpolate_with_cell_centered_ADM`, `ghl_interpolate_with_cell_centered_BSSN`, `ghl_interpolate_with_vertex_centered_ADM`) receiving caller-packed `[z][y][x]` arrays without grid metadata or validation. Cell-centered wrappers write every field of `ghl_induction_interp_vars`; vertex-centered ADM writes only `sqrtg_Ai[3]` and `alpha_Phi_minus_betaj_A_j`, leaving `alpha` and `betai[3]` untouched.
 
 ## Detail
 
 ### Public Wrappers, Output Fields, And Array Packing
 
-`ghl_induction_interp_vars` (`GRHayL/include/ghl_induction.h`) holds `alpha`, `betai[3]`, `alpha_Phi_minus_betaj_A_j` (at `phitilde = sqrt(gamma) * Phi`), and `sqrtg_Ai[3]` (representing `alpha * sqrt(gamma) * A^i = sqrt(-g) * A^i` at each staggered `A_i`, lapse already included). All three wrappers return `void` without validation (ADM divides by `sqrt_detgamma`; BSSN divides by `psi^6`). No `vvv_BSSN` wrapper exists.
+`ghl_induction_interp_vars` (`GRHayL/include/ghl_induction.h`) holds `alpha`, `betai[3]`, `alpha_Phi_minus_betaj_A_j` (at `phitilde = sqrt(gamma) * Phi`), and `sqrtg_Ai[3]` (representing `alpha * sqrt(gamma) * A^i = sqrt(-g) * A^i` at each staggered `A_i`, lapse already included). Each public wrapper returns `void` without validation (ADM divides by `sqrt_detgamma`; BSSN divides by `psi^6`). No `vvv_BSSN` wrapper exists.
 
 - **Array order (`[z][y][x]`):** `metric_stencil` (`2x2x2` `ghl_metric_quantities`), `psi_stencil` (`2x2x2` for cell-centered BSSN only), scalar `phitilde`, and `3x3x3` `Ax_stencil` (`i-1..i+1`, `j-1/2..j+3/2`, `k-1/2..k+3/2`), `Ay_stencil` (`i-1/2..i+3/2`, `j-1..j+1`, `k-1/2..k+3/2`), `Az_stencil` (`i-1/2..i+3/2`, `j-1/2..j+3/2`, `k-1..k+1`) relative to `tildePhi(i+1/2, j+1/2, k+1/2)`.
 - **ADM vs. BSSN discretization:** ADM stencils initialize `lapse`, `betaU`, `gammaUU`, `sqrt_detgamma` and average the combined `alpha * sqrt(gamma) * gamma^{ij}`. BSSN expects conformal inverse `psi^4 * gamma^{ij}` in `metric_stencil.gammaUU` (upper triangle only; ignores `sqrt_detgamma`), assumes a unit-determinant conformal metric (`psi^6` without `sqrt(det(gamma_tilde))`), and averages `alpha * psi^2` and conformal `gamma^{ij}` separately before multiplying—so ADM and BSSN need not match numerically on spatially varying geometry.
