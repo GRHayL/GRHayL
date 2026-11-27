@@ -40,11 +40,16 @@ Load relevant routes and only the selected skill. Explicit dialectic/paired revi
 or "use di", "run di", "engage di" selects
 [Dialectic](.agents/skills/dialectic/SKILL.md); trialectic/three-seat review or
 "use tri", "run tri", "engage tri" selects
-[Trialectic](.agents/skills/trialectic/SKILL.md). Policy may require them; mentioning,
-auditing, or editing them does not. Read the selected skill and
-[Shared Review Protocol](.agents/review-protocol.md) once per active version.
-Delegate when real tools offer a concrete benefit; never simulate independence
-or duplicate trivial work. Root owns delivery.
+[Trialectic](.agents/skills/trialectic/SKILL.md) (for both, root loads the
+selected skill, [Shared Review Protocol](.agents/review-protocol.md), and relevant
+[GRHayL evidence](.agents/grhayl-evidence.md) sections once per active version;
+seats receive only their skill roles, assigned protocol sections, and applicable
+evidence sections in the brief); Borda panel or "use borda", "run borda" selects
+[Borda](.agents/skills/borda/SKILL.md) (self-contained; ask missing task or agent
+count, infer filename with no naming restrictions). Policy may require them;
+mentioning, auditing, or editing a skill does not activate it. Delegate when real
+tools offer a concrete benefit; never simulate independence or duplicate trivial
+work. Root owns delivery.
 
 Follow-ups review deltas, open findings, and affected code/docs; retain valid
 coverage/checks. Meaning-preserving cleanup needs focused verification; semantic

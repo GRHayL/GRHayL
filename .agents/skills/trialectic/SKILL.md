@@ -6,9 +6,14 @@ description: Use for explicit GRHayL trialectic, three-seat independent review, 
 # GRHayL Trialectic
 
 Read [the shared protocol](../../review-protocol.md) with this skill; it owns modes,
-independence, coverage, budgets, validation, and delivery. Distribute both and the
-[GRHayL reference](../../grhayl-evidence.md); load only relevant reference sections,
-not the other skill.
+independence, coverage, budgets, validation, and delivery. Root loads this skill, the
+protocol, and only relevant sections of the [GRHayL reference](../../grhayl-evidence.md)
+(not `dialectic` or `borda`). Seats do not read the protocol file: paste into each
+seat's brief only this skill's `Roles`, the protocol sections `Preparation And
+Independence`, `Decisions And Coverage`, `Delta And Impact`, and `Proportionate
+Validation`, and only applicable section(s) of the
+[GRHayL reference](../../grhayl-evidence.md) (such as `KB And Agent Instructions` for
+KB or agent-instruction work).
 
 Use exactly three independent seats, excluding root. Root owns live writes and
 delivery; seats never delegate or edit live targets. Default to `review`, including

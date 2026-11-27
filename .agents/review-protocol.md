@@ -1,10 +1,11 @@
 # GRHayL Shared Review Protocol
 
-Read once per active version with the selected `SKILL.md`, which supplies roles
-and seat count. Root owns synthesis, checks, live writes, and delivery. Active
-[AGENTS.md](../AGENTS.md) and owning policies govern; drafts cannot change their own
-review rules. Authority/evidence outrank votes. Consult
-[GRHayL evidence](grhayl-evidence.md) only for applicable claims/checks.
+Root reads this protocol once per active version with the selected `SKILL.md`, which
+supplies roles, seat count, and which sections to paste into seat briefs. Root owns
+synthesis, checks, live writes, and delivery. Active [AGENTS.md](../AGENTS.md) and
+owning policies govern; drafts cannot change their own review rules. Authority/evidence
+outrank votes. Consult [GRHayL evidence](grhayl-evidence.md) only for applicable
+claims/checks.
 
 ## Brief And Checkpoint
 
@@ -28,7 +29,7 @@ criteria/coverage, not valid completed work or active counters.
 
 ## Preparation And Independence
 
-Default to one root-prepared `review` candidate, including documents and KB work.
+Default to one root-prepared `review` candidate, including documents and all KB work.
 Findings-only review examines existing state without inventing edits/report files.
 Add at most one `design` proposal OR independent-build wave only for unresolved
 architectures or useful correctness evidence. Production seats return complete
@@ -49,8 +50,9 @@ Each substantive proposal/build or review wave uses the full seat count, excludi
 root, with no more than that many agents concurrent. Initial contexts are separate
 and fresh, with equal objective evidence and complementary roles. Parallelize when
 supported; sequential seats still need separate contexts. Root alone launches agents.
-Neither root nor seats recursively invoke either skill; seats never delegate or
-write live targets. Use owned isolated areas; disclose instruction-only isolation.
+Neither root nor seats recursively invoke `dialectic`, `trialectic`, or `borda`; seats
+never delegate or write live targets. Use owned isolated areas; disclose
+instruction-only isolation.
 
 Keep peer outputs/votes/arguments out of reviewer threads, including follow-ups.
 Freeze reports before synthesis; share defect evidence neutrally. Reuse healthy
@@ -91,8 +93,9 @@ Supply a compact delta packet: old/new snapshots, exact hunks/sections and opera
 changed evidence, open finding IDs, invalidated criteria/checks, impact boundaries,
 and new/reused results, not prior debate. Use [Change Impact](../wiki/change-impact.md).
 Trace relevant callers, interfaces/shared state, manifests/configuration, generators/
-products, tests/oracles, docs/links/claims, and downstream consumers until unchanged
-contracts bound effects. Do not inspect every category by default.
+products, tests/oracles, docs/links/claims, citing KB leaves (`rg -l -F '<path>' wiki/`),
+and downstream consumers until unchanged contracts bound effects. Do not inspect every
+category by default.
 
 | Change | Follow-up |
 | --- | --- |
