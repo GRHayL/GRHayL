@@ -11,8 +11,6 @@ Every standalone C unit-test driver (`Unit_Tests/unit_test_*.c`) and CompOSE Pyt
 
 ### Core, Con2Prim, EOS, Flux, And Induction Tests
 
-Claim status: contested; contradiction: CONTR-0003. See [CONTR-0003](../contradictions.md#contr-0003).
-
 | Test | Subsystem & scope | Mode & defining route |
 | --- | --- | --- |
 | `unit_test_grhayl_core_test_suite.c` | Core EOS bounds, constant atm, 4D metric helpers, ADM det, C2P names. | Default; [Core Tests](../core/tests-and-reference-data.md) |
@@ -69,4 +67,3 @@ Evidence (descriptive behavior): `configure::unit_test_`; corroboration: `Unit_T
 - Depends on: [Data Generators And Helpers](data-generators-and-helpers.md)
 - Depends on: [Runner And Build Outputs](runner-and-build-outputs.md)
 - See also: [Unit Test Coverage And Gap Matrix](unit-test-coverage-and-gap-matrix.md)
-- See also: [Contradictions](../contradictions.md#contr-0003)

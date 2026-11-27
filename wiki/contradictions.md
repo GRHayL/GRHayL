@@ -16,7 +16,7 @@ Active source discrepancies and unreconciled drift are tracked below. Recording 
 | --- | --- | --- | --- |
 | CONTR-0001 | contested | [Build And Configure](architecture/build-and-configure.md) | `configure` help advertises `nocflags` (rejected); parser accepts undocumented `plain`. |
 | CONTR-0002 | contested | [Build](architecture/build-and-configure.md); [Generated](architecture/generated-boundaries.md) | `generate_makefile.sh` scans outside `GRHayL/`, includes GRHayLib, emits `-I./include`. |
-| CONTR-0003 | contested | [Ref](tests/reference-data-and-test-drivers.md), [Run](tests/runner-and-build-outputs.md), [ET](tests/et-legacy-comparison.md), [Cat](tests/unit-test-catalog.md) | `Test_Data` vs `TestData`. |
+| CONTR-0003 | contested | [Ref](tests/reference-data-and-test-drivers.md), [Run](tests/runner-and-build-outputs.md), [ET](tests/et-legacy-comparison.md) | `Test_Data` vs `TestData`. |
 | CONTR-0004 | contested | [RefData](tests/reference-data-and-test-drivers.md); [ET](tests/et-legacy-comparison.md) | `README.md` states fixed `input * (1 + 1e-14)`; `data_gen/*.c` use test-specific random scales. |
 | CONTR-0005 | contested | [CI](architecture/ci-workflows.md); [GRHayLib](implementations/grhaylib-verification.md) | Ubuntu-GCC `paths-ignore` omits `implementations/**` unlike peers; ignores absent `Makefile_old`. |
 | CONTR-0006 | contested | [CI Workflows](architecture/ci-workflows.md) | Coverage action runs on Ubuntu clang (missing-file comment) and commented Intel/macOS-GCC collection bodies. |
@@ -45,7 +45,7 @@ Evidence (descriptive behavior): `generate_makefile.sh::libgrhayl.a`; corroborat
 
 ### CONTR-0003
 
-- Competing sources & authority: `README.md` naming `GRHayL/Test_Data` versus `docs/raw/mainpage.md`, `.github/run_tests.sh`, and `.github/workflows/github-actions-Ubuntu-gcc.yml` using `GRHayL/TestData`. Operational scripts decide current download paths; [Reference Data And Test Drivers](tests/reference-data-and-test-drivers.md) and [ET Legacy Comparison](tests/et-legacy-comparison.md) are `contested` while [Runner And Build Outputs](tests/runner-and-build-outputs.md) and [Unit Test Catalog](tests/unit-test-catalog.md) stay `confirmed`.
+- Competing sources & authority: `README.md` naming `GRHayL/Test_Data` versus `docs/raw/mainpage.md`, `.github/run_tests.sh`, and `.github/workflows/github-actions-Ubuntu-gcc.yml` using `GRHayL/TestData`. Operational scripts decide current download paths; [Reference Data And Test Drivers](tests/reference-data-and-test-drivers.md) and [ET Legacy Comparison](tests/et-legacy-comparison.md) are `contested` while [Runner And Build Outputs](tests/runner-and-build-outputs.md) stays `confirmed`.
 - Recheck trigger: edits to `README.md`, `docs/raw/mainpage.md`, `.github/run_tests.sh`, or workflow TestData URLs.
 - Resolution check: run `rg -n 'Test_Data|TestData' README.md docs/raw/mainpage.md .github/` and confirm one canonical repository name across docs and scripts.
 
