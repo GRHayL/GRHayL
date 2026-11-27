@@ -1,165 +1,50 @@
 # Expected Failure And Error Keys
 
-Purpose: route `unit_test_code_error.c` expected-failure keys, no-HDF5 skip
-semantics, and cross-gem ownership of error-path coverage. This page does not
-re-document the error-code API; use the linked Core, EOS, Con2Prim, and
-Neutrinos pages for behavior contracts.
+> Inverted exit-code protocol, `GHL_DISABLE_HDF5` skip sets, and subsystem key ranges (`0`–`90`) in `Unit_Tests/unit_test_code_error.c`. · Status: confirmed
+> Up: [Tests](index.md)
 
-Read with [Core tests and fixtures](../core/tests-and-fixtures.md),
-[Core errors, IO, debug, utilities](../core/errors-io-debug-utilities.md),
-[EOS tests and fixtures](../gems/eos/tests-and-fixtures.md),
-[EOS initialization and dispatch](../gems/eos/initialization-and-dispatch.md),
-[Con2Prim tests and fixtures](../gems/con2prim/tests-and-fixtures.md),
-[Con2Prim recovery flow](../gems/con2prim/recovery-flow.md), and
-[Neutrinos tests and fixtures](../gems/neutrinos/tests-and-fixtures.md).
+## Summary
 
-## Harness Contract
+`Unit_Tests/unit_test_code_error.c` verifies GRHayL error-code paths over integer keys `0`–`90` using an inverted process-status protocol: matched errors exit nonzero through `ghl_abort_if_error`, whereas unexpected internal setup failures exit `0` so `.github/run_tests.sh` reports `Failed to fail!`. Under `GHL_DISABLE_HDF5`, HDF5-dependent keys exit as expected skips rather than running tabulated code.
 
-The full runner invokes `$repo_root/test/unit_test_code_error` for keys
-`0..90` from its private `code_error_workdir`.
-Each key is treated as an expected-error case: if the executable exits
-successfully, [.github/run_tests.sh](../../.github/run_tests.sh) prints `Failed to fail!` and fails the
-runner; if the executable exits nonzero, the runner treats that as the expected
-failure and continues.
+## Detail
 
-Therefore process exit alone is inverted harness evidence, not proof of the
-specific library error code. For active error-code keys, the test body compares
-the supplied code with `expected_error_code(...)`. Preserve captured output
-when distinguishing an expected harness exit from an unrelated crash or setup
-failure.
+### Inverted Exit Protocol And `GHL_DISABLE_HDF5` Skips
 
-`pass_test(...)` exits nonzero after an intended expected-error or skip path.
-`fail_test(...)` exits zero for unexpected internal failures so the outer
-runner rejects the key. Common hybrid-EOS setup failure, an unexpected string
-from the key-33 invalid-name call, and key 80's prerequisite pressure failure
-all use this failure-of-test convention rather than accidentally satisfying the
-outer expected-failure status check.
+Claim status: contested; contradiction: CONTR-0010. See [CONTR-0010](../contradictions.md#contr-0010).
 
-Keys `86` and `87` directly supply the expected NRPyLeakage blocking and
-nonfinite-output enum values. They exercise `ghl_abort_if_error` and process
-termination; the NRPyLeakage physics test covers producer returns. Key `88`
-directly supplies `ghl_error_invalid_hlle_wavespeeds` to exercise the same
-abort path and termination; it does not call an HLLE kernel to check error
-production. The harness does not assert emitted message text.
+`.github/run_tests.sh` runs `unit_test_code_error` over keys `0..90` inside a private `code_error_workdir` removed on `EXIT`. Inside `unit_test_code_error.c`:
+- `expect_error_code(...)` compares the produced `ghl_error_codes_t` against the expected code, then invokes `ghl_abort_if_error(error)` for nonzero termination (the test does not assert emitted message strings).
+- `pass_test(...)` exits nonzero for intended expected-error or skip outcomes; `fail_test(...)` exits `0` on unexpected internal setup failures (such as common hybrid setup failure, key `33` returning non-`NULL`, or key `80` prerequisite failure) so the outer runner fails the key.
+- Keys `86`–`88` pass enum values directly (`ghl_abort_if_error` coverage for NRPyLeakage blocking/nonfinite errors and `ghl_error_invalid_hlle_wavespeeds`) rather than invoking the producing physics routines.
+- Under `GHL_DISABLE_HDF5`, keys `6..32`, `34..60`, `63`, `66`, `69..85`, and `89..90` take expected-skip exits.
 
-Inside `unit_test_code_error.c`, `expect_error_code(...)` compares the supplied
-GRHayL error code with the expected mapping, then routes through
-`ghl_abort_if_error(error)` so the process exits as the expected-error harness
-requires. Key `33` is a special invalid-name route: it expects
-`ghl_get_con2prim_routine_name` to return `NULL` and exits nonzero through the
-same expected-failure convention.
+Evidence (descriptive behavior): `Unit_Tests/unit_test_code_error.c::expect_error_code`; corroboration: `Unit_Tests/unit_test_code_error.c::fail_test` and `.github/run_tests.sh::Failed to fail!`.
 
-## No-HDF5 Skip Semantics
+### Error-Key Ranges By Subsystem
 
-When compiled with `GHL_DISABLE_HDF5`, `unit_test_code_error.c` skips exactly
-these HDF5-only keys:
+| Key range | Subsystem & behavior checked | Defining route |
+| --- | --- | --- |
+| `0`, `1`, `61`, `62`, `64`, `65`, `67`, `68` | Invalid simple/hybrid EOS density and pressure setup. | [EOS Dispatch](../core/eos-dispatch.md) |
+| `2`, `3` | Invalid `NRPyLeakage_Fermi_Dirac_integrals` keys across the small-`z` split. | [Neutrinos Tests](../gems/neutrinos/tests-and-reference-data.md) |
+| `4`, `5`, `32`, `33` | Core `ghl_limit_v_and_compute_u0` singular `u0` (`4`); invalid Con2Prim routine selection (`5`, `32`) and `NULL` routine-name lookup (`33`). | [Velocity And `u0`](../core/velocity-u0.md), [Recovery Flow](../gems/con2prim/recovery-flow.md) |
+| `6..11`, `63`, `66`, `69..72` | Invalid tabulated `rho`, `Y_e`, `T` atmosphere/min/max bounds (`SLy4` table). | [Tabulated Table Layout](../gems/eos/tabulated-table-layout.md) |
+| `12..31` | Too-many-variable helper calls and out-of-table `rho`/`Y_e`/`T` bounds in direct and root-finding interpolators. | [Tabulated Interpolation And Bounds](../gems/eos/tabulated-interpolation-and-bounds.md) |
+| `34..60`, `73`, `74` | Missing (`34`) and malformed temporary `test.h5` HDF5 open/rank/read failures (standalone invocations can leave `test.h5` in cwd). | [HDF5 Sample Tables](hdf5-sample-tables.md) |
+| `75..77` | Null `ghl_eos_parameters`, non-tabulated EOS type, and invalid `ghl_eos_table_t`. | [EOS Initialization And Dispatch](../gems/eos/initialization-and-dispatch.md) |
+| `78..82` | Beta-equilibrium out-of-range density/pressure `root not bracketed` errors. | [Tabulated Interpolation And Bounds](../gems/eos/tabulated-interpolation-and-bounds.md) |
+| `83..85` | `ghl_c2p_nn_load_hdf5` null EOS (`83`), empty path (`84`), and `enable_neural_net_c2p` on `SLy4` lacking `grhayl_nn_c2p` (`85`). | [Neural-Network Primitive Guess](../gems/con2prim/neural-network-primitive-guess.md) |
+| `86..88` | Direct enum abort checks for NRPyLeakage blocking/nonfinite errors (`86`, `87`) and `ghl_error_invalid_hlle_wavespeeds` (`88`). | [Errors, IO, Debug, And Utilities](../core/errors-io-debug-utilities.md) |
+| `89`, `90` | Tabulated `ghl_tabulated_Newman1D_energy` (`89`) and `ghl_tabulated_Palenzuela1D_energy` (`90`) returning `ghl_error_table_bisection` on over-range `tau`. | [Recovery Flow](../gems/con2prim/recovery-flow.md) |
 
-- `6..32`
-- `34..60`
-- `63`
-- `66`
-- `69..85`
-- `89..90`
+## Sources
 
-Those skipped HDF5-only keys exit as the test harness expects under a no-HDF5
-build. Treat them as expected-skip confirmations for HDF5-only paths, not as
-ordinary behavior coverage. The build-side no-HDF5 source and test filtering is
-owned by [configure](../../configure), which defines `GHL_DISABLE_HDF5`,
-filters table-dependent tests and sources, and retains selected tabulated
-helpers, disabled direct-C2P stubs, and real tabulated flux kernels.
+- [Unit_Tests/unit_test_code_error.c](../../Unit_Tests/unit_test_code_error.c) - keys `0`–`90`, `expect_error_code`, `pass_test`, `fail_test`, `GHL_DISABLE_HDF5` skips
+- [.github/run_tests.sh](../../.github/run_tests.sh) - `code_error_workdir` loop and `Failed to fail!` check
 
-## Behavior Families
+## See Also
 
-- Hybrid/simple EOS parameter validation: keys `0`, `1`, `61`, `62`, `64`,
-  `65`, `67`, and `68` cover invalid density and pressure setup for simple and
-  hybrid EOS paths. Route contract questions to Core EOS setup and EOS
-  initialization pages.
-- Neutrinos Fermi-Dirac invalid-key handling: keys `2` and `3` call
-  `NRPyLeakage_Fermi_Dirac_integrals` on both sides of the small-`z` split.
-  Route behavior to Neutrinos tests and fixtures.
-- Core velocity and Con2Prim dispatch: key `4` covers singular `u0` through
-  `ghl_limit_v_and_compute_u0`; keys `5`, `32`, and `33` cover invalid
-  Con2Prim routine selection or invalid routine-name lookup. Route `u0` to Core
-  velocity pages and routine dispatch to Con2Prim recovery flow.
-- Tabulated EOS setup bounds: keys `6..11`, `63`, `66`, and `69..72` cover
-  invalid tabulated `rho`, `Y_e`, and `T` atmosphere/min/max setup. Route to EOS
-  initialization and tabulated table pages.
-- Tabulated interpolation and bounds: keys `12..31` cover too-many-variable
-  helper calls plus out-of-table `rho`, `Y_e`, and `T` behavior for direct
-  `(rho,Y_e,T)` interpolators and root-finding auxiliary routes. These are EOS
-  table/interpolator test routes, not a replacement for the public API docs.
-- HDF5 table-read failures: key `34` removes any existing `test.h5` and checks
-  the missing-file path; keys `35..60`, `73`, and `74` create temporary
-  malformed `test.h5` files to cover dataset-open, dataset-rank, and
-  dataset-read failures. Successful expected-error handling exits the process
-  before a post-test removal, so an individual key invocation can leave
-  `test.h5` in its current working directory. Standalone and workflow
-  invocations use their current directory. The full runner invokes every key
-  inside a private `code_error_workdir` and removes that directory through an
-  `EXIT` trap on success or failure. Route table-shape and HDF5 questions to
-  EOS tests and HDF5 sample table routing.
-- Invalid tabulated EOS/table state: keys `75..77` cover null EOS parameter
-  struct, non-tabulated EOS type, and invalid table type before or during table
-  setup. Route to EOS initialization and Core shared parameter pages.
-- Beta-equilibrium/root-bracketing failures: keys `78..82` initialize
-  beta-equilibrium helpers, then force out-of-range density or pressure routes
-  that return root not bracketed. Route detailed root behavior to tabulated EOS
-  interpolation/bounds pages.
-- NN loader/init failures: key `83` passes a NULL EOS parameter struct to
-  `ghl_c2p_nn_load_hdf5`; key `84` passes an empty NN filepath to
-  `ghl_c2p_nn_load_hdf5`; key `85` initializes tabulated EOS with
-  `enable_neural_net_c2p` true while the table has no embedded
-  `grhayl_nn_c2p` group. Route runtime replay coverage to Con2Prim tests and
-  initialization behavior to EOS/Core initialization pages.
-- Flux_Source invalid-wave-speed error: key `88` checks
-  `ghl_error_invalid_hlle_wavespeeds` handling in `ghl_abort_if_error`.
-  Direct checked HLLE input validation belongs to
-  [Flux_Source HLLE flux variants](../gems/flux-source/hlle-flux-variant-matrix.md).
-- Tabulated 1D Con2Prim EOS failures: keys `89` and `90` scale `tau` above the
-  SLy4 table's energy range at the test density, so the temperature inversion
-  fails and `ghl_tabulated_Newman1D_energy` (`89`) and
-  `ghl_tabulated_Palenzuela1D_energy` (`90`) must return
-  `ghl_error_table_bisection` rather than a converged state.
-  Route solver behavior to [Con2Prim recovery flow](../gems/con2prim/recovery-flow.md).
-
-## Ownership Routes
-
-- Core owns shared error-code vocabulary, `ghl_abort_if_error`, invalid routine
-  name behavior, and `u0` helper routing. Start with
-  [Core tests and fixtures](../core/tests-and-fixtures.md) and
-  [Core errors, IO, debug, utilities](../core/errors-io-debug-utilities.md).
-- EOS owns simple, hybrid, tabulated setup, HDF5 table reads, interpolation
-  bounds, invalid EOS/table state, and beta-equilibrium root routes. Start with
-  [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md).
-- Con2Prim owns invalid C2P key dispatch and recovery-selection semantics.
-  Start with [Con2Prim tests and fixtures](../gems/con2prim/tests-and-fixtures.md)
-  and [Con2Prim recovery flow](../gems/con2prim/recovery-flow.md).
-- Con2Prim/EOS jointly route NN primitive-guess error keys: the loader lives in
-  Con2Prim tabulated NN source, while key `85` is reached through tabulated EOS
-  initialization.
-- Neutrinos owns `Fermi` invalid-key coverage and NRPyLeakage fixture routes.
-  Start with [Neutrinos tests and fixtures](../gems/neutrinos/tests-and-fixtures.md).
-- Flux_Source owns invalid HLLE wave-speed returns. Start with
-  [Flux_Source HLLE flux variants](../gems/flux-source/hlle-flux-variant-matrix.md).
-
-## Repo-Local References
-
-- [configure](../../configure)
-- [.github/run_tests.sh](../../.github/run_tests.sh)
-- [.github/workflows/](../../.github/workflows/)
-- [Unit_Tests/unit_test_code_error.c](../../Unit_Tests/unit_test_code_error.c)
-- [Unit_Tests/nrpyleakage_main.h](../../Unit_Tests/nrpyleakage_main.h)
-- [Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c](../../Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c)
-- [Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c](../../Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c)
-- [Unit_Tests/unit_test_nrpyleakage_luminosities.c](../../Unit_Tests/unit_test_nrpyleakage_luminosities.c)
-- [Unit_Tests/unit_test_tabulated_eos.c](../../Unit_Tests/unit_test_tabulated_eos.c)
-- [Unit_Tests/tabulated_eos_unit_test_helpers.c](../../Unit_Tests/tabulated_eos_unit_test_helpers.c)
-- [Unit_Tests/test_compute_h_and_cs2.c](../../Unit_Tests/test_compute_h_and_cs2.c)
-- [Unit_Tests/unit_test_tabulated_flux.c](../../Unit_Tests/unit_test_tabulated_flux.c)
-- [Unit_Tests/unit_test_con2prim_tabulated.c](../../Unit_Tests/unit_test_con2prim_tabulated.c)
-- [Unit_Tests/unit_test_con2prim_debug.c](../../Unit_Tests/unit_test_con2prim_debug.c)
-- [Unit_Tests/unit_test_c2p_nn_guess.c](../../Unit_Tests/unit_test_c2p_nn_guess.c)
-- [wiki/gems/eos/tests-and-fixtures.md](../gems/eos/tests-and-fixtures.md)
-- [wiki/gems/con2prim/tests-and-fixtures.md](../gems/con2prim/tests-and-fixtures.md)
-- [wiki/gems/neutrinos/tests-and-fixtures.md](../gems/neutrinos/tests-and-fixtures.md)
-- [wiki/core/tests-and-fixtures.md](../core/tests-and-fixtures.md)
+- Depends on: [Errors, IO, Debug, And Utilities](../core/errors-io-debug-utilities.md)
+- Depends on: [Runner And Build Outputs](runner-and-build-outputs.md)
+- See also: [HDF5 Sample Tables](hdf5-sample-tables.md)
+- See also: [Contradictions](../contradictions.md#contr-0010)

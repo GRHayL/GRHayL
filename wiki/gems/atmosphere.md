@@ -1,74 +1,58 @@
-# Atmosphere Gem
+# Atmosphere
 
-## Purpose
+> Active `ghl_set_prims_to_constant_atm` floor reset, EOS field coupling, test coverage, and the unbuilt radial-falloff routine. · Status: stale
+> Up: [GRHayL Gems](index.md)
 
-Atmosphere routines reset primitive variables to prescribed low-density floor states.
+## Summary
 
-## Read First
+`GRHayL/Atmosphere/` resets primitive variables to low-density floor values stored in `ghl_eos_parameters`. `ghl_set_prims_to_constant_atm` is the sole declared, manifest-built, documented, and tested prescription; `ghl_set_prims_to_radial_falloff_atm` is header-declared and present as incomplete C source, but omitted from `GRHayL/Atmosphere/make.code.defn`, Doxygen, and tests.
 
-- [Atmosphere prescription contract](atmosphere/prescription-contract.md)
-- [`docs/raw/Atmosphere.dox`](../../docs/raw/Atmosphere.dox)
-- [`GRHayL/include/ghl_atmosphere.h`](../../GRHayL/include/ghl_atmosphere.h)
-- [`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h)
-- [`wiki/physics/variables-and-conventions.md`](../physics/variables-and-conventions.md)
+## Detail
 
-## Public Headers
+### Constant Atmosphere Reset And EOS Field Coupling
 
-- `GRHayL/include/ghl_atmosphere.h`
-- `GRHayL/include/ghl.h`
+`ghl_set_prims_to_constant_atm` (`GRHayL/Atmosphere/set_prims_to_constant_atm.c`, declared in installed `GRHayL/include/ghl_atmosphere.h`) writes:
+- `prims->rho = eos->rho_atm`, `press = eos->press_atm`, `eps = eos->eps_atm`, `entropy = eos->entropy_atm`, `Y_e = eos->Y_e_atm`, `temperature = eos->T_atm`;
+- `prims->vU[0..2] = 0`.
 
-Built public surface:
-- `ghl_set_prims_to_constant_atm`; see
-  [prescription contract](atmosphere/prescription-contract.md).
+It leaves `prims->BU[0..2]` and `prims->u0` untouched, returns `void`, and performs no pointer, EOS-family, or finiteness validation. Callers needing a complete primitive state preserve `BU` separately and recompute `u0`.
 
-Declared/source-present but unbuilt surface:
-- `ghl_set_prims_to_radial_falloff_atm` is declared in
-  `GRHayL/include/ghl_atmosphere.h` and has a source file, but
-  [`GRHayL/Atmosphere/make.code.defn`](../../GRHayL/Atmosphere/make.code.defn) does not compile it and
-  `docs/raw/Atmosphere.dox` documents only the constant prescription. No repo
-  call or test references it. This establishes current manifest absence, not
-  intended removal, internal status, or future support. Route radial questions to
-  [prescription contract](atmosphere/prescription-contract.md).
+- **Production caller:** `GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c` invokes `ghl_set_prims_to_constant_atm` on atmosphere fallback, then sets `vU = -betaU` and `u0 = lapseinv` ([Limits And Conversions](con2prim/limits-and-conversions.md), [Neural-Network Primitive Guess](con2prim/neural-network-primitive-guess.md)).
+- **EOS initialization coupling:** `GRHayL/GRHayL_Core/initialize_eos.c` populates `rho_atm`, `press_atm`, `eps_atm`, `entropy_atm`, and `tau_atm` for simple/hybrid EOS while storing deterministic zero placeholders in unused `Y_e_atm` and `T_atm` so constant reset always reads defined values; tabulated EOS derives `press_atm`, `eps_atm`, and `entropy_atm` from table-clamped `(rho_atm, Y_e_atm, T_atm)`.
 
-[`GRHayL/include/make.code.defn`](../../GRHayL/include/make.code.defn) lists `ghl_atmosphere.h` for installation.
-Installed declaration, built definition, documentation, calls, and tests are
-separate evidence; only the constant routine currently closes those surfaces.
+Evidence (descriptive behavior): `GRHayL/Atmosphere/set_prims_to_constant_atm.c::ghl_set_prims_to_constant_atm`; corroboration: `GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c` and `GRHayL/GRHayL_Core/initialize_eos.c`.
 
-## Implementation Paths
+### Unbuilt Radial-Falloff Routine And Test Coverage
 
-- Active build path: [`GRHayL/Atmosphere/set_prims_to_constant_atm.c`](../../GRHayL/Atmosphere/set_prims_to_constant_atm.c)
-- Unbuilt/incomplete source path:
-  [`GRHayL/Atmosphere/set_prims_to_radial_falloff_atm.c`](../../GRHayL/Atmosphere/set_prims_to_radial_falloff_atm.c)
-- `GRHayL/Atmosphere/make.code.defn`
+Claim status: stale; contradiction: CONTR-0009. See [CONTR-0009](../contradictions.md#contr-0009).
 
-## Test Paths
+| Routine | Header & manifest status | Current behavior |
+| --- | --- | --- |
+| `ghl_set_prims_to_constant_atm` | Installed (`ghl_atmosphere.h`), built (`make.code.defn`), documented (`Atmosphere.dox`), called in production and tests. (Ev: `GRHayL/Atmosphere/make.code.defn::set_prims_to_constant_atm.c`) | Full thermodynamic reset and zero velocity; preserves `BU` and `u0`. |
+| `ghl_set_prims_to_radial_falloff_atm` | Installed (`ghl_atmosphere.h`), source-present, **omitted** from `make.code.defn`, `Atmosphere.dox`, callers, and tests. (Ev: `GRHayL/Atmosphere/set_prims_to_radial_falloff_atm.c::ghl_set_prims_to_radial_falloff_atm`) | Incomplete: `r` is unused; `rho`, `press`, `eps` writes are commented out; only copies `entropy`/`Y_e`/`temperature` and zeros `vU`. |
 
-- Direct constant-atmosphere coverage: [`Unit_Tests/unit_test_grhayl_core_test_suite.c`](../../Unit_Tests/unit_test_grhayl_core_test_suite.c)
-- Conditional legacy reset call: [`Unit_Tests/unit_test_ET_Legacy_primitives.c`](../../Unit_Tests/unit_test_ET_Legacy_primitives.c)
-- Indirect coverage through the Con2Prim tabulated primitive guess: [`Unit_Tests/unit_test_c2p_nn_guess.c`](../../Unit_Tests/unit_test_c2p_nn_guess.c)
-- Nearby downstream coverage: [`Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`](../../Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c), [`Unit_Tests/unit_test_apply_conservative_limits.c`](../../Unit_Tests/unit_test_apply_conservative_limits.c)
+**Test coverage:**
+- `Unit_Tests/unit_test_grhayl_core_test_suite.c` directly verifies `rho`, `press`, `eps`, `entropy`, and `vU = 0` for simple and hybrid EOS; its tabulated branch is commented out (`TODO`), and its `Y_e`/`temperature` checks sit inside an unreached `eos_type == 2` block.
+- `Unit_Tests/unit_test_c2p_nn_guess.c` indirectly asserts tabulated atmosphere fields (including `Y_e` and `temperature`), `vU = -betaU`, `u0 = lapseinv`, and unchanged `BU` through synthetic tabulated metadata and fake callbacks.
+- `Unit_Tests/unit_test_ET_Legacy_primitives.c` calls constant reset conditionally when `cons.rho <= 0.0` (with a `TODO` for explicit reset assertions). No test or caller references `ghl_set_prims_to_radial_falloff_atm`.
 
-## Key Contracts
+Evidence (descriptive behavior): `GRHayL/include/ghl_atmosphere.h::ghl_set_prims_to_radial_falloff_atm`; corroboration: `Unit_Tests/unit_test_grhayl_core_test_suite.c`.
 
-- Constant reset copies density, pressure, internal energy, entropy,
-  temperature, and `Y_e` from `ghl_eos_parameters`; it zeros all three
-  transport velocities.
-- It does not write magnetic fields or `u0`. Existing magnetic values remain;
-  `u0` may be stale until recomputed.
-- Simple/hybrid EOS initialization sets the unused `Y_e_atm` and `T_atm`
-  placeholders to zero, so constant reset reads defined values.
+## Sources
 
-## Common Edit Routes
+- [GRHayL/include/ghl_atmosphere.h](../../GRHayL/include/ghl_atmosphere.h) - constant and radial-falloff declarations
+- [GRHayL/Atmosphere/make.code.defn](../../GRHayL/Atmosphere/make.code.defn) - `SRCS` (`set_prims_to_constant_atm.c` only)
+- [GRHayL/Atmosphere/set_prims_to_constant_atm.c](../../GRHayL/Atmosphere/set_prims_to_constant_atm.c) - constant atmosphere implementation
+- [GRHayL/Atmosphere/set_prims_to_radial_falloff_atm.c](../../GRHayL/Atmosphere/set_prims_to_radial_falloff_atm.c) - incomplete unbuilt radial-falloff source
+- [GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c](../../GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c) - tabulated primitive-guess caller
+- [GRHayL/GRHayL_Core/initialize_eos.c](../../GRHayL/GRHayL_Core/initialize_eos.c) - EOS atmosphere field setup and zero placeholders
+- [docs/raw/Atmosphere.dox](../../docs/raw/Atmosphere.dox) - constant atmosphere Doxygen documentation
+- [Unit_Tests/unit_test_grhayl_core_test_suite.c](../../Unit_Tests/unit_test_grhayl_core_test_suite.c) - direct simple/hybrid constant-atmosphere checks
+- [Unit_Tests/unit_test_c2p_nn_guess.c](../../Unit_Tests/unit_test_c2p_nn_guess.c) - indirect tabulated atmosphere fallback checks
 
-- Change atmosphere values: update EOS parameter initialization/bounds and primitive-limit tests.
-- Add/activate prescription: reconcile implementation, declaration,
-  build-list entry, Doxygen entry, call surface, and direct unit coverage.
+## See Also
 
-## Drift Risks
-
-- Atmosphere floors affect Con2Prim recovery, conservative limiting, and EOS bounds.
-- Public header changes affect GRHayLib through `GRHayLib.h`.
-
-## Do Not Duplicate
-
-Keep prescription-level details in `docs/raw/Atmosphere.dox` and source. This page routes edits and tests.
+- Depends on: [EOS Dispatch](../core/eos-dispatch.md)
+- See also: [Limits And Conversions](con2prim/limits-and-conversions.md)
+- See also: [Public API Map](../architecture/public-api-map.md)
+- See also: [Contradictions](../contradictions.md#contr-0009)

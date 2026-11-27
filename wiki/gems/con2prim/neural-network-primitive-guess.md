@@ -1,134 +1,50 @@
 # Neural-Network Primitive Guess
 
-This page routes the tabulated Con2Prim neural-network primitive guess feature. It covers the GRHayL API, embedded HDF5 model contract, runtime retry flow, tests, CI setup, and downstream GRHayLib flag. It does not document a standalone solver, a `ghl_con2prim_id_t` value, hybrid/simple EOS support, model training, or model performance claims.
+> Tabulated Con2Prim neural-network retry API, `{q, r, s, t}` inference and overflow fallbacks, HDF5 model layout (`grhayl_nn_c2p`), memory cleanup, and GRHayLib parameter routing. · Status: confirmed
+> Up: [Con2Prim](index.md)
 
-## Purpose
+## Summary
 
-The neural-network feature predicts an initial scalar `x` used to rebuild a tabulated primitive guess. Normal tabulated Con2Prim routines still perform the recovery; the NN path only changes the guess used for retry after a failure. The owning runtime path is tabulated Con2Prim in [GRHayL/Con2Prim/con2prim_multi_method.c](../../../GRHayL/Con2Prim/con2prim_multi_method.c), with helper completion in [GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c](../../../GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c).
+GRHayL's neural-network Con2Prim feature predicts a scalar `x` to build an alternate tabulated primitive guess when normal tabulated recovery fails. It is not a standalone `ghl_con2prim_id_t` solver and applies only to tabulated EOS (`eos->enable_neural_net_c2p`), with `GHL_NN_C2P_API_VERSION = 4u` fixing the `{q, r, s, t}` input layout (`q_idx = 0`, `s_idx = 2`). No training or model-accuracy source exists in this repository.
 
-It is not a solver enum: [GRHayL/include/ghl.h](../../../GRHayL/include/ghl.h) lists `ghl_con2prim_id_t` routines, while the NN structs and functions are a separate "Neural Network Initial Guesses" API in [GRHayL/include/ghl_con2prim.h](../../../GRHayL/include/ghl_con2prim.h).
+## Detail
 
-## Source Authority
+### Public API, Inference Arithmetic, And Fallbacks
 
-Primary source paths:
+`GRHayL/include/ghl_con2prim.h` defines `GHL_NN_C2P_API_VERSION` (`4u`, informational—loaders validate fields without negotiating an on-disk version dataset), `ghl_nn_c2p_input_t` (`float q, r, s, t`), `ghl_nn_c2p_guess_t` (`float x`), `ghl_c2p_nn_model`, and `ghl_c2p_nn_{guess,guess_primitives,validate_model,load_hdf5,load_from_eos_hdf5,free}`. Shared state (`enable_neural_net_c2p`, `c2p_nn`) and `ghl_error_nn_c2p_*` codes live in `ghl.h`.
 
-- Public API: [GRHayL/include/ghl_con2prim.h](../../../GRHayL/include/ghl_con2prim.h) and [GRHayL/include/ghl.h](../../../GRHayL/include/ghl.h).
-- NN implementation: [GRHayL/Con2Prim/Tabulated/neural_network_guess/](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/).
-- EOS initialization: [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c).
-- Runtime retry flow: [GRHayL/Con2Prim/con2prim_multi_method.c](../../../GRHayL/Con2Prim/con2prim_multi_method.c).
-- Primitive completion: [GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c](../../../GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c).
-- Lifetime/free path: [GRHayL/EOS/Tabulated/NRPyEOS_free_memory.c](../../../GRHayL/EOS/Tabulated/NRPyEOS_free_memory.c).
-- Build filtering: [configure](../../../configure), [GRHayL/Con2Prim/Tabulated/make.code.defn](../../../GRHayL/Con2Prim/Tabulated/make.code.defn), and [GRHayL/Con2Prim/Tabulated/neural_network_guess/make.code.defn](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/make.code.defn).
-- Tests and CI: [Unit_Tests/unit_test_c2p_nn_guess.c](../../../Unit_Tests/unit_test_c2p_nn_guess.c), [Unit_Tests/unit_test_con2prim_tabulated.c](../../../Unit_Tests/unit_test_con2prim_tabulated.c), [Unit_Tests/unit_test_code_error.c](../../../Unit_Tests/unit_test_code_error.c), [.github/run_tests.sh](../../../.github/run_tests.sh), and [.github/workflows/](../../../.github/workflows/).
-- Downstream flag routing: [implementations/GRHayLib/param.ccl](../../../implementations/GRHayLib/param.ccl) and [implementations/GRHayLib/src/initialize_and_shutdown.c](../../../implementations/GRHayLib/src/initialize_and_shutdown.c).
+- **Auxiliaries (`tabulated_primitive_guess_helpers.c`):** forms `q = tau / D`, `r = S_squared / D^2`, `s = B_squared / D`, `t = BdotS / D^(3/2)` (`D = cons_undens->rho`).
+- **Scalar prediction (`c2p_nn_guess_x.c`, `ghl_c2p_nn.h`):** expects an already-validated model. If `model == NULL`, `q` or `s` is nonfinite, or `x_lo = 1 + q - s` or `width = 1 + q` is nonfinite, it returns zero-initialized `{0}`. Otherwise it floors `width` by `model->dx_eps`, computes fallback `x = x_lo + 0.5 * width` (returning `{0}` if midpoint overflows), applies input transforms (kind `0` identity, kind `1` `log10` after `x_eps` floor), clips to scaling intervals, evaluates hard-tanh hidden layers and sigmoid output clamped to `[y_eps, 1 - y_eps]` (in `float`), and returns fallback on nonfinite `r`/`t` or failed transforms/prediction.
+- **Primitive completion (`c2p_nn_guess_primitives.c`):** requires a validated model, positive finite `D`, finite auxiliaries, and ordered bounds. On valid candidates, clamps `x` to `[1 + q - s, 2 + 2q - s]` and calls `ghl_tabulated_primitive_guess_from_x`. On missing models or unusable states, returns atmosphere fields (`vU = -betaU`, `u0 = lapseinv`, preserved `BU`, and finite conservative `Y_e` clamped to EOS bounds); if only EOS inversion fails after a valid algebraic candidate, keeps bounded `(rho, Y_e, eps)`, `T_max`, and atmosphere `press`/`entropy` while completing velocity.
 
-## Public API
+Evidence (descriptive behavior): `GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_x.c::ghl_c2p_nn_guess`; corroboration: `GRHayL/include/ghl_con2prim.h::GHL_NN_C2P_API_VERSION` and `GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_primitives.c`.
 
-[GRHayL/include/ghl_con2prim.h](../../../GRHayL/include/ghl_con2prim.h) defines:
+### HDF5 Model Layout, Validation, Build Rules, And Tests
 
-- `ghl_nn_c2p_input_t`: four `float` inputs `q`, `r`, `s`, and `t`.
-- `ghl_nn_c2p_guess_t`: one `float x` prediction.
-- `ghl_c2p_nn_model`: dimensions, input indices, numeric epsilons, scaling arrays, output metadata, and layer weights/biases.
-- `GHL_NN_C2P_API_VERSION`: informational marker for the expected
-  schema/output-kind semantics, currently `4u`; version 4 fixes the input order
-  to `{q, r, s, t}` (`q_idx=0`, `s_idx=2`). Current loaders validate model
-  fields but do not read or negotiate an on-disk version dataset.
-- `ghl_c2p_nn_guess`: maps `ghl_nn_c2p_input_t` plus `ghl_c2p_nn_model` to an `x` guess.
-- `ghl_c2p_nn_guess_primitives`: computes tabulated auxiliaries and completes
-  primitives only for a finite bounded candidate; otherwise it returns
-  the documented atmosphere initial guess while preserving magnetic fields and
-  any finite conservative composition ratio at positive density within EOS bounds.
-  If only the EOS inversion fails after a valid algebraic candidate is built,
-  it instead preserves bounded `rho`, `Y_e`, and `eps`, restores `T_max` as
-  the root seed, supplies finite atmosphere pressure/entropy, and completes
-  the velocity seed.
-- `ghl_c2p_nn_validate_model`: validates dimensions, indices, scaling metadata, output kinds, required arrays, and finite weights.
-- `ghl_c2p_nn_free`: releases all model arrays and the model struct.
-- `ghl_c2p_nn_load_hdf5`: loads a standalone/root HDF5 NN model into `eos->c2p_nn`.
-- `ghl_c2p_nn_load_from_eos_hdf5`: loads the embedded EOS-table group into `eos->c2p_nn`.
+- **HDF5 locations (`c2p_nn_load_from_eos_hdf5.c`):** `ghl_c2p_nn_load_hdf5` reads from file root; `ghl_c2p_nn_load_from_eos_hdf5` reads from group `grhayl_nn_c2p`. Datasets: `dims/{in_dim,hidden_dim,n_hidden,out_dim}` (each `1..8`), `meta/{q_idx,s_idx,y_eps,dx_eps}`, `scaling/{x_eps,x_kind,x_lo,x_hi,x_invrng,out_kind,out_lo,out_hi,out_invrng}`, and `layers/{W_in,b_in,W_hid,b_hid,W_out,b_out}` (`W_hid`/`b_hid` required only for `n_hidden > 1`). Legacy single-output files without `scaling/out_kind` (`out_dim == 1`) default to bounded `x` on `[0, 1]`.
+- **Validation (`c2p_nn_validate_model.c`):** enforces `in_dim == 4`, `q_idx == 0`, `s_idx == 2` (incompatible older models must be re-exported, e.g. CI uses `pyghl==0.4.0`), positive dims, finite positive `x_eps`/`dx_eps`, `0 < y_eps < 0.5`, input kinds in `{0, 1}`, output `0` kind `GHL_NN_C2P_OUT_X_BOUNDED`, positive ranges, and finite weights/biases. Successful loads replace and free old `eos->c2p_nn`; failed loads preserve existing `eos->c2p_nn`. `NRPyEOS_free_memory.c` calls `ghl_c2p_nn_free` (requires heap-allocated model/arrays) and clears `eos->c2p_nn = NULL`.
+- **Build, retry, GRHayLib & tests:** `neural_network_guess/make.code.defn` registers `#! INCS = ghl_c2p_nn.h` for dependency rebuilds (not installed). Under `GHL_DISABLE_HDF5`, inference/validation remain compiled while HDF5 loaders return `ghl_error_used_disabled_hdf5`. `GRHayLib` maps `enable_backup_nn_primitive_guess` (default `"no"`) to `enable_neural_net_c2p`, treating incompatible embedded metadata as fatal at init. Tested by `unit_test_c2p_nn_guess.c`, `unit_test_con2prim_tabulated.c` (with `pyghl append`), and `unit_test_code_error.c` keys `83`–`85`.
 
-[GRHayL/include/ghl.h](../../../GRHayL/include/ghl.h) carries the shared state and errors: `ghl_eos_parameters.enable_neural_net_c2p`, `ghl_eos_parameters.c2p_nn`, and NN-specific errors such as `ghl_error_nn_c2p_model_is_null`, `ghl_error_nn_c2p_invalid_dimensions`, `ghl_error_nn_c2p_invalid_input_index`, `ghl_error_nn_c2p_missing_array`, `ghl_error_nn_c2p_invalid_kind`, and `ghl_error_nn_c2p_invalid_number`.
+Evidence (descriptive behavior): `GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_validate_model.c::ghl_c2p_nn_validate_model`; corroboration: `GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_load_from_eos_hdf5.c` and `GRHayL/EOS/Tabulated/NRPyEOS_free_memory.c`.
 
-## Runtime Flow
+## Sources
 
-[GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c) sets `eos->enable_neural_net_c2p` from `ghl_initialize_tabulated_eos(... enable_neural_net_c2p ...)`, initializes `eos->c2p_nn` to `NULL`, reads the tabulated EOS table, and, when the NN flag is true, calls `ghl_c2p_nn_load_from_eos_hdf5(table_filepath, eos)`. If that load fails, initialization frees the partially initialized tabulated EOS memory and returns the error.
+- [GRHayL/include/ghl_con2prim.h](../../../GRHayL/include/ghl_con2prim.h) - `GHL_NN_C2P_API_VERSION`, `ghl_c2p_nn_model`, NN API
+- [GRHayL/include/ghl.h](../../../GRHayL/include/ghl.h) - `enable_neural_net_c2p`, `c2p_nn`, `ghl_error_nn_c2p_*`
+- [GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c](../../../GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c) - `{q, r, s, t}` auxiliaries and completion helper
+- [GRHayL/Con2Prim/Tabulated/neural_network_guess/ghl_c2p_nn.h](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/ghl_c2p_nn.h) - private inline activation/scaling helpers
+- [GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_x.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_x.c) - `ghl_c2p_nn_guess` and midpoint fallback
+- [GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_primitives.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_primitives.c) - `ghl_c2p_nn_guess_primitives` and atmosphere fallback
+- [GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_load_from_eos_hdf5.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_load_from_eos_hdf5.c) - root/embedded HDF5 loaders and no-HDF5 stubs
+- [GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_validate_model.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_validate_model.c) - dimension and metadata checks
+- [GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_free.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_free.c) - heap cleanup
+- [GRHayL/Con2Prim/Tabulated/neural_network_guess/make.code.defn](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/make.code.defn) - `#! INCS = ghl_c2p_nn.h`
+- [GRHayL/EOS/Tabulated/NRPyEOS_free_memory.c](../../../GRHayL/EOS/Tabulated/NRPyEOS_free_memory.c) - releases `eos->c2p_nn`
+- [Unit_Tests/unit_test_c2p_nn_guess.c](../../../Unit_Tests/unit_test_c2p_nn_guess.c) - direct NN validation/inference/HDF5 tests
 
-[GRHayL/Con2Prim/con2prim_multi_method.c](../../../GRHayL/Con2Prim/con2prim_multi_method.c) runs the usual `params->calc_prim_guess` path first, stores that primitive guess, and calls the selected tabulated main routine. If the main routine fails and `eos->enable_neural_net_c2p` is true, it builds `prims_guess_nn` from the stored guess, calls `ghl_c2p_nn_guess_primitives`, and retries the same main routine with the NN-derived guess.
+## See Also
 
-The backup loop in [GRHayL/Con2Prim/con2prim_multi_method.c](../../../GRHayL/Con2Prim/con2prim_multi_method.c) first resets primitives to the ordinary stored guess and runs each configured tabulated backup. If that backup fails and the NN flag is true, it retries the same backup with `prims_guess_nn`. This makes the NN path a failure retry policy for tabulated Con2Prim only.
-
-## Numerical Contract
-
-[GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c](../../../GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c) computes shared auxiliaries from conservative variables and the metric: `q = tau / D`, `r = S_squared / D^2`, `s = B_squared / D`, and `t = BdotS / D^(3/2)`, where `D` is `cons_undens->rho`.
-
-[GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_x.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_x.c) uses `q`, `r`, `s`, and `t` as NN inputs. A non-NULL model must already satisfy the model contract; numerical fallback does not validate its dimensions or arrays. If the model is `NULL`, `q` or `s` is non-finite, or the derived `x_lo = 1 + q - s` or width `1 + q` is non-finite, it returns the zero-initialized guess. Otherwise it floors the width by `model->dx_eps` and sets fallback `x = x_lo + 0.5 * width`; if that midpoint overflows to a non-finite value, it returns the zero-initialized guess. Otherwise the fallback is returned when `r` or `t` is non-finite, feature transforms fail, prediction fails, or the predicted `x` is non-finite.
-
-[GRHayL/Con2Prim/Tabulated/neural_network_guess/ghl_c2p_nn.h](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/ghl_c2p_nn.h) transforms input features by kind `0` as identity and kind `1` as `log10` after an `x_eps` floor, clips transformed inputs into the configured scaling interval, applies hard-tanh hidden layers, applies sigmoid output activation, and clamps each output into `[y_eps, 1 - y_eps]`, with the upper endpoint computed in `float` arithmetic.
-
-[GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_primitives.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_primitives.c) requires a validated model, positive finite conservative density, finite auxiliaries, ordered finite bounds, and a finite algebraically usable candidate before calling completion. Candidate sign alone is not an EOS admissibility test. Missing models or rejected numerical states return initialized EOS atmosphere fields, coordinate velocity `-beta`, `u0 = lapseinv`, and the incoming magnetic fields. Finite conservative composition at positive
-density is retained within EOS bounds on fallback. The arguments, EOS atmosphere, metric, parameters, and magnetic inputs must already satisfy their public contracts; the helper does not validate corrupted model/EOS objects. On the usable path it clamps `x` to `[1 + q - s, 2 + 2q - s]`, then calls `ghl_tabulated_primitive_guess_from_x`. That helper in [GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c](../../../GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c) computes Lorentz factor, `rho`, `Y_e`, `eps`, `u0`, pressure, entropy, temperature, and velocity through existing tabulated EOS and speed-limit helpers.
-
-## HDF5 Model Contract
-
-[GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_load_from_eos_hdf5.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_load_from_eos_hdf5.c) supports two load locations:
-
-- Root model files through `ghl_c2p_nn_load_hdf5`, where datasets are read directly from the file root.
-- Embedded EOS-table models through `ghl_c2p_nn_load_from_eos_hdf5`, where the group prefix must be `grhayl_nn_c2p`.
-
-The loader reads scalar datasets under `dims/` for `in_dim`, `hidden_dim`, `n_hidden`, and `out_dim`; scalar datasets under `meta/` for `q_idx`, `s_idx`, `y_eps`, and `dx_eps`; scalar dataset `scaling/x_eps`; array datasets under `scaling/` for `x_kind`, `x_lo`, `x_hi`, `x_invrng`, `out_kind`, `out_lo`, `out_hi`, and `out_invrng`; and layer arrays under `layers/` for `W_in`, `b_in`, `W_hid`, `b_hid`, `W_out`, and `b_out`. `W_hid` and `b_hid` are required when `n_hidden > 1` and unused when `n_hidden == 1`.
-
-The loader allows dimensions from `1` through `8` before allocating arrays, then calls `ghl_c2p_nn_validate_model`. Validation in [GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_validate_model.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_validate_model.c) requires `in_dim == 4`, fixed `q_idx == 0` and `s_idx == 2` for the `{q, r, s, t}` layout, positive hidden/output dimensions, finite positive `x_eps` and `dx_eps`, finite `0 < y_eps < 0.5`, required arrays, input kinds `0` or `1`, output kind `GHL_NN_C2P_OUT_X_BOUNDED` for output `0`, linear or log-linear kinds for later outputs, positive ranges, and finite weights/biases.
-
-Legacy one-output files are accepted when `scaling/out_kind` is absent and `out_dim == 1`; the loader fills output scaling as bounded `x` on `[0, 1]`. Missing output scaling with more than one output is an HDF5 dataset-open error. These paths are exercised in [Unit_Tests/unit_test_c2p_nn_guess.c](../../../Unit_Tests/unit_test_c2p_nn_guess.c).
-
-Models with input metadata incompatible with the fixed `{q, r, s, t}` order
-must be regenerated with a schema-compatible exporter (the CI reference is
-`pyghl==0.4.0`) so that `meta/q_idx=0` and `meta/s_idx=2`. The loader does not
-negotiate an on-disk schema version. Enabling the NN backup with incompatible
-embedded metadata therefore makes EOS initialization return an error; GRHayLib
-treats that error as fatal rather than silently disabling the requested model.
-
-Before loading, `eos->c2p_nn` must be NULL or an owned heap model suitable for `ghl_c2p_nn_free`. Successful loads free any old `eos->c2p_nn` and replace it with the new model. Failed loads free the new partial model and preserve any existing `eos->c2p_nn`, as implemented in [GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_load_from_eos_hdf5.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_load_from_eos_hdf5.c) and tested by `check_hdf5_load_failure_preserves_model` in [Unit_Tests/unit_test_c2p_nn_guess.c](../../../Unit_Tests/unit_test_c2p_nn_guess.c).
-
-The direct [free helper](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_free.c) releases every array and the model allocation itself; each non-NULL allocation must be independently free-compatible. It cannot free a stack-backed model and does not clear the caller's pointer.
-
-## Build/Lifetime
-
-[GRHayL/Con2Prim/Tabulated/make.code.defn](../../../GRHayL/Con2Prim/Tabulated/make.code.defn) includes `neural_network_guess`, and [GRHayL/Con2Prim/Tabulated/neural_network_guess/make.code.defn](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/make.code.defn) lists the NN free, guess, loader, and validation sources.
-
-The NN manifest also registers its private inline header with
-`#! INCS = ghl_c2p_nn.h`. [scripts/parser](../../../scripts/parser) reads this
-registration into the header dependencies used by [configure](../../../configure),
-so changing the header rebuilds dependent objects. Installation uses the separate
-`install_headers` manifest entries; this registration does not install the
-private header.
-
-When HDF5 is disabled, [GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_load_from_eos_hdf5.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_load_from_eos_hdf5.c) compiles loader stubs returning `ghl_error_used_disabled_hdf5`. [configure](../../../configure) defines `GHL_DISABLE_HDF5`; the exact retained and excluded source/test surface is owned by [Build and CI](../../build-and-ci.md).
-Pure inference with an independently valid in-memory model does not itself use
-HDF5; this retained low-level surface is not standalone tabulated recovery.
-
-[GRHayL/EOS/Tabulated/NRPyEOS_free_memory.c](../../../GRHayL/EOS/Tabulated/NRPyEOS_free_memory.c) frees `eos->c2p_nn` with `ghl_c2p_nn_free` and then sets it to `NULL` when tabulated EOS memory is released.
-
-## Tests/CI
-
-[Unit_Tests/unit_test_c2p_nn_guess.c](../../../Unit_Tests/unit_test_c2p_nn_guess.c) covers model validation errors, direct `ghl_c2p_nn_guess`, fallback behavior for invalid/non-finite inputs, root HDF5 loading, embedded `grhayl_nn_c2p` loading, legacy one-output loading, malformed HDF5 datasets, validation failure after load, and preservation of an existing model after a failed load.
-
-HDF5-enabled test cases create and enter a unique private temporary directory,
-remove every file entry created in that private directory, and then remove the
-directory on normal or handled failure exit.
-
-[Unit_Tests/unit_test_con2prim_tabulated.c](../../../Unit_Tests/unit_test_con2prim_tabulated.c) enables embedded NN loading when the run key is nonzero, then replays tabulated Con2Prim tests with `eos.enable_neural_net_c2p` both disabled and enabled. Its generation path explicitly disables NN guesses.
-
-[Unit_Tests/unit_test_code_error.c](../../../Unit_Tests/unit_test_code_error.c) covers NN-related expected-failure keys `83`, `84`, and `85`: null EOS pointer for `ghl_c2p_nn_load_hdf5`, empty NN filepath for `ghl_c2p_nn_load_hdf5`, and NN-enabled tabulated EOS initialization against a table without embedded `grhayl_nn_c2p`.
-
-[.github/run_tests.sh](../../../.github/run_tests.sh) runs `./test/unit_test_c2p_nn_guess`, loops `unit_test_code_error` over `0..90`, and runs `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before tabulated Con2Prim replay. The workflow files in [.github/workflows/](../../../.github/workflows/) include `c2p_nn_guess` in the failure-test matrix, run the same `pyghl append` command, and loop error keys over `0..90`. This page treats `pyghl append` only as visible test setup evidence; it does not document `pyghl` internals.
-
-## Downstream Flag
-
-[implementations/GRHayLib/param.ccl](../../../implementations/GRHayLib/param.ccl) defines `enable_backup_nn_primitive_guess`, defaulting to `"no"`, with text saying `"yes"` uses the neural-network primitive guess if the default guess fails. [implementations/GRHayLib/src/initialize_and_shutdown.c](../../../implementations/GRHayLib/src/initialize_and_shutdown.c) passes that Cactus parameter as the `enable_neural_net_c2p` argument to `ghl_initialize_tabulated_eos`.
-
-This downstream flag maps into the tabulated EOS initialization path only. It does not add hybrid/simple EOS support and does not create a new Con2Prim solver ID.
-
-## Known Gaps
-
-No repo-local model training, provenance, or accuracy source was found in the source, tests, CI, Doxygen raw docs, or GRHayLib implementation paths listed above. Do not add claims about those topics unless maintainers add repo-local or official evidence.
+- Depends on: [Recovery Flow](recovery-flow.md)
+- Depends on: [Atmosphere](../atmosphere.md)
+- See also: [GRHayLib Runtime Parameters](../../implementations/grhaylib-runtime-parameters.md)
+- Validated by: [Con2Prim Tests And Reference Data](tests-and-reference-data.md)

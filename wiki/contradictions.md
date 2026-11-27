@@ -1,38 +1,124 @@
-# Current Contradictions And Maintainer Decisions
+# Contradictions
 
-Purpose: hold only unresolved current repository conflicts and bounded product
-decisions. This is not history. Owner leaves document observed behavior and
-coverage gaps; rows below name only disputed intent or unsafe seams needing a
-product/docs choice. Delete a row after source-backed resolution.
+> Register of active contested and stale GRHayL KB claims. · Status: confirmed
 
-Safe rule while any row remains: describe observable current behavior, never
-upgrade declaration/source/workflow presence into built, initialized, executed,
-or supported status.
+Active source discrepancies and unreconciled drift are tracked below. Recording an entry documents current code versus documentation or workflow behavior without implying a source patch.
 
-| Area and bounded proposition | Competing evidence and observed behavior | Impact and safe pending wording | Smallest coherent decision |
+## Rules
+
+- Follow [KB Rules](SCHEMA.md#contradiction-rules): keep only `contested` and `stale` claims in `## Register`, paired with `### CONTR-XXXX` subsections and literal inline markers (`Claim status: contested; contradiction: CONTR-0001.` or `stale`) on every affected leaf.
+- Look up one entry with `rg -n -F '| CONTR-0001 |' wiki/contradictions.md` and read its `### CONTR-XXXX` subsection.
+- Retire resolved entries in the resolving commit once affected leaves are reconciled and all `#contr-*` links are removed. Retired IDs: none.
+
+## Register
+
+| ID | Claim status | Affected pages | Summary |
 | --- | --- | --- | --- |
-| Configure build-type names | `configure` help advertises `nocflags`, which its parser rejects; parser accepts undocumented `plain`. | Document parser behavior as current and the no-flags help string as broken; users following it can fail configuration. | Choose the accepted no-flags name and align help and parser. |
-| Legacy static Makefile route | [generate_makefile.sh](../generate_makefile.sh) scans all repo manifests, emits GRHayLib initialization as a target, and uses checkout-invalid `-I./include`. | Current output is broken; generation may be reproduced only in a disposable tree and `make` must not run. | Repair parser/scope/include root or retire the legacy route. |
-| Fixture repository name | [README.md](../README.md) names `GRHayL/Test_Data`; [docs/raw/mainpage.md](../docs/raw/mainpage.md), workflows, and [.github/run_tests.sh](../.github/run_tests.sh) use operational `GRHayL/TestData`. | Use `TestData` for current scripted behavior; README link can misroute users. | Choose canonical repository name and align docs/scripts. |
-| Perturbation formula | `README.md` states fixed `input * (1 + 1e-14)`; `docs/raw/mainpage.md` and `Unit_Tests/data_gen/*.c` use test-specific magnitudes and often random signed factors. | Say perturbation is generator-specific; fixed global formula is false. | Update README or standardize every generator. |
-| CI path-filter policy | Every workflow ignores docs/wiki/Markdown for ignored-only push/PR changes. Ubuntu-GCC can select normal GRHayL jobs for implementation-only changes containing a non-ignored path, subject to branch/event filters, but does not inspect GRHayLib symlinks; the other workflows still ignore `implementations/**`. Schedules and mixed-path changes differ. `Makefile_old` is also ignored though absent. | Do not claim docs/KB CI proof or GRHayLib/Cactus validation; eligible implementation-only changes select ordinary GRHayL jobs; Markdown-only implementation changes remain ignored. | Decide whether broader implementation triggers or a real downstream build are wanted and whether the stale ignore entry remains intentional. |
-| Coverage action meaning | Ubuntu clang jobs invoke coverage despite action note that expected files are absent; only some Intel jobs invoke it while Intel collection body is commented; macOS GCC invokes action with local body commented, macOS clang does not. Upload-action invocation alone does not prove that a usable coverage artifact was collected or uploaded. | Describe coverage as compiler/job-specific and unverified where collection is commented/missing. | Define intended artifact policy per compiler/OS, then align jobs and composite action. |
-| macOS compiler setup | [Compile action](../.github/actions/compile_GRHayL/action.yml) has an unmatched quote inside the GCC `CC` command substitution; its clang branch supplies `--cflags` repeatedly, while [configure](../configure) keeps only the last value. | Workflow labels do not establish successful GCC selection; the later clang include flag replaces the requested coverage flags. | Correct GCC command quoting and pass the intended clang flags in one argument. |
-| Codecov peer synchronization | [Ubuntu-GCC finalizer](../.github/workflows/github-actions-Ubuntu-gcc.yml) polls only returned, recent peer runs matching head/event and waits for `completed`, without requiring each named workflow to appear or checking conclusions. | Notification is not proof that every peer ran, succeeded, or uploaded coverage. | Decide whether completion of visible peers is sufficient or require explicit peer existence/success and upload evidence. |
-| Radial atmosphere API | `ghl_set_prims_to_radial_falloff_atm` is installed-header declared and source-present, but absent from Atmosphere manifest/docs/tests; source leaves density/pressure/energy assignments commented. | No standard built runtime path; do not call it supported. | Complete/build/document/test routine or remove/internalize stale surface. |
-| Tabulated reinitialization in the error test | The public lifecycle requires cleanup before reinitializing a live table, while [Unit_Tests/unit_test_code_error.c](../Unit_Tests/unit_test_code_error.c) repeatedly initializes one live `tab_eos` object. | The cases can abandon table allocations; do not treat them as lifecycle examples or leak-check evidence. | Clean the live table before each reinitialization or give each case a fresh object. |
-| Negative metric determinant | `ghl_initialize_metric` divides cofactors by `fabs(detgamma)`; determinant-enforced path preserves negative conformal determinant sign, warns, returns `void`, and test does not require positive determinant. | Validity requires positive-definite metric; negative inputs have no checked failure status and inverse semantics are unsafe. | Reject/report invalid metric or explicitly define recovery behavior and test invariant. |
-| Reconstruction fixture provenance | ET_Legacy generator writes perturbed input that replay does not read; trusted and perturbed outputs remain externally supplied. | Generator existence does not prove use or provenance of every fixture path. | Consume or remove the unused perturbed-input path and document output provenance. |
+| CONTR-0001 | contested | [Build And Configure](architecture/build-and-configure.md) | `configure` help advertises `nocflags` (rejected); parser accepts undocumented `plain`. |
+| CONTR-0002 | stale | [Build](architecture/build-and-configure.md); [Generated](architecture/generated-boundaries.md) | `generate_makefile.sh` scans outside `GRHayL/`, includes GRHayLib, emits `-I./include`. |
+| CONTR-0003 | stale | [Ref](tests/reference-data-and-test-drivers.md), [Run](tests/runner-and-build-outputs.md), [ET](tests/et-legacy-comparison.md), [Cat](tests/unit-test-catalog.md) | `Test_Data` vs `TestData`. |
+| CONTR-0004 | contested | [RefData](tests/reference-data-and-test-drivers.md); [ET](tests/et-legacy-comparison.md) | `README.md` states fixed `input * (1 + 1e-14)`; `data_gen/*.c` use test-specific random scales. |
+| CONTR-0005 | contested | [CI](architecture/ci-workflows.md); [GRHayLib](implementations/grhaylib-verification.md) | Ubuntu-GCC `paths-ignore` omits `implementations/**` unlike peers; ignores absent `Makefile_old`. |
+| CONTR-0006 | stale | [CI Workflows](architecture/ci-workflows.md) | Coverage action runs on clang, Intel, and macOS-GCC jobs where collection is commented or files are absent. |
+| CONTR-0007 | contested | [CI Workflows](architecture/ci-workflows.md) | `compile_GRHayL/action.yml` has unmatched macOS GCC quote and repeated clang `--cflags` overwritten by `configure`. |
+| CONTR-0008 | contested | [CI Workflows](architecture/ci-workflows.md) | Ubuntu-GCC `codecov-finalize` polls recent peer runs without checking peer presence, conclusions, or uploads. |
+| CONTR-0009 | stale | [Atmosphere](gems/atmosphere.md); [API](architecture/public-api-map.md) | `ghl_set_prims_to_radial_falloff_atm` is declared with incomplete source, omitted from manifest/tests. |
+| CONTR-0010 | contested | [TabLayout](gems/eos/tabulated-table-layout.md); [Errors](tests/expected-failure-and-error-keys.md) | `unit_test_code_error.c` reinitializes one live `tab_eos` without freeing table memory. |
+| CONTR-0011 | contested | [Metric ADM](core/metric-adm.md) | `ghl_initialize_metric` divides by `fabs(detgamma)`; determinant-enforced init warns (`void`) on negative det. |
+| CONTR-0012 | stale | [Recon](gems/reconstruction/tests-and-reference-data.md); [ET](tests/et-legacy-comparison.md) | ET_Legacy reconstruction generator writes perturbed input unused by replay; outputs are external. |
 
-## Owner Routes
+### CONTR-0001
 
-- Build, runner, CI, installed surface: [Build And CI](build-and-ci.md),
-  [Generated Boundaries](generated-boundaries.md), [Test Map](test-map.md).
-- Core/Atmosphere: [Core](core/index.md),
-  [Atmosphere prescription](gems/atmosphere/prescription-contract.md).
-- Con2Prim/EOS: [solver matrix](gems/con2prim/solver-matrix.md),
-  [EOS initialization](gems/eos/initialization-and-dispatch.md),
-  [tabulated catalog](gems/eos/tabulated-interpolator-catalog.md).
-- Flux/Induction/Reconstruction/Neutrinos: respective [gem router](gems/index.md).
-- Downstream: [GRHayLib runtime contract](implementations/grhaylib/runtime-parameter-contract.md)
-  and [verification boundary](implementations/grhaylib/verification-and-drift.md).
+- Competing sources & authority: `configure` help text advertising `--buildtype=nocflags` versus the `configure` argument parser rejecting `nocflags` and accepting undocumented `plain`. The executed parser decides current behavior; [Build And Configure](architecture/build-and-configure.md) is `contested`.
+- Recheck trigger: edits to `configure` `--help` output or `--buildtype` `case` handling.
+- Resolution check: run `./configure --help` and inspect the `--buildtype` `case` statement, verifying that the documented no-flags option matches the accepted parser token.
+
+Evidence (descriptive behavior): `configure::nocflags`; corroboration: `configure::plain`.
+
+### CONTR-0002
+
+- Competing sources & authority: `generate_makefile.sh` scanning every repository `make.code.defn` (including `implementations/GRHayLib/src/initialize_and_shutdown.c`) and emitting `-I./include` versus the supported `configure` build path under `GRHayL/include/`. `configure` decides supported builds; [Build And Configure](architecture/build-and-configure.md) is `contested` while [Generated Boundaries](architecture/generated-boundaries.md) stays `confirmed`.
+- Recheck trigger: edits to `generate_makefile.sh` or its removal from the repository.
+- Resolution check: inspect `generate_makefile.sh` (or confirm removal) in a disposable checkout, verifying `GRHayL/`-scoped manifest discovery, `-IGRHayL/include` include root, shell shebang, and HDF5 filtering.
+
+Evidence (descriptive behavior): `generate_makefile.sh::libgrhayl.a`; corroboration: `configure::GRHayL/make.code.defn`.
+
+### CONTR-0003
+
+- Competing sources & authority: `README.md` naming `GRHayL/Test_Data` versus `docs/raw/mainpage.md`, `.github/run_tests.sh`, and `.github/workflows/github-actions-Ubuntu-gcc.yml` using `GRHayL/TestData`. Operational scripts decide current download paths; [Reference Data And Test Drivers](tests/reference-data-and-test-drivers.md) and [ET Legacy Comparison](tests/et-legacy-comparison.md) are `contested` while [Runner And Build Outputs](tests/runner-and-build-outputs.md) and [Unit Test Catalog](tests/unit-test-catalog.md) stay `confirmed`.
+- Recheck trigger: edits to `README.md`, `docs/raw/mainpage.md`, `.github/run_tests.sh`, or workflow TestData URLs.
+- Resolution check: run `rg -n 'Test_Data|TestData' README.md docs/raw/mainpage.md .github/` and confirm one canonical repository name across docs and scripts.
+
+Evidence (descriptive behavior): `README.md::Test_Data`; corroboration: `.github/run_tests.sh::TestData` and `docs/raw/mainpage.md::TestData`.
+
+### CONTR-0004
+
+- Competing sources & authority: `README.md` stating a uniform `input * (1 + 1e-14)` perturbation versus `docs/raw/mainpage.md` and `Unit_Tests/data_gen/*.c` using generator-specific magnitudes and random signed factors. Generator C sources decide actual perturbation math; affected leaves are `contested`.
+- Recheck trigger: edits to `README.md` perturbation prose or `Unit_Tests/data_gen/unit_test_data_*.c`.
+- Resolution check: compare `README.md` against `docs/raw/mainpage.md` and `Unit_Tests/data_gen/*.c`, confirming accurate description of generator-specific perturbations.
+
+Evidence (descriptive behavior): `README.md::1e-14`; corroboration: `Unit_Tests/data_gen/unit_test_data_hybrid_flux.c`.
+
+### CONTR-0005
+
+- Competing sources & authority: `.github/workflows/github-actions-Ubuntu-gcc.yml` omitting `implementations/**` from `paths-ignore` (and ignoring absent `Makefile_old`) versus the peer compiler workflows ignoring `implementations/**`, while no workflow builds or tests the Cactus thorn. Workflow YAML decides selection; [CI Workflows](architecture/ci-workflows.md) is `contested` while [GRHayLib Verification](implementations/grhaylib-verification.md) stays `confirmed`.
+- Recheck trigger: edits to `paths-ignore` in `.github/workflows/github-actions-*.yml`.
+- Resolution check: inspect `paths-ignore` across every `.github/workflows/github-actions-*.yml` file and verify consistent `implementations/**` and `Makefile_old` policy.
+
+Evidence (CI behavior): `.github/workflows/github-actions-Ubuntu-gcc.yml::Makefile_old`; corroboration: `.github/workflows/github-actions-Ubuntu-clang.yml::implementations/**`.
+
+### CONTR-0006
+
+- Competing sources & authority: `.github/workflows/github-actions-*.yml` invoking `.github/actions/code-coverage/action.yml` on Ubuntu clang, selected Ubuntu Intel, and macOS GCC jobs versus commented-out collection bodies and missing-file notes inside `code-coverage/action.yml`. Action shell steps decide actual collection; [CI Workflows](architecture/ci-workflows.md) is `contested`.
+- Recheck trigger: edits to `.github/actions/code-coverage/action.yml` or coverage job steps in `.github/workflows/github-actions-*.yml`.
+- Resolution check: inspect `code-coverage/action.yml` and every workflow job invoking it, verifying active collection commands or removal of no-op invocations.
+
+Evidence (CI behavior): `.github/actions/code-coverage/action.yml::codecov/codecov-action@v5`; corroboration: `.github/workflows/github-actions-MacOS-gcc.yml`.
+
+### CONTR-0007
+
+- Competing sources & authority: `.github/actions/compile_GRHayL/action.yml` macOS GCC `CC` command substitution (unmatched quote in `egrep`) and repeated macOS clang `--cflags` arguments versus `configure` retaining only the final `--cflags` value. `configure` and shell syntax decide actual execution; [CI Workflows](architecture/ci-workflows.md) is `contested`.
+- Recheck trigger: edits to `.github/actions/compile_GRHayL/action.yml` or `configure` `--cflags` parsing.
+- Resolution check: inspect macOS GCC quoting and clang `--cflags` consolidation in `.github/actions/compile_GRHayL/action.yml` and confirm `configure` preserves all intended flags.
+
+Evidence (CI behavior): `.github/actions/compile_GRHayL/action.yml::--cflags`; corroboration: `configure::--cflags`.
+
+### CONTR-0008
+
+- Competing sources & authority: `codecov.yml` deferred notifications and Ubuntu-GCC `codecov-finalize` polling returned recent peer runs for `completed` without requiring every named peer workflow to appear, succeed, or upload coverage. Workflow script decides actual synchronization; [CI Workflows](architecture/ci-workflows.md) is `contested`.
+- Recheck trigger: edits to `codecov-finalize` in `.github/workflows/github-actions-Ubuntu-gcc.yml` or `codecov.yml`.
+- Resolution check: inspect `codecov-finalize` polling logic and verify whether missing peers, failed conclusions, and upload confirmation are explicitly handled.
+
+Evidence (CI behavior): `.github/workflows/github-actions-Ubuntu-gcc.yml::codecov-finalize`; corroboration: `codecov.yml`.
+
+### CONTR-0009
+
+- Competing sources & authority: `GRHayL/include/ghl_atmosphere.h` declaring `ghl_set_prims_to_radial_falloff_atm` and `GRHayL/Atmosphere/set_prims_to_radial_falloff_atm.c` leaving density/pressure/energy assignments commented versus `GRHayL/Atmosphere/make.code.defn` omitting that C file from built sources. Build manifest and C body decide current runtime availability; [Atmosphere](gems/atmosphere.md) is `stale` while [Public API Map](architecture/public-api-map.md) stays `confirmed`.
+- Recheck trigger: edits to `ghl_atmosphere.h`, `set_prims_to_radial_falloff_atm.c`, or `GRHayL/Atmosphere/make.code.defn`.
+- Resolution check: confirm either that `set_prims_to_radial_falloff_atm.c` is completed, listed in `make.code.defn`, documented, and tested, or that the unfinished declaration and file are removed.
+
+Evidence (descriptive behavior): `GRHayL/include/ghl_atmosphere.h::ghl_set_prims_to_radial_falloff_atm`; corroboration: `GRHayL/Atmosphere/make.code.defn` and `GRHayL/Atmosphere/set_prims_to_radial_falloff_atm.c`.
+
+### CONTR-0010
+
+- Competing sources & authority: `ghl_tabulated_free_memory` cleanup requirements before reinitializing a live `ghl_eos_parameters` tabulated object versus `Unit_Tests/unit_test_code_error.c` repeatedly calling tabulated initialization on one live `tab_eos` object without freeing memory between error cases. Public EOS memory rules decide safe caller usage; affected leaves stay `confirmed`.
+- Recheck trigger: edits to `Unit_Tests/unit_test_code_error.c` or tabulated EOS initialization cleanup.
+- Resolution check: inspect `Unit_Tests/unit_test_code_error.c` and verify every live `tab_eos` object is freed before reinitialization or isolated per error case.
+
+Evidence (descriptive behavior): `Unit_Tests/unit_test_code_error.c::tab_eos`; corroboration: `GRHayL/include/ghl_nrpyeos_tabulated.h::NRPyEOS_free_memory`.
+
+### CONTR-0011
+
+- Competing sources & authority: physical requirement for a positive-definite 3-metric versus `ghl_initialize_metric` dividing cofactors by `fabs(detgamma)` and `ghl_enforce_detgtij_and_initialize_ADM_metric` issuing a `ghl_warn` while returning `void` and preserving negative determinant sign. C implementations decide current behavior; [Metric And ADM Helpers](core/metric-adm.md) is `contested`.
+- Recheck trigger: edits to `GRHayL/GRHayL_Core/initialize_metric.c`, `enforce_detgij_and_initialize_ADM_metric.c`, or `Unit_Tests/unit_test_grhayl_core_test_suite.c`.
+- Resolution check: inspect both metric initializers and verify either checked error returns on nonpositive determinants or an explicit documented and tested recovery rule.
+
+Evidence (descriptive behavior): `GRHayL/GRHayL_Core/initialize_metric.c::ghl_initialize_metric`; corroboration: `GRHayL/GRHayL_Core/enforce_detgij_and_initialize_ADM_metric.c::ghl_enforce_detgtij_and_initialize_ADM_metric`.
+
+### CONTR-0012
+
+- Competing sources & authority: `Unit_Tests/data_gen/unit_test_data_ET_Legacy_reconstruction.c` writing perturbed input data versus `Unit_Tests/unit_test_ET_Legacy_reconstruction.c` never reading that perturbed input while relying on externally supplied trusted and perturbed outputs. Test C files decide actual replay behavior; [ET Legacy Comparison](tests/et-legacy-comparison.md) is `contested` while [Reconstruction Tests And Reference Data](gems/reconstruction/tests-and-reference-data.md) stays `confirmed`.
+- Recheck trigger: edits to `Unit_Tests/data_gen/unit_test_data_ET_Legacy_reconstruction.c` or `Unit_Tests/unit_test_ET_Legacy_reconstruction.c`.
+- Resolution check: inspect both files and verify either that replay consumes the generated perturbed input or that unused generation code is removed and output provenance is documented.
+
+Evidence (descriptive behavior): `Unit_Tests/unit_test_ET_Legacy_reconstruction.c`; corroboration: `Unit_Tests/data_gen/unit_test_data_ET_Legacy_reconstruction.c`.

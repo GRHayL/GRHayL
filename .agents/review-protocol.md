@@ -91,7 +91,7 @@ that suffix in the next semantic review.
 
 Supply a compact delta packet: old/new snapshots, exact hunks/sections and operations,
 changed evidence, open finding IDs, invalidated criteria/checks, impact boundaries,
-and new/reused results, not prior debate. Use [Change Impact](../wiki/change-impact.md).
+and new/reused results, not prior debate. Use [Change Impact](../wiki/architecture/change-impact.md).
 Trace relevant callers, interfaces/shared state, manifests/configuration, generators/
 products, tests/oracles, docs/links/claims, citing KB leaves (`rg -l -F '<path>' wiki/`),
 and downstream consumers until unchanged contracts bound effects. Do not inspect every
@@ -163,7 +163,7 @@ another bounded invocation; retain evidence/findings and review its delta/impact
 ## Proportionate Validation
 
 Follow relevant owners, [Workflows](../wiki/workflows.md),
-[Test Map](../wiki/test-map.md), and applicable [GRHayL evidence](grhayl-evidence.md).
+[Tests](../wiki/tests/index.md), and applicable [GRHayL evidence](grhayl-evidence.md).
 Keep mandatory checks. Test changed contracts/plausible regressions, not mirrored
 low-impact edits or unrelated suites. Root shares execution results; seats add
 independent reasoning/oracle evidence, not duplicate runs.

@@ -1,163 +1,54 @@
 # Con2Prim Recovery Flow
 
-This page summarizes runtime recovery order and conservative-variable data
-boundaries for [GRHayL/Con2Prim/](../../../GRHayL/Con2Prim). It is a route into source, Doxygen, and
-tests; repo-local source remains authority.
+> Seven-step runtime recovery sequence, densitized versus undensitized boundaries, backup/NN retry rules, and `GHL_DISABLE_HDF5` stubs. · Status: confirmed
+> Up: [Con2Prim](index.md)
 
-## Ordered Flow
+## Summary
 
-1. Initialize `ghl_con2prim_diagnostics` with
-   `ghl_initialize_diagnostics`. It clears `tau_fix`, `Stilde_fix`,
-   `speed_limited`, all three `backup` slots, and sets `which_routine` to
-   `ghl_con2prim_id_None`. It also clears `nn_guess_used` and initializes
-   `n_iter` to zero. The diagnostics struct and public helper list are
-   declared in [GRHayL/include/ghl_con2prim.h](../../../GRHayL/include/ghl_con2prim.h).
-   Source: [GRHayL/Con2Prim/initialize_diagnostics.c](../../../GRHayL/Con2Prim/initialize_diagnostics.c).
-2. Apply conservative limits when the caller has densitized conservative data
-   that needs the Faber-style inequalities before recovery. The helper mutates
-   densitized `tau` and `SD`, needs only `prims->BU` from primitives, and
-   updates `diagnostics->tau_fix` or `diagnostics->Stilde_fix`.
-   Source: [GRHayL/Con2Prim/apply_conservative_limits.c](../../../GRHayL/Con2Prim/apply_conservative_limits.c);
-   test: [Unit_Tests/unit_test_apply_conservative_limits.c](../../../Unit_Tests/unit_test_apply_conservative_limits.c).
-3. Convert densitized conservative fields to undensitized fields with
-   `ghl_undensitize_conservatives(metric_adm.sqrt_detgamma, &cons,
-   &cons_undens)`. The Con2Prim drivers and solvers take the undensitized
-   object, not evolved densitized storage.
-   Source: [GRHayL/Con2Prim/undensitize_conservatives.c](../../../GRHayL/Con2Prim/undensitize_conservatives.c);
-   tests: [Unit_Tests/unit_test_con2prim_multi_method_hybrid.c](../../../Unit_Tests/unit_test_con2prim_multi_method_hybrid.c),
-   [Unit_Tests/unit_test_con2prim_tabulated.c](../../../Unit_Tests/unit_test_con2prim_tabulated.c).
-4. Optionally guess primitives. `params->calc_prim_guess` makes both
-   multi-method drivers call `ghl_guess_primitives` before the main attempt.
-   The helper contract takes undensitized conservatives; hybrid/simple guesses
-   set cold-pressure data, while tabulated guesses use a Palenzuela-style
-   estimate and table bounds. When guessing is skipped, callers must supply the
-   selected solver's input primitives, including composition and temperature
-   for the [tabulated Palenzuela contract](internal-numerics-and-root-finding.md#palenzuela-internal-route).
-   Source: [GRHayL/Con2Prim/guess_primitives.c](../../../GRHayL/Con2Prim/guess_primitives.c),
-   [GRHayL/Con2Prim/con2prim_multi_method.c](../../../GRHayL/Con2Prim/con2prim_multi_method.c).
-5. Call either a selector directly or the multi-method driver. Selectors
-   (`ghl_con2prim_hybrid_select_method`,
-   `ghl_con2prim_tabulated_select_method`) dispatch one `c2p_key` and return
-   its error. Multi-method drivers choose `params->main_routine`, own optional
-   guessing, and own backup retries.
-   Source: `GRHayL/Con2Prim/con2prim_multi_method.c`.
-6. If the main routine fails inside a multi-method driver, try up to three
-   `params->backup_routine` slots. The loop stops after success, after three
-   slots, or immediately at the first `ghl_con2prim_id_None`. For each backup
-   actually tried, it sets `diagnostics->backup[n] = true`, resets `*prims` to
-   the saved primitive guess, and calls the same selector layer again. The
-   successful solver updates `diagnostics->which_routine` and its applicable
-   `diagnostics->n_iter`; see [root-finder diagnostics](internal-numerics-and-root-finding.md#brent-and-root-helper-route). Attempt flags are sticky over the logical recovery:
-   `speed_limited`, `backup[]`, and `nn_guess_used` record whether the event
-   occurred in any attempt, including failed attempts.
-   Source: `GRHayL/Con2Prim/con2prim_multi_method.c`;
-   tests: [Unit_Tests/unit_test_hybrid_failure.c](../../../Unit_Tests/unit_test_hybrid_failure.c),
-   `Unit_Tests/unit_test_con2prim_tabulated.c`.
-7. After successful recovery, enforce primitive limits and compute `u0` with
-   `ghl_enforce_primitive_limits_and_compute_u0`. The helper applies EOS-
-   specific primitive floors/ceilings and recomputes thermodynamic fields. Only
-   successful thermodynamic processing reaches the speed limiter and `u0`
-   calculation. Check its returned error; failures can leave partial changes.
-   Source: [GRHayL/Con2Prim/enforce_primitive_limits_and_compute_u0.c](../../../GRHayL/Con2Prim/enforce_primitive_limits_and_compute_u0.c);
-   tests: [Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c](../../../Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c),
-   [Unit_Tests/data_gen/unit_test_data_con2prim_multi_method_hybrid.c](../../../Unit_Tests/data_gen/unit_test_data_con2prim_multi_method_hybrid.c).
-8. Recompute conservatives, and stress-energy when the caller needs it, after
-   successful primitive limiting. `ghl_compute_conservs` returns densitized conservatives;
-   `ghl_compute_conservs_and_Tmunu` returns densitized conservatives plus
-   `Tmunu`. Both require initialized `prims->eps` and `prims->u0`.
-   Source: [GRHayL/Con2Prim/compute_conservs.c](../../../GRHayL/Con2Prim/compute_conservs.c),
-   [GRHayL/Con2Prim/compute_conservs_and_Tmunu.c](../../../GRHayL/Con2Prim/compute_conservs_and_Tmunu.c);
-   tests: [Unit_Tests/unit_test_compute_conservs_and_Tmunu.c](../../../Unit_Tests/unit_test_compute_conservs_and_Tmunu.c),
-   `Unit_Tests/data_gen/unit_test_data_con2prim_multi_method_hybrid.c`.
+A logical Con2Prim recovery proceeds from diagnostics initialization and optional conservative limiting on densitized variables, through undensitization, optional primitive guessing, main/backup (and optional tabulated NN) solver retries on undensitized conservatives, to post-recovery primitive limiting/`u0` and conservative/stress-energy recomputation. Failed recoveries may leave partial primitive mutations and do not automatically reset to atmosphere.
 
-## Tabulated NN Retry Hook
+## Detail
 
-Tabulated neural-network primitive guesses route through
-[neural-network primitive guess](neural-network-primitive-guess.md). They do
-not replace `params->calc_prim_guess`: that flag controls the ordinary
-`ghl_guess_primitives` call before the first main routine attempt.
-`eos->enable_neural_net_c2p` instead controls fallback retries for tabulated
-recovery. After the first failed tabulated main attempt, the driver computes
-`prims_guess_nn` with `ghl_c2p_nn_guess_primitives`, resets `*prims` to that
-guess, sets `diagnostics->nn_guess_used = true`, and retries the main selector.
-If later tabulated backup attempts fail, the driver reuses the stored
-`prims_guess_nn` and calls the same backup selector again. `nn_guess_used`
-records that the main NN retry was attempted; it is not set again per backup
-and does not prove the NN retry succeeded.
+### Ordered Recovery Sequence And Densitized Boundary
 
-Sources: `GRHayL/Con2Prim/con2prim_multi_method.c`,
-[GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_primitives.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_primitives.c),
-[GRHayL/include/ghl.h](../../../GRHayL/include/ghl.h), `GRHayL/include/ghl_con2prim.h`.
-Tests: [Unit_Tests/unit_test_c2p_nn_guess.c](../../../Unit_Tests/unit_test_c2p_nn_guess.c),
-`Unit_Tests/unit_test_con2prim_tabulated.c`.
+1. **Initialize diagnostics:** `ghl_initialize_diagnostics` (`initialize_diagnostics.c`) zeroes `n_iter`, clears `tau_fix`, `Stilde_fix`, `speed_limited`, `nn_guess_used`, and `backup[0..2]`, and sets `which_routine = ghl_con2prim_id_None`.
+2. **Apply conservative limits (densitized):** `ghl_apply_conservative_limits` (`apply_conservative_limits.c`) mutates densitized `tau` and `SD` using `prims->BU` and updates `tau_fix` / `Stilde_fix`.
+3. **Undensitize conservatives:** `ghl_undensitize_conservatives(metric_adm.sqrt_detgamma, &cons, &cons_undens)` (`undensitize_conservatives.c`) divides `rho`, `SD`, `tau`, `Y_e`, and `entropy` by `psi6`; all selectors, drivers, and `ghl_guess_primitives` expect `cons_undens`.
+4. **Optional primitive guess:** when `params->calc_prim_guess` is true, multi-method drivers invoke `ghl_guess_primitives` before the main solver (hybrid/simple cold pressure; tabulated Palenzuela-style estimate). When skipped, callers must supply solver-required inputs including `Y_e` and `temperature` for tabulated Palenzuela.
+5. **Main solve & up to three backups:** single-shot selectors (`ghl_con2prim_{hybrid,tabulated}_select_method`) run one `c2p_key`. Multi-method drivers save the initial guess, run `params->main_routine`, and on failure iterate `params->backup_routine[0..2]`, stopping at success, slot exhaustion, or `ghl_con2prim_id_None`. Before each backup, the driver sets `diagnostics->backup[n] = true` and restores `*prims` to the saved guess. Attempt flags (`speed_limited`, `backup[]`, `nn_guess_used`) stay sticky across failed attempts; on final failure `which_routine` stays `None`, `n_iter` is unspecified, and `*prims` is not rolled back.
+6. **Post-recovery limits & `u0`:** `ghl_enforce_primitive_limits_and_compute_u0` clamps EOS-specific thermodynamic bounds and runs `ghl_limit_v_and_compute_u0` only if thermodynamic updates succeed.
+7. **Recompute densitized conservatives (and `Tmunu`):** `ghl_compute_conservs` or `ghl_compute_conservs_and_Tmunu` consumes valid `prims->eps` and `prims->u0` to produce consistent densitized `cons` (and `Tmunu`).
 
-## Selector And Multi-Method Split
-
-- Selectors are single-shot dispatchers. They map one `ghl_con2prim_id_t` to
-  an EOS-compatible solver or return `ghl_error_invalid_c2p_key`.
-  Source: `GRHayL/Con2Prim/con2prim_multi_method.c`.
-- Multi-method drivers are policy wrappers. They read `params->main_routine`,
-  optionally compute a primitive guess, preserve that guess, and run the backup
-  loop over the three configured slots.
-  Source: `GRHayL/include/ghl.h`,
-  [GRHayL/GRHayL_Core/initialize_params.c](../../../GRHayL/GRHayL_Core/initialize_params.c),
-  `GRHayL/Con2Prim/con2prim_multi_method.c`.
-- Diagnostics lifecycle is split. Callers initialize diagnostics once per
-  logical recovery; conservative limits accumulate `tau_fix` and `Stilde_fix`;
-  multi-method records attempted backup slots and NN retry and accumulates
-  solver `speed_limited` results; post-limit speed limiting also accumulates it.
-  A successful direct solver alone reports only its current call. The successful solver
-  owns `which_routine` and its applicable `n_iter`; when no solver succeeds,
-  `which_routine` remains `None` and `n_iter` is unspecified.
-  Source: `GRHayL/include/ghl_con2prim.h`,
-  `GRHayL/Con2Prim/initialize_diagnostics.c`,
-  `GRHayL/Con2Prim/apply_conservative_limits.c`,
-  `GRHayL/Con2Prim/enforce_primitive_limits_and_compute_u0.c`,
-  solver files under [GRHayL/Con2Prim/Hybrid/](../../../GRHayL/Con2Prim/Hybrid) and
-  [GRHayL/Con2Prim/Tabulated/](../../../GRHayL/Con2Prim/Tabulated).
-
-On failure, primitive fields may contain partial changes from the last
-attempted solver. Drivers restore the saved guess before backup attempts,
-but do not roll back after the final failure or provide an atmosphere recovery
-result. Callers must handle the error before using the primitives.
-
-## HDF5-Disabled Tabulated Behavior
-
-When built with `GHL_DISABLE_HDF5`, tabulated select and tabulated
-multi-method return `ghl_error_used_disabled_hdf5` before solver dispatch or
-backup behavior. The public direct tabulated solver symbols in
-[disabled-HDF5 stubs](../../../GRHayL/Con2Prim/hdf5_disabled_stubs.c) remain
-link-visible as non-mutating stubs returning the same error. The tabulated branch in
-`ghl_enforce_primitive_limits_and_compute_u0` returns the same error. The
-code-error tests skip HDF5-only cases in no-HDF5 builds.
-
-Sources: `GRHayL/Con2Prim/con2prim_multi_method.c`,
-`GRHayL/Con2Prim/enforce_primitive_limits_and_compute_u0.c`,
-`GRHayL/include/ghl.h`, [Unit_Tests/unit_test_code_error.c](../../../Unit_Tests/unit_test_code_error.c).
-
-## Densitized Boundary Table
-
-| Function or driver | Conservative input | Conservative output | Boundary contract |
+| Routine | Conservative input | Conservative output | Boundary note |
 | --- | --- | --- | --- |
-| `ghl_apply_conservative_limits` | Densitized `cons`; only `prims->BU` required from primitives | Mutates densitized `cons` | Pre-recovery limiter for evolved `tau` and `SD`; records `tau_fix` and `Stilde_fix`. Source: `GRHayL/Con2Prim/apply_conservative_limits.c`; test: `Unit_Tests/unit_test_apply_conservative_limits.c`. |
-| `ghl_undensitize_conservatives` | Densitized `cons` plus `psi6` | Undensitized `cons_undens` | Divides `rho`, `SD`, `tau`, `Y_e`, and `entropy` by `psi6`; use before Con2Prim solvers. Source: `GRHayL/Con2Prim/undensitize_conservatives.c`. |
-| `ghl_guess_primitives` | Undensitized `cons_undens` by source contract | Primitive guess only | Multi-method drivers and the hybrid selected-method test pass undensitized data. Source: `GRHayL/Con2Prim/guess_primitives.c`, `GRHayL/Con2Prim/con2prim_multi_method.c`; fixture: `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c`. |
-| Hybrid select and multi-method | Undensitized `cons_undens` | Primitive recovery result | Select dispatches one hybrid key; multi-method owns optional guess and backup loop. Source: `GRHayL/Con2Prim/con2prim_multi_method.c`; tests: `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c`, `Unit_Tests/unit_test_hybrid_failure.c`. |
-| Tabulated select and multi-method | Undensitized `cons_undens` | Primitive recovery result | Same selector versus multi-method split as hybrid, but compiled-out HDF5 paths return `ghl_error_used_disabled_hdf5`. Source: `GRHayL/Con2Prim/con2prim_multi_method.c`; tests: `Unit_Tests/unit_test_con2prim_tabulated.c`, `Unit_Tests/unit_test_code_error.c`. |
-| `ghl_enforce_primitive_limits_and_compute_u0` | No conservative input | No conservative output | After successful recovery, recomputes EOS fields and, on success, `u0`; accumulates speed limiting in an initialized in/out flag. Failure can leave partial primitive changes. Source: `GRHayL/Con2Prim/enforce_primitive_limits_and_compute_u0.c`; tests: `Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`. |
-| `ghl_compute_conservs` | Primitives with initialized `eps` and `u0` | Densitized conservative `cons` | Primitive-to-conservative recompute after primitive limits. Source: `GRHayL/Con2Prim/compute_conservs.c`; tests: `Unit_Tests/unit_test_compute_conservs_and_Tmunu.c`. |
-| `ghl_compute_conservs_and_Tmunu` | Primitives with initialized `eps` and `u0` | Densitized conservative `cons` and `Tmunu` | Same conservative recompute plus stress-energy tensor. Source: `GRHayL/Con2Prim/compute_conservs_and_Tmunu.c`; tests: `Unit_Tests/unit_test_compute_conservs_and_Tmunu.c`, `Unit_Tests/data_gen/unit_test_data_con2prim_multi_method_hybrid.c`. |
+| `ghl_apply_conservative_limits` | Densitized `cons` (`prims->BU` only) | Mutated densitized `cons` | Updates `tau_fix` and `Stilde_fix`. (Ev: `GRHayL/Con2Prim/apply_conservative_limits.c::ghl_apply_conservative_limits`) |
+| `ghl_undensitize_conservatives` | Densitized `cons`, `psi6` | Undensitized `cons_undens` | Divides `rho`, `SD`, `tau`, `Y_e`, `entropy` by `psi6`. (Ev: `GRHayL/Con2Prim/undensitize_conservatives.c::ghl_undensitize_conservatives`) |
+| `ghl_guess_primitives` & selectors/drivers | Undensitized `cons_undens` | Primitives only | Multi-method saves/restores guess across backups. (Ev: `GRHayL/Con2Prim/con2prim_multi_method.c::ghl_con2prim_hybrid_multi_method`) |
+| `ghl_enforce_primitive_limits_and_compute_u0` | None | None | Recomputes EOS fields and `u0`; failure can leave partial writes. (Ev: `GRHayL/Con2Prim/enforce_primitive_limits_and_compute_u0.c`) |
+| `ghl_compute_conservs` / `_and_Tmunu` | Primitives (`eps`, `u0` required) | Densitized `cons` (+ `Tmunu`) | Post-limit synchronization. (Ev: `GRHayL/Con2Prim/compute_conservs.c::ghl_compute_conservs`) |
 
-## Test Routes
+### Tabulated NN Retry Hook And `GHL_DISABLE_HDF5` Stubs
 
-- Conservative limits: `Unit_Tests/unit_test_apply_conservative_limits.c`.
-- Hybrid selected-method recovery and method fixtures:
-  `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c`.
-- Hybrid multi-method failure and backup behavior:
-  `Unit_Tests/unit_test_hybrid_failure.c`.
-- Tabulated multi-method recovery, backup accounting, and EOS-table paths:
-  `Unit_Tests/unit_test_con2prim_tabulated.c`.
-- Primitive post-limits and `u0`:
-  `Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`.
-- Conservative recompute and stress-energy:
-  `Unit_Tests/unit_test_compute_conservs_and_Tmunu.c`.
+- **Tabulated NN retry:** Separate from `params->calc_prim_guess`, when `eos->enable_neural_net_c2p` is true and the first tabulated main attempt fails, `ghl_con2prim_tabulated_multi_method` builds `prims_guess_nn` via `ghl_c2p_nn_guess_primitives`, sets `diagnostics->nn_guess_used = true`, and retries the main routine; if later backup slots fail with the ordinary guess, the driver reuses `prims_guess_nn` to retry each failed backup. `nn_guess_used` records an attempted NN retry, not success ([Neural-Network Primitive Guess](neural-network-primitive-guess.md)).
+- **`GHL_DISABLE_HDF5`:** Tabulated select/multi-method, the tabulated branch of `ghl_enforce_primitive_limits_and_compute_u0`, and the link-visible non-mutating direct tabulated solver stubs in `GRHayL/Con2Prim/hdf5_disabled_stubs.c` all return `ghl_error_used_disabled_hdf5` before dispatching.
+
+Evidence (descriptive behavior): `GRHayL/Con2Prim/con2prim_multi_method.c::ghl_con2prim_tabulated_multi_method`; corroboration: `GRHayL/Con2Prim/hdf5_disabled_stubs.c`.
+
+## Sources
+
+- [GRHayL/include/ghl_con2prim.h](../../../GRHayL/include/ghl_con2prim.h) - recovery, diagnostics, and helper declarations
+- [GRHayL/Con2Prim/con2prim_multi_method.c](../../../GRHayL/Con2Prim/con2prim_multi_method.c) - selectors, backup loop, NN retry hook, and no-HDF5 guards
+- [GRHayL/Con2Prim/initialize_diagnostics.c](../../../GRHayL/Con2Prim/initialize_diagnostics.c) - diagnostics reset
+- [GRHayL/Con2Prim/apply_conservative_limits.c](../../../GRHayL/Con2Prim/apply_conservative_limits.c) - pre-recovery conservative limits
+- [GRHayL/Con2Prim/undensitize_conservatives.c](../../../GRHayL/Con2Prim/undensitize_conservatives.c) - undensitization helper
+- [GRHayL/Con2Prim/guess_primitives.c](../../../GRHayL/Con2Prim/guess_primitives.c) - ordinary primitive guess
+- [GRHayL/Con2Prim/enforce_primitive_limits_and_compute_u0.c](../../../GRHayL/Con2Prim/enforce_primitive_limits_and_compute_u0.c) - post-recovery limits and `u0`
+- [GRHayL/Con2Prim/compute_conservs.c](../../../GRHayL/Con2Prim/compute_conservs.c) - densitized conservative recompute
+- [GRHayL/Con2Prim/hdf5_disabled_stubs.c](../../../GRHayL/Con2Prim/hdf5_disabled_stubs.c) - non-mutating no-HDF5 direct tabulated solver stubs
+
+## See Also
+
+- Depends on: [Solver Matrix](solver-matrix.md)
+- Depends on: [Limits And Conversions](limits-and-conversions.md)
+- See also: [Neural-Network Primitive Guess](neural-network-primitive-guess.md)
+- Validated by: [Con2Prim Tests And Reference Data](tests-and-reference-data.md)

@@ -1,476 +1,99 @@
 # Workflows
 
-Use these playbooks for cross-module edits. They route to local source of truth and avoid duplicating Doxygen API text.
-
-## Build, Install, Test, Or CI Change
-
-Read first:
-
-- [Build And CI](build-and-ci.md)
-- [Generated Boundaries](generated-boundaries.md)
-- [Runner and generated artifacts](tests/runner-and-generated-artifacts.md)
-- `configure`, `scripts/parser`, and recursive `GRHayL/**/make.code.defn`
-- `.github/actions/*/action.yml`, `.github/workflows/*.yml`, and
-  [.github/run_tests.sh](../.github/run_tests.sh)
-
-Use unique disposable trees for commands that generate Makefiles, build/test
-trees, fixtures, tables, or docs. Keep separate results for configuration,
-library compile, test compile, data-generator compile, install, forced-symbol
-consumer link, and runtime. `make tests` and `make datagen` do not execute their
-binaries.
-
-For target or mode changes, compare generated `SRC`, `TEXES`, `DGEXES`, and
-`IHDS` sets against manifests/files in both default and `--disable-hdf5` modes.
-The no-HDF5 predicate explicitly retains selected Con2Prim Tabulated/NN
-sources and concrete tabulated HLLE kernels. Re-open the exact predicate instead of filtering by a guessed name.
-
-For CI changes, parse YAML and compare every job command with composite action
-bodies and actual targets. Distinguish ignored-only push/pull-request changes,
-mixed-path changes, and scheduled events. Workflow presence proves selection,
-not execution. Do not use upstream Unit_Tests as proof of a GRHayLib Cactus
-build.
-
-Current `generate_makefile.sh` output is broken. Reproduce generation only in a
-disposable tree; never run `make` after malformed targets or invalid paths are
-found. Product-script, workflow, CI-policy, or Doxygen-source repairs require
-their owning authorization; a KB-only task documents current safe behavior.
-
-## Core/Chalice
-
-Read first:
-- [wiki/core/index.md](core/index.md)
-- [wiki/core/struct-pack-unpack-contract.md](core/struct-pack-unpack-contract.md) for shared structs, packing, and unpacking
-- [wiki/core/metric-adm-contract.md](core/metric-adm-contract.md) for metric initialization, determinant handling, and ADM auxiliaries
-- [wiki/core/velocity-u0-contract.md](core/velocity-u0-contract.md) for `ghl_limit_v_and_compute_u0`, speed limiting, Lorentz factor, and `u0`
-- [wiki/core/stress-energy-smallb-contract.md](core/stress-energy-smallb-contract.md) for `smallb`, `b2`, `Tmunu`, `TDNmunu`, and `TUPmunu`
-- [wiki/core/eos-dispatch-contract.md](core/eos-dispatch-contract.md) for Core EOS wrappers and global function-pointer dispatch
-- [wiki/core/errors-io-debug-utilities.md](core/errors-io-debug-utilities.md) for `ghl_abort_if_error`, `ghl_warn`, `ghl_error`, `ghl_info`, debug helpers, and `ghl_clamp`
-- [wiki/core/tests-and-fixtures.md](core/tests-and-fixtures.md) for Core fixture and coverage routing
-- [docs/raw/GRHayL_Core.dox](../docs/raw/GRHayL_Core.dox)
-- [GRHayL/GRHayL_Core/make.code.defn](../GRHayL/GRHayL_Core/make.code.defn)
-- [GRHayL/include/ghl.h](../GRHayL/include/ghl.h)
-- [GRHayL/include/ghl_metric_helpers.h](../GRHayL/include/ghl_metric_helpers.h)
-- [GRHayL/include/ghl_io.h](../GRHayL/include/ghl_io.h)
-- [GRHayL/include/ghl_debug.h](../GRHayL/include/ghl_debug.h)
-- [GRHayL/include/ghl_eos_functions.h](../GRHayL/include/ghl_eos_functions.h)
-- [GRHayL/include/ghl_eos_functions_declaration.h](../GRHayL/include/ghl_eos_functions_declaration.h)
-- [GRHayL/include/make.code.defn](../GRHayL/include/make.code.defn)
-
-Edit paths:
-- Core source: [GRHayL/GRHayL_Core/](../GRHayL/GRHayL_Core)
-- Shared public headers: `GRHayL/include/ghl.h`, `GRHayL/include/ghl_metric_helpers.h`, `GRHayL/include/ghl_io.h`, `GRHayL/include/ghl_debug.h`, `GRHayL/include/ghl_eos_functions.h`
-- Internal EOS pointer storage: `GRHayL/include/ghl_eos_functions_declaration.h`
-- Public header install list: `GRHayL/include/make.code.defn`
-- Core build list: `GRHayL/GRHayL_Core/make.code.defn`
-- Downstream integration only with owner coordination: [implementations/GRHayLib/](../implementations/GRHayLib)
-
-Tests/data generators:
-- [Unit_Tests/unit_test_grhayl_core_test_suite.c](../Unit_Tests/unit_test_grhayl_core_test_suite.c)
-- [Unit_Tests/data_gen/unit_test_data_grhayl_core_test_suite.c](../Unit_Tests/data_gen/unit_test_data_grhayl_core_test_suite.c)
-- [Unit_Tests/unit_test_code_error.c](../Unit_Tests/unit_test_code_error.c)
-- [Unit_Tests/unit_test_compute_conservs_and_Tmunu.c](../Unit_Tests/unit_test_compute_conservs_and_Tmunu.c)
-- [Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c](../Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c)
-- [Unit_Tests/pert_test_fail_conservatives.c](../Unit_Tests/pert_test_fail_conservatives.c)
-- [Unit_Tests/pert_test_fail_primitives.c](../Unit_Tests/pert_test_fail_primitives.c)
-- [Unit_Tests/pert_test_fail_stress_energy.c](../Unit_Tests/pert_test_fail_stress_energy.c)
-- [Unit_Tests/randomize_metric.c](../Unit_Tests/randomize_metric.c)
-- [Unit_Tests/randomize_primitives.c](../Unit_Tests/randomize_primitives.c)
-
-KB to update:
-- Core KB child pages under [wiki/core/](core) when routing, prerequisites, coverage, or ownership changes.
-- [wiki/catalog.md](catalog.md), [wiki/source-map.md](source-map.md), and [wiki/test-map.md](test-map.md) when Core term routes, source ownership, or fixture routes change.
-- Keep `docs/raw/GRHayL_Core.dox` and [docs/raw/derivation.md](../docs/raw/derivation.md) as source context only for this KB scope; do not edit Doxygen source or copy equations into KB router pages.
-
-Pitfalls/contracts:
-- Public header blast radius is broad. `ghl.h` owns shared structs, enums, Core declarations, and some declarations whose implementations live outside Core.
-- Global EOS dispatch is initialized through Core wrappers. `ghl_initialize_eos_functions` writes function pointers such as `ghl_compute_h_and_cs2` and `ghl_con2prim_multi_method`; mismatched EOS selection can break Con2Prim and Flux_Source.
-- `u0` validity depends on initialized parameters, metric data, primitive velocities, and caller-managed `speed_limited`. Separate Core `ghl_limit_v_and_compute_u0` from Con2Prim `ghl_enforce_primitive_limits_and_compute_u0`.
-- Metric determinant behavior matters. `ghl_enforce_detgtij_and_initialize_ADM_metric` enforces conformal determinant behavior before rebuilding ADM metric quantities; check `detgamma`, `sqrt_detgamma`, and `detgtij` expectations.
-- `ghl.h` declares non-Core implementations including `ghl_get_con2prim_routine_name` and `ghl_compute_SU_Bsq_Ssq_BdotS`; route implementation changes to Con2Prim unless ownership is re-verified.
-
-## EOS Routine
-
-Read first:
-- [docs/raw/EOS.dox](../docs/raw/EOS.dox)
-- `docs/raw/GRHayL_Core.dox`
-- `GRHayL/include/ghl.h`
-- `GRHayL/include/ghl_eos_functions.h`
-- [GRHayL/include/ghl_nrpyeos_hybrid.h](../GRHayL/include/ghl_nrpyeos_hybrid.h)
-- [GRHayL/include/ghl_nrpyeos_tabulated.h](../GRHayL/include/ghl_nrpyeos_tabulated.h)
-
-Edit paths:
-- Hybrid EOS: [GRHayL/EOS/Hybrid/](../GRHayL/EOS/Hybrid)
-- Tabulated EOS: [GRHayL/EOS/Tabulated/](../GRHayL/EOS/Tabulated)
-- Tabulated interpolators: [GRHayL/EOS/Tabulated/interpolators/](../GRHayL/EOS/Tabulated/interpolators)
-- Table adapters: [GRHayL/EOS/Tabulated/stellarcollapse/](../GRHayL/EOS/Tabulated/stellarcollapse)
-- Public declarations and function pointers: [GRHayL/include/](../GRHayL/include)
-- Build lists: local `make.code.defn` files under changed EOS directories
-
-Tests/data generators:
-- [Unit_Tests/unit_test_piecewise_polytrope.c](../Unit_Tests/unit_test_piecewise_polytrope.c)
-- [Unit_Tests/unit_test_tabulated_eos.c](../Unit_Tests/unit_test_tabulated_eos.c)
-- [Unit_Tests/test_compute_h_and_cs2.c](../Unit_Tests/test_compute_h_and_cs2.c): synthetic callback shared by tabulated flux replay/generation, not an EOS-table oracle
-- [Unit_Tests/sample_table/](../Unit_Tests/sample_table)
-
-Docs to update:
-- `docs/raw/EOS.dox` for public behavior or new EOS families
-- `docs/raw/GRHayL_Core.dox` if initialization contracts change
-- [wiki/gems/eos.md](gems/eos.md) for routing changes
-
-Pitfalls/contracts:
-- On supported initialization paths, the Core `*_functions_and_params`
-  wrappers select global dispatch before initializing parameters; the parameter-only initializers do not select
-  dispatch. Check returned status and keep dispatch consistent with the EOS;
-  see [EOS initialization](gems/eos/initialization-and-dispatch.md).
-- Hybrid and tabulated paths expose different variables and bounds; do not assume a tabulated variable exists in hybrid EOS.
-- No-HDF5 builds cannot use HDF5-backed tabulated runtime paths; keep `GHL_DISABLE_HDF5` guards and build lists aligned.
-- Changes to pressure, internal energy, entropy, temperature, or `Y_e` can affect Con2Prim and flux paths.
-
-## Con2Prim Method
-
-Read first:
-- [wiki/gems/con2prim.md](gems/con2prim.md)
-- [wiki/gems/con2prim/solver-matrix.md](gems/con2prim/solver-matrix.md) for solver names, support status, dispatch, and diagnostics
-- [wiki/gems/con2prim/recovery-flow.md](gems/con2prim/recovery-flow.md) for recovery order, backups, and densitized/undensitized boundaries
-- [wiki/gems/con2prim/limits-and-conversions.md](gems/con2prim/limits-and-conversions.md) for conservative limits, primitive limits, guesses, and conversion helpers
-- [wiki/gems/con2prim/tests-and-fixtures.md](gems/con2prim/tests-and-fixtures.md) for Con2Prim test and fixture routing
-- [docs/raw/Con2Prim.dox](../docs/raw/Con2Prim.dox)
-- `docs/raw/derivation.md`
-- [GRHayL/include/ghl_con2prim.h](../GRHayL/include/ghl_con2prim.h)
-- `GRHayL/include/ghl.h`
-
-Edit paths:
-- Shared pre/post logic: [GRHayL/Con2Prim/](../GRHayL/Con2Prim)
-- Hybrid methods: [GRHayL/Con2Prim/Hybrid/](../GRHayL/Con2Prim/Hybrid)
-- Tabulated methods: [GRHayL/Con2Prim/Tabulated/](../GRHayL/Con2Prim/Tabulated)
-- Public method IDs and diagnostics: `GRHayL/include/ghl.h`, `GRHayL/include/ghl_con2prim.h`
-- Build lists: local Con2Prim `make.code.defn` files
-
-Tests/data generators:
-- [Unit_Tests/unit_test_con2prim_multi_method_hybrid.c](../Unit_Tests/unit_test_con2prim_multi_method_hybrid.c)
-- [Unit_Tests/unit_test_con2prim_tabulated.c](../Unit_Tests/unit_test_con2prim_tabulated.c)
-- [Unit_Tests/unit_test_con2prim_debug.c](../Unit_Tests/unit_test_con2prim_debug.c)
-- [Unit_Tests/unit_test_hybrid_failure.c](../Unit_Tests/unit_test_hybrid_failure.c)
-- [Unit_Tests/unit_test_c2p_nn_guess.c](../Unit_Tests/unit_test_c2p_nn_guess.c)
-- [Unit_Tests/data_gen/unit_test_data_con2prim_multi_method_hybrid.c](../Unit_Tests/data_gen/unit_test_data_con2prim_multi_method_hybrid.c)
-- `Unit_Tests/unit_test_compute_conservs_and_Tmunu.c`
-
-Docs to update:
-- `docs/raw/Con2Prim.dox` for method availability, EOS support, or references
-- `wiki/gems/con2prim.md` for hub routing changes
-- `wiki/gems/con2prim/solver-matrix.md` for method support, dispatch, diagnostics, or backup-status changes
-- `wiki/gems/con2prim/recovery-flow.md` for driver order, backup behavior, and densitized/undensitized contracts
-- `wiki/gems/con2prim/limits-and-conversions.md` for helper contract or conversion changes
-- `wiki/gems/con2prim/tests-and-fixtures.md` for fixture, HDF5, or targeted-test changes
-- [wiki/physics/variables-and-conventions.md](physics/variables-and-conventions.md) if variable meaning changes
-
-Pitfalls/contracts:
-- `ghl_con2prim_diagnostics` must identify limits, backups, selected routine, and iteration count consistently.
-- Some routines take densitized conservatives; others use undensitized values. Check `ghl_undensitize_conservatives` call sites and [recovery flow](gems/con2prim/recovery-flow.md) before editing.
-- Entropy methods require suitable conservative entropy input and EOS support.
-  Method selection is not gated by `params->evolve_entropy`; that flag controls
-  selected updates elsewhere. See [solver matrix](gems/con2prim/solver-matrix.md).
-- The multi-method recovery wrappers do not run the full primitive limiter.
-  After successful recovery, callers that need floors/ceilings and refreshed `u0` must invoke
-  `ghl_enforce_primitive_limits_and_compute_u0` afterward and handle its status;
-  see [recovery flow](gems/con2prim/recovery-flow.md).
-
-## Reconstruction Routine
-
-Read first:
-- [wiki/gems/reconstruction.md](gems/reconstruction.md)
-- [wiki/gems/reconstruction/face-and-stencil-contract.md](gems/reconstruction/face-and-stencil-contract.md)
-- [wiki/gems/reconstruction/plm-limiters.md](gems/reconstruction/plm-limiters.md)
-- [wiki/gems/reconstruction/ppm-flow.md](gems/reconstruction/ppm-flow.md)
-- [wiki/gems/reconstruction/wenoz-contract.md](gems/reconstruction/wenoz-contract.md)
-- [wiki/gems/reconstruction/tests-and-fixtures.md](gems/reconstruction/tests-and-fixtures.md)
-- [docs/raw/Reconstruction.dox](../docs/raw/Reconstruction.dox) as read-only evidence
-- [GRHayL/include/ghl_reconstruction.h](../GRHayL/include/ghl_reconstruction.h)
-- [GRHayL/Reconstruction/](../GRHayL/Reconstruction)
-
-Edit paths:
-- PLM: [GRHayL/Reconstruction/PLM/](../GRHayL/Reconstruction/PLM)
-- PPM: [GRHayL/Reconstruction/PPM/](../GRHayL/Reconstruction/PPM)
-- WENO-z: [GRHayL/Reconstruction/WENOZ/](../GRHayL/Reconstruction/WENOZ)
-- Public declarations: `GRHayL/include/ghl_reconstruction.h`
-- Build lists: local Reconstruction `make.code.defn` files
-
-Tests/data generators:
-- [Unit_Tests/unit_test_PLM_reconstruction.c](../Unit_Tests/unit_test_PLM_reconstruction.c)
-- [Unit_Tests/unit_test_WENOZ_reconstruction.c](../Unit_Tests/unit_test_WENOZ_reconstruction.c)
-- [Unit_Tests/unit_test_ET_Legacy_reconstruction.c](../Unit_Tests/unit_test_ET_Legacy_reconstruction.c)
-- [Unit_Tests/data_gen/unit_test_data_PLM_reconstruction.c](../Unit_Tests/data_gen/unit_test_data_PLM_reconstruction.c)
-- [Unit_Tests/data_gen/unit_test_data_WENOZ_reconstruction.c](../Unit_Tests/data_gen/unit_test_data_WENOZ_reconstruction.c)
-- [Unit_Tests/data_gen/unit_test_data_ET_Legacy_reconstruction.c](../Unit_Tests/data_gen/unit_test_data_ET_Legacy_reconstruction.c)
-
-KB routes to update:
-- `wiki/gems/reconstruction.md` when hub routes change
-- Reconstruction child pages under [wiki/gems/reconstruction/](gems/reconstruction) when method,
-  stencil, caller-impact, or fixture routing changes
-- Required routers such as `wiki/catalog.md`, `wiki/source-map.md`,
-  `wiki/test-map.md`, and [wiki/change-impact.md](change-impact.md) when aliases, source
-  ownership, fixtures, or impact routes change
-
-Pitfalls/contracts:
-- Standard reconstruction wrappers return left/right values for the left face
-  of a cell. Centered PPM/WENOZ helpers declared in the same header use the
-  [two-face helper contract](gems/reconstruction/face-and-stencil-contract.md).
-- PPM steepening uses pressure, effective Gamma, and parameters in `ghl_parameters`; preserve stencil sizes.
-- Downstream integrators feed Reconstruction states to Flux_Source and
-  Induction; neither gem calls Reconstruction directly in this tree. Changing
-  output orientation can silently corrupt downstream fluxes.
-
-## Flux/Source Path
-
-Read first:
-- [docs/raw/Flux_Source.dox](../docs/raw/Flux_Source.dox)
-- `docs/raw/derivation.md`
-- [GRHayL/include/ghl_flux_source.h](../GRHayL/include/ghl_flux_source.h)
-- [GRHayL/Flux_Source/](../GRHayL/Flux_Source)
-
-Edit paths:
-- Characteristic speeds and sources: `GRHayL/Flux_Source/`
-- Hybrid HLLE: [GRHayL/Flux_Source/hybrid/](../GRHayL/Flux_Source/hybrid)
-- Hybrid entropy HLLE: [GRHayL/Flux_Source/hybrid_entropy/](../GRHayL/Flux_Source/hybrid_entropy)
-- Tabulated HLLE: [GRHayL/Flux_Source/tabulated/](../GRHayL/Flux_Source/tabulated)
-- Tabulated entropy HLLE: [GRHayL/Flux_Source/tabulated_entropy/](../GRHayL/Flux_Source/tabulated_entropy)
-- NRPy 2 generation: [GRHayL/Flux_Source/generate_flux_source.sh](../GRHayL/Flux_Source/generate_flux_source.sh) and
-  [GRHayL/Flux_Source/generate_flux_source.py](../GRHayL/Flux_Source/generate_flux_source.py)
-- Public declarations: `GRHayL/include/ghl_flux_source.h`
-
-Tests/data generators:
-- [Unit_Tests/unit_test_hybrid_flux.c](../Unit_Tests/unit_test_hybrid_flux.c)
-- [Unit_Tests/unit_test_tabulated_flux.c](../Unit_Tests/unit_test_tabulated_flux.c)
-- [Unit_Tests/unit_test_ET_Legacy_flux_source.c](../Unit_Tests/unit_test_ET_Legacy_flux_source.c)
-- [Unit_Tests/data_gen/unit_test_data_hybrid_flux.c](../Unit_Tests/data_gen/unit_test_data_hybrid_flux.c)
-- [Unit_Tests/data_gen/unit_test_data_tabulated_flux.c](../Unit_Tests/data_gen/unit_test_data_tabulated_flux.c)
-
-Docs to update:
-- `docs/raw/Flux_Source.dox`
-- [wiki/gems/flux-source.md](gems/flux-source.md)
-- [wiki/physics/evolution-equation-map.md](physics/evolution-equation-map.md) if term mapping changes
-
-Pitfalls/contracts:
-- HLLE public entry points are split by direction, EOS family, and entropy evolution.
-- Flux inputs are expected at faces; use Reconstruction contracts when changing caller-facing assumptions.
-- Source terms require metric derivatives supplied by the surrounding code.
-- Characteristic-speed changes also affect Induction HLL flux routing.
-
-## Induction Path
-
-Read first:
-- [wiki/gems/induction.md](gems/induction.md)
-- [wiki/gems/induction/hll-flux-contract.md](gems/induction/hll-flux-contract.md)
-- [wiki/gems/induction/interpolation-and-staggering-contract.md](gems/induction/interpolation-and-staggering-contract.md)
-- [wiki/gems/induction/gauge-rhs-contract.md](gems/induction/gauge-rhs-contract.md)
-- [wiki/gems/induction/tests-and-fixtures.md](gems/induction/tests-and-fixtures.md)
-- [wiki/gems/induction/verification-workflows.md](gems/induction/verification-workflows.md)
-- [docs/raw/Induction.dox](../docs/raw/Induction.dox)
-- `docs/raw/derivation.md`
-- [GRHayL/include/ghl_induction.h](../GRHayL/include/ghl_induction.h)
-- [GRHayL/Induction/](../GRHayL/Induction)
-
-Edit paths:
-- Magnetic HLL fluxes: [GRHayL/Induction/HLL_flux_with_B.c](../GRHayL/Induction/HLL_flux_with_B.c), [GRHayL/Induction/HLL_flux_with_Btilde.c](../GRHayL/Induction/HLL_flux_with_Btilde.c)
-- Gauge/scalar-potential RHS: [GRHayL/Induction/calculate_phitilde_rhs.c](../GRHayL/Induction/calculate_phitilde_rhs.c)
-- Interpolation helpers: [GRHayL/Induction/Interpolators/](../GRHayL/Induction/Interpolators)
-- Public declarations: `GRHayL/include/ghl_induction.h`
-
-Tests/data generators:
-- `Unit_Tests/unit_test_HLL_flux.c`
-- `Unit_Tests/unit_test_ET_Legacy_HLL_flux.c`
-- [Unit_Tests/unit_test_induction_ccc_ADM.c](../Unit_Tests/unit_test_induction_ccc_ADM.c)
-- [Unit_Tests/unit_test_induction_ccc_BSSN.c](../Unit_Tests/unit_test_induction_ccc_BSSN.c)
-- [Unit_Tests/unit_test_induction_vvv_ADM.c](../Unit_Tests/unit_test_induction_vvv_ADM.c)
-- [Unit_Tests/unit_test_ET_Legacy_induction_gauge_rhs.c](../Unit_Tests/unit_test_ET_Legacy_induction_gauge_rhs.c)
-- [Unit_Tests/compute_A_flux_with_B.c](../Unit_Tests/compute_A_flux_with_B.c)
-- [Unit_Tests/compute_A_flux_with_Btilde.c](../Unit_Tests/compute_A_flux_with_Btilde.c)
-- [Unit_Tests/compute_ccc_ADM.c](../Unit_Tests/compute_ccc_ADM.c)
-- [Unit_Tests/compute_ccc_BSSN.c](../Unit_Tests/compute_ccc_BSSN.c)
-- [Unit_Tests/compute_vvv_ADM.c](../Unit_Tests/compute_vvv_ADM.c)
-- `Unit_Tests/data_gen/unit_test_data_HLL_flux.c`
-- [Unit_Tests/data_gen/unit_test_data_ET_Legacy_HLL_flux.c](../Unit_Tests/data_gen/unit_test_data_ET_Legacy_HLL_flux.c)
-- [Unit_Tests/data_gen/unit_test_data_induction_interpolation.c](../Unit_Tests/data_gen/unit_test_data_induction_interpolation.c)
-- [Unit_Tests/data_gen/unit_test_data_ET_Legacy_induction_gauge_rhs.c](../Unit_Tests/data_gen/unit_test_data_ET_Legacy_induction_gauge_rhs.c)
-
-KB routes to update:
-- `wiki/gems/induction.md` when hub routes change
-- `wiki/gems/induction/hll-flux-contract.md` for HLL flux API, packing, or densitization contracts
-- `wiki/gems/induction/interpolation-and-staggering-contract.md` for interpolator, stencil, or staggering contracts
-- `wiki/gems/induction/gauge-rhs-contract.md` for scalar/gauge RHS contracts
-- `wiki/gems/induction/tests-and-fixtures.md` for fixture, helper, or coverage routing
-- `wiki/gems/induction/verification-workflows.md` for targeted run and CI job routing
-- `wiki/physics/evolution-equation-map.md` and `wiki/physics/variables-and-conventions.md` when equation or variable routing changes
-
-Pitfalls/contracts:
-- Primitive `BU` already carries GRHayL's `1/sqrt(4*pi)` magnetic
-  normalization. Induction `Btilde` additionally includes volume densitization;
-  the HLL routines perform no magnetic-normalization conversion. See [variables and conventions](physics/variables-and-conventions.md).
-- `A_i`, `tilde{Phi}`, and staggered magnetic fields have distinct assumed grid locations.
-- `ghl_HLL_vars` uses cross-product component ordering, not literal vector index names.
-- `ghl_HLL_flux_with_B` densitizes with `psi6`; `ghl_HLL_flux_with_Btilde` expects densitized input.
-
-## NRPyLeakage/Neutrino Path
-
-Read first:
-- [wiki/gems/neutrinos.md](gems/neutrinos.md)
-- [wiki/gems/neutrinos/api-and-data.md](gems/neutrinos/api-and-data.md)
-- [wiki/gems/neutrinos/implementation-flow.md](gems/neutrinos/implementation-flow.md)
-- [wiki/gems/neutrinos/tests-and-fixtures.md](gems/neutrinos/tests-and-fixtures.md)
-- [GRHayL/include/ghl_radiation.h](../GRHayL/include/ghl_radiation.h)
-- [GRHayL/include/ghl_nrpyleakage.h](../GRHayL/include/ghl_nrpyleakage.h)
-- [GRHayL/Neutrinos/NRPyLeakage/](../GRHayL/Neutrinos/NRPyLeakage)
-- `GRHayL/include/ghl_nrpyeos_tabulated.h`
-
-Edit paths:
-- Leakage implementation: `GRHayL/Neutrinos/NRPyLeakage/`
-- Radiation structs: `GRHayL/include/ghl_radiation.h`
-- Leakage API/constants: `GRHayL/include/ghl_nrpyleakage.h`
-- Build lists: [GRHayL/Neutrinos/make.code.defn](../GRHayL/Neutrinos/make.code.defn), [GRHayL/Neutrinos/NRPyLeakage/make.code.defn](../GRHayL/Neutrinos/NRPyLeakage/make.code.defn)
-
-Tests/data generators:
-- [Unit_Tests/unit_test_nrpyleakage_physics.c](../Unit_Tests/unit_test_nrpyleakage_physics.c)
-- [Unit_Tests/unit_test_nrpyleakage_classifier_fallback.c](../Unit_Tests/unit_test_nrpyleakage_classifier_fallback.c)
-- [Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c](../Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c)
-- [Unit_Tests/unit_test_nrpyleakage_luminosities.c](../Unit_Tests/unit_test_nrpyleakage_luminosities.c)
-- [Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c](../Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c)
-- [Unit_Tests/nrpyleakage_main.h](../Unit_Tests/nrpyleakage_main.h)
-
-Wiki routes:
-- `wiki/gems/neutrinos.md`
-- `wiki/gems/neutrinos/api-and-data.md` for radiation structs, public leakage
-  entry points, constants ownership, errors, and HDF5/EOS dependency
-- `wiki/gems/neutrinos/implementation-flow.md` for Fermi-Dirac,
-  PathOfLeastResistance, source terms, luminosities, opacities, and finite
-  handling
-- `wiki/gems/neutrinos/tests-and-fixtures.md` for `nrpyleakage_main.h`,
-  fixture pairs, SLy4 table setup, CI downloads, and key `0`/key `1` behavior
-
-Pitfalls/contracts:
-- Leakage routines depend on EOS access to `rho`, `Y_e`, and temperature.
-- `ghl_neutrino_opacities` stores electron neutrino, electron antineutrino, and heavy-lepton neutrino entries; optical depths reuse the opacity struct type.
-- Units and constants live in `ghl_nrpyleakage.h`; changing them affects all leakage tests.
-
-## Add Unit Test Data
-
-Follow [the test-change restriction](../AGENTS.md#agent-execution-contract):
-adding or expanding tests, assertions, fixtures, generators, or CI test
-executions requires the user's explicit permission for that specific change.
-The routes below do not supply that permission.
-
-Read first:
-- `README.md` CI testing section
-- Existing matching `Unit_Tests/unit_test_*.c`
-- Existing matching `Unit_Tests/data_gen/unit_test_data_*.c`
-- [GRHayL/include/ghl_unit_tests.h](../GRHayL/include/ghl_unit_tests.h)
-
-Edit paths:
-- Test executable: `Unit_Tests/unit_test_*.c`
-- Data generator: `Unit_Tests/data_gen/unit_test_data_*.c`
-- Shared helpers: `Unit_Tests/randomize_*.c`, [Unit_Tests/tabulated_eos_unit_test_helpers.c](../Unit_Tests/tabulated_eos_unit_test_helpers.c)
-- Sample table inputs: `Unit_Tests/sample_table/`
-
-Tests/data generators:
-- Run the changed unit test and its generator when available.
-- For perturbation tests, compare output against the generated perturbed bounds, not exact equality unless the existing test does so.
-
-Docs to update:
-- Relevant gem page under [wiki/gems/](gems)
-- `wiki/test-map.md` when the new test, generator, or fixture changes the top-level test inventory.
-
-Pitfalls/contracts:
-- Test data often validates outputs against perturbed input ranges.
-- Relevant local ET Legacy generators write input-side data. Their presence
-  does not establish the provenance of downloaded outputs; use the
-  [ET Legacy evidence contract](tests/et-legacy-comparison-contract.md).
-- Do not update shared test maps in parallel-owned files without coordination.
-
-## Doxygen Source Docs
-
-Read first:
-- [docs/raw/mainpage.md](../docs/raw/mainpage.md)
-- Relevant `docs/raw/*.dox`
-- `Doxyfile`
-- Public headers in `GRHayL/include/`
-
-Edit paths:
-- Module pages: `docs/raw/*.dox`
-- Derivation source: `docs/raw/derivation.md`
-- Public API comments: `GRHayL/include/`
-
-Tests/data generators:
-- Run Doxygen from repo root only with `OUTPUT_DIRECTORY` overridden to a
-  unique temporary directory. Use the status-preserving command in
-  [Generated Boundaries](generated-boundaries.md); do not run `doxygen
-  Doxyfile` directly for validation because it writes generated output beside
-  [docs/raw/](../docs/raw). Record `doxygen --version`, review warning output, and compare
-  warning sets only against the same version/configuration.
-- At minimum, search links and group names after edits.
-
-Docs to update:
-- Keep wiki routing pages compact and point back to Doxygen/source authority.
-- Avoid copying long equations or full function docs into wiki pages.
-
-Pitfalls/contracts:
-- Doxygen source and public-header comments document function-level API intent;
-  declarations, definitions, build inclusion, and tests remain claim-specific
-  behavior evidence when they disagree.
-- `docs/raw/derivation.md` is authoritative for GRMHD variable definitions and equation concepts.
-- Generated output is not source; edit raw docs and headers instead.
-
-## Downstream GRHayLib Impact
-
-Read first:
-- [implementations/GRHayLib/README](../implementations/GRHayLib/README)
-- [implementations/GRHayLib/configuration.ccl](../implementations/GRHayLib/configuration.ccl)
-- [implementations/GRHayLib/interface.ccl](../implementations/GRHayLib/interface.ccl)
-- [implementations/GRHayLib/param.ccl](../implementations/GRHayLib/param.ccl)
-- [implementations/GRHayLib/schedule.ccl](../implementations/GRHayLib/schedule.ccl)
-- [implementations/GRHayLib/src/GRHayLib.h](../implementations/GRHayLib/src/GRHayLib.h)
-- [implementations/GRHayLib/src/initialize_and_shutdown.c](../implementations/GRHayLib/src/initialize_and_shutdown.c)
-- [implementations/GRHayLib/src/make.code.defn](../implementations/GRHayLib/src/make.code.defn)
-- [wiki/implementations/grhaylib/verification-and-drift.md](implementations/grhaylib/verification-and-drift.md)
-
-Edit paths:
-- Normally none. Edits under `implementations/GRHayLib/` need downstream
-  coordination; coordinate with the maintainers before editing
-  `implementations/GRHayLib/`.
-
-Tests/data generators:
-- Check whether changed headers are included through `implementations/GRHayLib/src/GRHayLib.h`.
-- Check whether new source subdirectories need corresponding downstream `SUBDIRS` entries.
-- Compare Cactus parameters in `implementations/GRHayLib/param.ccl` with parser
-  and initialization logic in `implementations/GRHayLib/src/initialize_and_shutdown.c`.
-- Use upstream targeted [Unit_Tests/](../Unit_Tests) only for upstream public API or behavior
-  changes that may affect GRHayLib. These tests do not verify Cactus thorn
-  build, scheduling, parameter parsing, or runtime behavior.
-- For Cactus thorn verification, use the manual hierarchy in
-  [GRHayLib verification and drift](implementations/grhaylib/verification-and-drift.md),
-  including manual source/link checks and an external Cactus or Einstein Toolkit
-  build when one is available. Do not invent a local Cactus build command.
-
-Docs to update:
-- Relevant GRHayLib implementation KB page when thorn routing, lifecycle, CCL,
-  or verification guidance changes.
-- Relevant gem page drift-risk section when upstream gem behavior or public API
-  changes.
-- Downstream docs only with coordination.
-
-Pitfalls/contracts:
-- GRHayLib directly compiles GRHayL-like subdirectories; new source directories can require downstream build-list changes.
-- Public header changes affect Cactus thorns that include `GRHayLib.h`.
-- Parameter or EOS initialization changes can require Cactus parameter/schedule updates.
-
-## KB Maintenance
-
-Read [KB Index](index.md), [KB Checks](lint/CHECKS.md), and exact source owners
-before editing KB pages. Reopen ground truth for changed claims, update affected
-routes and owner pages, then run affected link, policy, and whitespace checks.
-
-Volatile information is forbidden in the KB; follow the
-[Volatile Information Policy](index.md#volatile-information-policy). Never compute
-or record checksums, hashes, digests, VCS revision pins, counts of files, tests,
-or jobs, `mtime`, stored fingerprints, date stamps, timestamps, line numbers, or
-recorded run or review results. Do not create separate KB maintenance logs. Track
-source drift by changed paths and dependency-aware review; use git history for
-durable change history.
+> Procedures for querying, ingesting, reconciling, reproducing, and checking the GRHayL KB. · Status: confirmed
+
+## Summary
+
+Start at [AGENTS.md](../AGENTS.md), follow branch and sub-branch `index.md` routers directly, and read only the needed leaf or `###` subsection. Record each durable fact once in its defining leaf, compute reverse file dependencies dynamically with `rg -l -F`, keep builds and mutating scripts inside disposable trees, and verify edits with `tools/kb_lint.py` and [Language For Computational Physicists](computational-physics-language.md).
+
+## Search Order
+
+1. Read [AGENTS.md](../AGENTS.md) and jump to the target branch `index.md` router (or `wiki/gems/atmosphere.md`).
+2. For ambiguous or cross-branch queries, run `rg -n -i -F '<term>' wiki/catalog.md` and read only matching rows.
+3. Read compact leaves (`< 8,000` B) directly in one read. On leaves `>= 8,000` B, run `rg -n '^### ' <page>` first and read only the needed `###` range. Follow a `## See Also` link only when its prefix (`Depends on:`, `Implements:`, `Validated by:`, `Example:`, `Contrasts with:`, `See also:`) identifies a missing prerequisite or check.
+4. Search support tables selectively without reading whole files:
+   - Reverse file citations: `rg -l -F '<path>' wiki/`
+   - Source or aggregate rows: ``rg -n -F '| `<key>` |' raw/SOURCES.md`` or ``rg -n -F '| `<aggregate>` |' wiki/source-map.md``
+   - Contradiction entries: `rg -n -F '| <CONTR-ID> |' wiki/contradictions.md` plus the matching `### CONTR-XXXX` subsection
+   - Canonical term spellings: `rg -n -i -F '<term>' wiki/glossary.md`
+5. Reopen primary files in `GRHayL/`, `implementations/GRHayLib/`, `Unit_Tests/`, `docs/raw/`, `tools/compose/`, `configure`, or `.github/` directly when verifying or updating code-backed claims.
+
+## Ingest
+
+1. Confirm source coverage in [raw/SOURCES.md](../raw/SOURCES.md) via an aggregate row, an exact local row (`Source | Status`), or an external row (`Source | Tier | Provenance | Status | Ingest | Notes`, `Notes <= 80` B). Never store hashes, dates, timestamps, `mtime` values, inventory counts, line numbers, or run results.
+2. Select the single defining leaf for the topic under the appropriate branch router.
+3. Synthesize durable facts in direct computational-physics prose, add `<= 300` B `Evidence (<role>):` lines using shortest-unambiguous `` `subpath.c::symbol` `` tags for high-risk claims (C struct members as `struct.field`, binary `.h5` by path only), and list each cited file or URL once in `## Sources`.
+4. Partition `## Detail` with descriptive `###` headings whenever `## Detail` exceeds `4,000` B (`<= 6,000` B per chunk, `<= 20,000` B per leaf) and keep `1` to `6` relation-prefixed non-parent `## See Also` bullets.
+5. Update the immediate parent `index.md` and [catalog.md](catalog.md) only when adding, moving, renaming, or deleting a leaf; update [source-map.md](source-map.md) only when an aggregate's scope changes.
+
+## Query Filing
+
+Do not file one-off answers. File durable syntheses only when they resolve recurring cross-module questions, record non-obvious numerical or build constraints, or fix missing router paths:
+
+1. Single-topic updates go into the existing defining leaf (splitting into two focused leaves if the leaf would exceed `20,000` B).
+2. Narrow new topics add a leaf under the branch router (`2` to `14` children per `index.md`).
+3. Cross-branch comparisons with one leaf sit directly under `wiki/` (`> Up: [GRHayL Knowledge Base](../AGENTS.md)`); create a dedicated directory router only when at least two related leaves exist.
+
+## Living-Source Change
+
+1. Inspect the changed code, header, manifest, Doxygen, or CI diff and verify [raw/SOURCES.md](../raw/SOURCES.md) coverage plus [Change Impact](architecture/change-impact.md).
+2. Locate citing wiki pages dynamically with `rg -l -F '<changed_path>' wiki/`.
+3. Run `rg -l -F '<changed_symbol>' wiki/` across other wiki pages only when a public function signature, enum/struct layout, header guard, `make.code.defn` manifest entry, or mathematical convention changed—never expand 1-hop across generic [glossary.md](glossary.md) terms.
+4. Reconcile the defining leaf; replace duplicate prose in neighboring leaves with a one-sentence link. Mark a leaf `stale` with a `CONTR-XXXX` entry only when immediate reconciliation is blocked.
+5. **Downstream GRHayLib coordination:** Before editing `implementations/GRHayLib/` or public `GRHayL/include/` structs/enums read by `GRHayLib`, check [GRHayLib Runtime Parameters](implementations/grhaylib-runtime-parameters.md) and [GRHayLib Verification](implementations/grhaylib-verification.md). Static parity in `implementations/GRHayLib/` does not prove Cactus build, schedule, or runtime behavior.
+
+## External Source And Contradiction Updates
+
+Classify external URLs in [raw/SOURCES.md](../raw/SOURCES.md) as `background` unless a durable KB claim depends on a version-pinned paper, tag, or format specification (`external-spec`). Repository code, tests, generated evidence, and repository docs take precedence per [KB Rules](SCHEMA.md#citation-rules).
+
+When sources conflict or living-source drift cannot be reconciled in the same change, add a 4-column row (`<= 220` B) and `### CONTR-XXXX` subsection in [contradictions.md](contradictions.md) and place literal `Claim status: contested; contradiction: CONTR-0001.` (or `stale`) plus a `#contr-0001` link on every affected leaf. When resolved and verified by its resolution check, reconcile affected leaves, remove all `#contr-*` links, delete the register row and subsection, and append the ID to `Retired IDs:`.
+
+## Safe Reproduction
+
+In the shared repository checkout, run only side-effect-free scoped checks (`PYTHONDONTWRITEBYTECODE=1 python3 -B tools/kb_lint.py`, `git diff --check`, `./configure --help`, `./scripts/parser`, `sh -n`/`bash -n`, read-only YAML parsing). Run `./configure`, `make`, `make tests`, `make datagen`, `.github/run_tests.sh`, `generate_makefile.sh`, CompOSE converters, and Doxygen builds inside a unique disposable copy with redirected output paths (`OUTPUT_DIRECTORY` for Doxygen, never beside `docs/raw/`). Inspect scripts for downloads, cleanup globs, and failure leftovers before execution; never run `make` on broken `generate_makefile.sh` output, never edit `docs/raw/Reconstruction.dox` during KB work, and never add or enable tests or CI test executions without explicit user permission.
+
+## Evidence-First Debugging
+
+Follow the runtime failure inspection rule in [AGENTS.md](../AGENTS.md#agent-working-rules): reproduce or explain why not, inspect actual build outputs, generated `Makefile` variables (`SRC`, `TEXES`, `DGEXES`, `IHDS`), or runtime quantities before proposing a cause or fix, and record only durable lessons in `wiki/`.
+
+## Deterministic And Review Checks
+
+Run before completing KB edits:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -B tools/kb_lint.py
+git diff --check
+```
+
+`tools/kb_lint.py` must exit `0` and print `KB lint passed.`
+
+Optional review-time read-only scans (not part of `tools/kb_lint.py`):
+
+```bash
+# Forbidden volatile metadata, hashes, line citations, dates, and run results:
+rg -n -i '(checksum|digest|mtime|fingerprint|maintenance log|\bas of\b|\.(c|h|py|sh|yml|md|dox|ccl):[0-9]+)' AGENTS.md wiki raw/SOURCES.md || true
+# Doxygen markup duplication check:
+rg -n 'defgroup|@ingroup|@brief|@details|\\f\[' wiki || true
+# Absolute workspace path check (outside operational delivery-path clause in AGENTS.md):
+rg -n '(^|[^[:alnum:]_.])/work(/|`|$)' wiki raw/SOURCES.md || true
+```
+
+Semantic review checklist:
+- `git status --short` shows only intended changes, with no generated `Makefile`, `build/`, `test/`, `lib/`, `docs/html/`, `docs/latex/`, cache, or scratch report files added.
+- `AGENTS.md <= 4,800` B; every normal leaf `<= 20,000` B with `## Detail` chunks `<= 6,000` B; every `wiki/` line `<= 1,000` B; every router links `2`–`14` children with no prose facts; support tables obey `SCHEMA.md` row byte caps.
+- Every new or revised passage follows [KB Rules](SCHEMA.md) and [Language For Computational Physicists](computational-physics-language.md) with zero vague metaphors, no prose restating adjacent table cells, and single-defining-page authority.
+
+## Sources
+
+- [AGENTS.md](../AGENTS.md) - root router, working rules, computational-physics prose mandate, and test/CI restriction
+- [tools/kb_lint.py](../tools/kb_lint.py) - link, reachability, and Evidence-citation checks
+- [README.md](../README.md) - build, install, and test workflow overview
+- [configure](../configure) - build configuration options and HDF5 flags
+
+## See Also
+
+- Depends on: [KB Rules](SCHEMA.md)
+- Depends on: [Language For Computational Physicists](computational-physics-language.md)
+- See also: [Build And Configure](architecture/build-and-configure.md)
+- See also: [Change Impact](architecture/change-impact.md)
+- See also: [Tests](tests/index.md)

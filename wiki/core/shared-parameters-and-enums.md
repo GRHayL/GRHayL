@@ -1,206 +1,68 @@
 # Shared Parameters And Enums
 
-Purpose: route GRHayL shared public parameters, enums, and cross-gem structs to
-their owning source and KB pages. This page is a map, not a replacement for
-public headers, Core packers, EOS setup, Con2Prim recovery, Reconstruction, or
-Induction docs.
+> Shared `ghl.h` parameters, enums, struct routes, `GRHayL_Core/make.code.defn` source mapping, and non-Core `ghl.h` declarations. · Status: confirmed
+> Up: [GRHayL Core](index.md)
 
-Ground truth starts in
-[`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h),
-[`GRHayL/include/ghl_io.h`](../../GRHayL/include/ghl_io.h),
-[`GRHayL/include/ghl_debug.h`](../../GRHayL/include/ghl_debug.h), and
-[`GRHayL/include/ghl_metric_helpers.h`](../../GRHayL/include/ghl_metric_helpers.h).
-Use this page instead of creating separate public-header-install or
-extrinsic-curvature-only pages.
+## Summary
 
-## Public Header Surface
+`GRHayL/include/ghl.h` (with `ghl_io.h`, `ghl_debug.h`, and `ghl_metric_helpers.h`) defines GRHayL's shared public enums, parameter structs (`ghl_parameters`, `ghl_eos_parameters`), fluid/metric/stress-energy structs, and normalization macros (`SQR`, `ONE_OVER_SQRT_4PI`, `M_PI`, `MAX_EOS_PARAMS`). Most `ghl.h` declarations are implemented in `GRHayL/GRHayL_Core/`, except two Con2Prim-implemented declarations audited below.
 
-- [`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h) declares shared Core
-  structs, public enums, EOS setup functions, Core packing helpers, metric
-  helpers, stress-energy helpers, and small utility declarations.
-- [`GRHayL/include/ghl_io.h`](../../GRHayL/include/ghl_io.h) declares
-  `ghl_info`, `ghl_Warn_Error`, `ghl_error_keys`, and the terminating or
-  warning IO macros.
-- [`GRHayL/include/ghl_debug.h`](../../GRHayL/include/ghl_debug.h) provides
-  inline primitive/conservative debug printers and wrapper macros.
-- [`GRHayL/include/ghl_metric_helpers.h`](../../GRHayL/include/ghl_metric_helpers.h)
-  provides inline raise/lower and vector-square helpers for 3D and 4D metric
-  arrays.
+## Detail
 
-[`GRHayL/include/make.code.defn`](../../GRHayL/include/make.code.defn) lists
-the headers above for installation. Installation is only header
-availability: declarations still require matching library storage/definitions,
-and function-pointer declarations still require runtime assignment before a
-call.
+### `GRHayL_Core` Source Map And Non-Core `ghl.h` Declaration Audit
 
-Some installed-header cases need narrower labels:
+Every C file listed in `GRHayL/GRHayL_Core/make.code.defn` maps to one defining Core leaf:
 
-- [`GRHayL/include/ghl_eos_functions.h`](../../GRHayL/include/ghl_eos_functions.h)
-  contains `extern` function-pointer declarations. Storage is emitted by the
-  built Core translation unit through
-  [`ghl_eos_functions_declaration.h`](../../GRHayL/include/ghl_eos_functions_declaration.h),
-  but pointer values are zero-initialized until an initializer or caller
-  assigns them; use the [EOS dispatch contract](eos-dispatch-contract.md) for
-  lifecycle and assignment requirements.
-- [`GRHayL/include/ghl_unit_tests.h`](../../GRHayL/include/ghl_unit_tests.h) is
-  source-tree-only. Its non-inline helper definitions live under
-  [`Unit_Tests/`](../../Unit_Tests/), not in the Core or gem library manifests,
-  and the header is excluded from the install list.
+| `GRHayL_Core` C file(s) | Defining Core leaf |
+| --- | --- |
+| `abort_if_error.c`, `info_warn_error.c`, `min_max_clamp.c` | [Errors, IO, Debug, And Utilities](errors-io-debug-utilities.md) (Ev: `GRHayL/GRHayL_Core/make.code.defn::abort_if_error.c`) |
+| `compute_ADM_auxiliaries.c`, `enforce_detgij_and_initialize_ADM_metric.c`, `initialize_metric.c` | [Metric And ADM Helpers](metric-adm.md) (Ev: `GRHayL/GRHayL_Core/make.code.defn::initialize_metric.c`) |
+| `compute_smallb_and_b2.c`, `compute_TDNmunu.c`, `compute_TUPmunu.c`, `initialize_stress_energy.c`, `return_stress_energy.c` | [Stress-Energy And `smallb`](stress-energy-smallb.md) (Ev: `GRHayL/GRHayL_Core/make.code.defn::compute_TDNmunu.c`) |
+| `initialize_conservatives.c`, `initialize_extrinsic_curvature.c`, `initialize_params.c`, `initialize_primitives.c`, `return_conservatives.c`, `return_primitives.c` | [Struct Pack And Unpack](struct-pack-unpack.md) (Ev: `GRHayL/GRHayL_Core/make.code.defn::initialize_params.c`) |
+| `initialize_eos.c` | [EOS Dispatch](eos-dispatch.md) (Ev: `GRHayL/GRHayL_Core/make.code.defn::initialize_eos.c`) |
+| `limit_v_and_compute_u0.c` | [Velocity And `u0`](velocity-u0.md) (Ev: `GRHayL/GRHayL_Core/make.code.defn::limit_v_and_compute_u0.c`) |
 
-`ghl.h` also exposes guarded utility/normalization macros (`SQR`,
-`ONE_OVER_SQRT_4PI`, and `M_PI`) and the `MAX_EOS_PARAMS` layout bound. Route
-magnetic normalization to [stress-energy/smallb](stress-energy-smallb-contract.md)
-and the EOS array bound to EOS pages; the header remains layout authority.
+**Non-Core declarations in `ghl.h`:**
+- `ghl_get_con2prim_routine_name` is declared in `GRHayL/include/ghl.h` but implemented in `GRHayL/Con2Prim/get_con2prim_routine_name.c`.
+- `ghl_compute_SU_Bsq_Ssq_BdotS` is declared in `GRHayL/include/ghl.h` but implemented in `GRHayL/Con2Prim/compute_SU_Bsq_Ssq_BdotS.c` ([Limits And Conversions](../gems/con2prim/limits-and-conversions.md)).
+- The opaque `ghl_c2p_nn_model` forward declaration in `ghl.h` belongs to [Neural-Network Primitive Guess](../gems/con2prim/neural-network-primitive-guess.md).
 
-## Enum Routes
+Evidence (descriptive behavior): `GRHayL/include/ghl.h::ghl_get_con2prim_routine_name`; corroboration: `GRHayL/Con2Prim/get_con2prim_routine_name.c` and `GRHayL/Con2Prim/compute_SU_Bsq_Ssq_BdotS.c`.
 
-| Public enum | Primary route | Use for |
+### Public Enums And Shared Struct Routes
+
+| Type | Defining route | Purpose |
 | --- | --- | --- |
-| `ghl_error_codes_t` | [errors, IO, debug, utilities](errors-io-debug-utilities.md) | Return-code vocabulary for EOS, Con2Prim, table, HDF5, atmosphere/floor, velocity, allocation, and utility errors. Message text is owned by [`abort_if_error.c`](../../GRHayL/GRHayL_Core/abort_if_error.c). |
-| `ghl_con2prim_id_t` | [Con2Prim solver matrix](../gems/con2prim/solver-matrix.md) | Solver IDs such as `Noble2D`, `Font1D`, `Palenzuela1D`, `Newman1D`, entropy variants, and `None` backup sentinel. |
-| `ghl_eos_t` | [EOS initialization and dispatch](../gems/eos/initialization-and-dispatch.md) | EOS family selection: simple, hybrid, or tabulated. |
-| `ghl_eos_table_t` | [EOS initialization and dispatch](../gems/eos/initialization-and-dispatch.md) and tabulated EOS pages | Table-family selection, currently including `ghl_eos_table_stellarcollapse` and unknown/type-count sentinels. |
-| `ghl_error_keys` | [errors, IO, debug, utilities](errors-io-debug-utilities.md) | IO macro control values in `ghl_io.h`, separate from recoverable `ghl_error_codes_t` returns. |
+| `ghl_error_codes_t` / `ghl_error_keys` | [Errors, IO, Debug, And Utilities](errors-io-debug-utilities.md) | Recoverable return codes (`abort_if_error.c` messages) and `ghl_io.h` macro controls. (Ev: `GRHayL/include/ghl.h::ghl_error_codes_t`) |
+| `ghl_con2prim_id_t` | [Solver Matrix](../gems/con2prim/solver-matrix.md) | Solver IDs (`Noble2D`, `Font1D`, `Palenzuela1D`, `Newman1D`, entropy variants, `None`). (Ev: `GRHayL/include/ghl.h::ghl_con2prim_id_t`) |
+| `ghl_eos_t` / `ghl_eos_table_t` | [EOS Initialization And Dispatch](../gems/eos/initialization-and-dispatch.md) | Simple/hybrid/tabulated family enum and table-format enum (`ghl_eos_table_stellarcollapse`). (Ev: `GRHayL/include/ghl.h::ghl_eos_t`) |
+| `ghl_primitive_quantities` / `ghl_conservative_quantities` / `ghl_extrinsic_curvature` | [Struct Pack And Unpack](struct-pack-unpack.md) | Primitive, conservative, and symmetric `K_{ij}` point structs (`ghl.h`). (Ev: `GRHayL/include/ghl.h::ghl_extrinsic_curvature`) |
+| `ghl_metric_quantities` / `ghl_ADM_aux_quantities` | [Metric And ADM Helpers](metric-adm.md) | ADM 3-metric and 4-metric structs (`ghl.h`). (Ev: `GRHayL/include/ghl.h::ghl_ADM_aux_quantities`) |
+| `ghl_stress_energy` | [Stress-Energy And `smallb`](stress-energy-smallb.md) | `T4[4][4]` stress-energy struct (`ghl.h`). (Ev: `GRHayL/include/ghl.h::ghl_stress_energy`) |
 
-The forward-declared opaque `ghl_c2p_nn_model` type is also shared public
-surface in `ghl.h`; its allocation and model lifecycle belong to Con2Prim
-neural-network routes, not Core packing.
+### `ghl_parameters` And `ghl_eos_parameters` Field Groups
 
-## `ghl_parameters`
+- **`ghl_parameters` (`initialize_params.c`):** stores `main_routine`, `backup_routine[3]`, `evolve_entropy`, `evolve_temp`, `calc_prim_guess`, `psi6threshold`, `max_Lorentz_factor` (and derived `inv_sq_max_Lorentz_factor`), `con2prim_max_iterations`, `con2prim_solver_tolerance`, `ppm_*` flattening/shock parameters ([PPM Flow](../gems/reconstruction/ppm-flow.md)), and `Lorenz_damping_factor` ([Gauge RHS](../gems/induction/gauge-rhs.md)). `ghl_initialize_params` returns `void` with no validation, reads all three `backup_routine` entries, and divides `1.0 / max_Lorentz_factor^2` directly; callers must pass finite `max_Lorentz_factor >= 1`.
+- **`ghl_eos_parameters` (`initialize_eos.c`):** stores `eos_type`, `table_type`, `clean_sound_speed`, atmosphere/min/max bounds (`rho_*`, `tau_atm`, `press_*`, `Y_e_*`, `T_*`, `eps_*`, `entropy_*`), piecewise-polytrope arrays (`neos`, `rho_ppoly`, `Gamma_ppoly`, `K_ppoly`, `eps_integ_const`, `p_ppoly`, `Gamma_th`), and tabulated table arrays/beta-equilibrium fields/`root_finding_precision`. On success, Core EOS initializers replace the destination with a zero-initialized aggregate populated for the active family (setting unused `Y_e_atm` and `T_atm` to zero for simple/hybrid so constant Atmosphere can copy them).
+- **Cross-module edit hazards:** modifying `ghl_con2prim_id_t`, `ghl_error_codes_t`, `ghl_eos_parameters`, `ppm_*`, or `Lorenz_damping_factor` impacts downstream gems, `abort_if_error.c`, and `implementations/GRHayLib/`.
 
-`ghl_parameters` lives in
-[`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h). Core initializes it in
-[`GRHayL/GRHayL_Core/initialize_params.c`](../../GRHayL/GRHayL_Core/initialize_params.c).
+Evidence (descriptive behavior): `GRHayL/GRHayL_Core/initialize_params.c::ghl_initialize_params`; corroboration: `GRHayL/include/ghl.h::ghl_parameters` and `GRHayL/include/ghl.h::ghl_eos_parameters`.
 
-Route fields by ownership:
+## Sources
 
-- `main_routine` and `backup_routine[3]`: route `ghl_con2prim_id_t` values to
-  [Con2Prim solver matrix](../gems/con2prim/solver-matrix.md) and recovery
-  order to [Con2Prim recovery flow](../gems/con2prim/recovery-flow.md).
-- `evolve_entropy`, `evolve_temp`, and `calc_prim_guess`: route recovery effects
-  to [Con2Prim recovery flow](../gems/con2prim/recovery-flow.md) and EOS field
-  coupling to [EOS initialization and dispatch](../gems/eos/initialization-and-dispatch.md).
-- `max_Lorentz_factor` and `inv_sq_max_Lorentz_factor`: route velocity limiting
-  to [Core velocity/u0 contract](velocity-u0-contract.md) and primitive-limit
-  wrapper behavior to [Con2Prim limits and conversions](../gems/con2prim/limits-and-conversions.md).
-  The caller must supply a finite maximum Lorentz factor of at least one.
-  Initialization stores that value and derives its inverse square, while the limiter rejects a required cap that cannot produce
-  a representably subluminal, within-cap result.
-- `psi6threshold`: route conservative/floor adjustment behavior to
-  [Con2Prim limits and conversions](../gems/con2prim/limits-and-conversions.md).
-- `con2prim_max_iterations` and `con2prim_solver_tolerance`: route solver
-  behavior to [Con2Prim recovery flow](../gems/con2prim/recovery-flow.md) and
-  method support to [Con2Prim solver matrix](../gems/con2prim/solver-matrix.md).
-- `ppm_flattening_epsilon`, `ppm_flattening_omega1`,
-  `ppm_flattening_omega2`, `ppm_shock_k0`, `ppm_shock_eta1`,
-  `ppm_shock_eta2`, and `ppm_shock_epsilon`: route to
-  [PPM flow](../gems/reconstruction/ppm-flow.md).
-- `Lorenz_damping_factor`: route scalar-potential damping to
-  [Induction gauge RHS contract](../gems/induction/gauge-rhs-contract.md).
+- [GRHayL/include/ghl.h](../../GRHayL/include/ghl.h) - public enums, structs, macros, and non-Core declarations
+- [GRHayL/include/ghl_io.h](../../GRHayL/include/ghl_io.h) - `ghl_error_keys` and IO macros
+- [GRHayL/include/ghl_debug.h](../../GRHayL/include/ghl_debug.h) - inline debug print helpers
+- [GRHayL/include/ghl_metric_helpers.h](../../GRHayL/include/ghl_metric_helpers.h) - inline 3D/4D metric helpers
+- [GRHayL/GRHayL_Core/make.code.defn](../../GRHayL/GRHayL_Core/make.code.defn) - Core C source list
+- [GRHayL/GRHayL_Core/initialize_params.c](../../GRHayL/GRHayL_Core/initialize_params.c) - `ghl_initialize_params`
+- [GRHayL/GRHayL_Core/initialize_eos.c](../../GRHayL/GRHayL_Core/initialize_eos.c) - Core EOS aggregate initialization
+- [GRHayL/Con2Prim/get_con2prim_routine_name.c](../../GRHayL/Con2Prim/get_con2prim_routine_name.c) - Con2Prim-implemented `ghl.h` function
+- [GRHayL/Con2Prim/compute_SU_Bsq_Ssq_BdotS.c](../../GRHayL/Con2Prim/compute_SU_Bsq_Ssq_BdotS.c) - Con2Prim-implemented `ghl.h` function
 
-`ghl_initialize_params` copies caller-selected control values, derives
-`inv_sq_max_Lorentz_factor`, and sets default Con2Prim and `ppm_` controls.
-Default values belong in
-[`initialize_params.c`](../../GRHayL/GRHayL_Core/initialize_params.c) and the
-existing [struct pack/unpack contract](struct-pack-unpack-contract.md), not in
-new duplicated tables.
+## See Also
 
-The initializer returns `void` and performs no enum, pointer, finiteness, or
-range validation. In particular, it reads all three entries of the caller's
-`backup_routine` array and computes `1.0 / max_Lorentz_factor^2` directly.
-Callers own those preconditions; the implementation provides no failure code.
-
-## `ghl_eos_parameters`
-
-`ghl_eos_parameters` is declared in
-[`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h). EOS initialization owns
-its population; route setup details to
-[EOS initialization and dispatch](../gems/eos/initialization-and-dispatch.md).
-
-Use field groups as routes:
-
-- EOS selection: `eos_type`, `table_type`, and `clean_sound_speed` route to EOS
-  initialization and tabulated EOS pages.
-- Atmosphere and floors: `rho_atm`, `rho_min`, `rho_max`, `tau_atm`,
-  `press_atm`, `press_min`, `press_max`, `Y_e_atm`, `Y_e_min`, `Y_e_max`,
-  `T_atm`, `T_min`, `T_max`, `eps_atm`, `eps_min`, `eps_max`,
-  `entropy_atm`, `entropy_min`, and `entropy_max` route to
-  [Atmosphere prescription contract](../gems/atmosphere/prescription-contract.md)
-  and [Con2Prim limits and conversions](../gems/con2prim/limits-and-conversions.md).
-- Hybrid/piecewise-polytrope fields, including `neos`, `rho_ppoly`,
-  `Gamma_ppoly`, `K_ppoly`, `eps_integ_const`, `p_ppoly`, and `Gamma_th`,
-  route to [hybrid piecewise-polytrope EOS](../gems/eos/hybrid-piecewise-polytrope.md).
-- Tabulated table dimensions, arrays, bounds, interpolation auxiliaries,
-  beta-equilibrium arrays, and `root_finding_precision` route to
-  [tabulated interpolation and bounds](../gems/eos/tabulated-interpolation-and-bounds.md)
-  and [tabulated EOS table contract](../gems/eos/tabulated-table-contract.md).
-
-Core EOS setup entry points are declared in
-[`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h) and implemented in
-[`GRHayL/GRHayL_Core/initialize_eos.c`](../../GRHayL/GRHayL_Core/initialize_eos.c).
-On success they replace the destination with a zero-initialized aggregate whose
-family-relevant members have been populated; unused members have zero/null
-values. This is a member-value contract, not a guarantee about padding bytes.
-Simple/hybrid setup explicitly defines the cross-family `Y_e_atm` and `T_atm`
-placeholders as zero because constant Atmosphere reads them. Use the
-[Atmosphere prescription contract](../gems/atmosphere/prescription-contract.md)
-for reset semantics and the [EOS dispatch contract](eos-dispatch-contract.md)
-for initialization ordering and failure behavior.
-
-## Shared Struct Routes
-
-| Struct | Route | Primary initializer |
-| --- | --- | --- |
-| `ghl_primitive_quantities` | [struct pack/unpack contract](struct-pack-unpack-contract.md), [Core velocity/u0 contract](velocity-u0-contract.md), [physics variables](../physics/variables-and-conventions.md) | [`initialize_primitives.c`](../../GRHayL/GRHayL_Core/initialize_primitives.c) |
-| `ghl_conservative_quantities` | [struct pack/unpack contract](struct-pack-unpack-contract.md), [Con2Prim recovery flow](../gems/con2prim/recovery-flow.md), [physics variables](../physics/variables-and-conventions.md) | [`initialize_conservatives.c`](../../GRHayL/GRHayL_Core/initialize_conservatives.c) |
-| `ghl_metric_quantities` | [metric/ADM contract](metric-adm-contract.md) | [`initialize_metric.c`](../../GRHayL/GRHayL_Core/initialize_metric.c) |
-| `ghl_ADM_aux_quantities` | [metric/ADM contract](metric-adm-contract.md) | [`compute_ADM_auxiliaries.c`](../../GRHayL/GRHayL_Core/compute_ADM_auxiliaries.c) |
-| `ghl_extrinsic_curvature` | [struct pack/unpack contract](struct-pack-unpack-contract.md) and source-term routes that need `K_{ij}` | [`initialize_extrinsic_curvature.c`](../../GRHayL/GRHayL_Core/initialize_extrinsic_curvature.c) |
-| `ghl_stress_energy` | [stress-energy/smallb contract](stress-energy-smallb-contract.md) | [`initialize_stress_energy.c`](../../GRHayL/GRHayL_Core/initialize_stress_energy.c) |
-
-These structs are public ABI surface. Do not duplicate full struct definitions
-in KB pages; link
-[`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h) for layout and use owner
-pages above for behavioral contracts.
-
-## Core Packers And Helpers
-
-- [`GRHayL/GRHayL_Core/initialize_params.c`](../../GRHayL/GRHayL_Core/initialize_params.c)
-  owns `ghl_parameters` initialization and default Con2Prim/PPM controls.
-- [`GRHayL/GRHayL_Core/initialize_primitives.c`](../../GRHayL/GRHayL_Core/initialize_primitives.c)
-  copies primitive fields; `u0` is not initialized there.
-- [`GRHayL/GRHayL_Core/initialize_conservatives.c`](../../GRHayL/GRHayL_Core/initialize_conservatives.c)
-  copies conservative fields using caller storage convention.
-- [`GRHayL/GRHayL_Core/initialize_metric.c`](../../GRHayL/GRHayL_Core/initialize_metric.c)
-  copies lapse, shift, and symmetric 3-metric inputs, then derives inverse and
-  determinant fields.
-- [`GRHayL/GRHayL_Core/initialize_extrinsic_curvature.c`](../../GRHayL/GRHayL_Core/initialize_extrinsic_curvature.c)
-  copies six symmetric `K_{ij}` inputs into `ghl_extrinsic_curvature`.
-- [`GRHayL/GRHayL_Core/initialize_stress_energy.c`](../../GRHayL/GRHayL_Core/initialize_stress_energy.c)
-  copies ten symmetric tensor components into `ghl_stress_energy`.
-
-## Review Hazards
-
-- Con2Prim IDs are shared public API: adding or renaming an enum value requires
-  matching solver support, name mapping, dispatch, build-list, and test review.
-- EOS fields are shared across EOS, Atmosphere, Con2Prim, Flux_Source, and
-  Neutrinos. Do not treat `ghl_eos_parameters` as Core-only.
-- `ppm_` fields in `ghl_parameters` affect Reconstruction PPM behavior even
-  though initialization lives in Core.
-- `Lorenz_damping_factor` is stored in Core parameters but consumed by
-  Induction gauge RHS callers.
-- Error-code additions require both enum and `ghl_abort_if_error` message-map
-  review.
-
-## Repo-Local References
-
-- [`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h)
-- [`GRHayL/include/ghl_io.h`](../../GRHayL/include/ghl_io.h)
-- [`GRHayL/include/ghl_debug.h`](../../GRHayL/include/ghl_debug.h)
-- [`GRHayL/include/ghl_metric_helpers.h`](../../GRHayL/include/ghl_metric_helpers.h)
-- [`GRHayL/GRHayL_Core/initialize_params.c`](../../GRHayL/GRHayL_Core/initialize_params.c)
-- [`GRHayL/GRHayL_Core/initialize_primitives.c`](../../GRHayL/GRHayL_Core/initialize_primitives.c)
-- [`GRHayL/GRHayL_Core/initialize_conservatives.c`](../../GRHayL/GRHayL_Core/initialize_conservatives.c)
-- [`GRHayL/GRHayL_Core/initialize_metric.c`](../../GRHayL/GRHayL_Core/initialize_metric.c)
-- [`GRHayL/GRHayL_Core/initialize_extrinsic_curvature.c`](../../GRHayL/GRHayL_Core/initialize_extrinsic_curvature.c)
-- [`GRHayL/GRHayL_Core/initialize_stress_energy.c`](../../GRHayL/GRHayL_Core/initialize_stress_energy.c)
+- Depends on: [Public API Map](../architecture/public-api-map.md)
+- See also: [Struct Pack And Unpack](struct-pack-unpack.md)
+- See also: [EOS Dispatch](eos-dispatch.md)
+- See also: [GRHayLib Runtime Parameters](../implementations/grhaylib-runtime-parameters.md)
