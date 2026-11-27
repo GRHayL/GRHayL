@@ -79,7 +79,7 @@ Evidence (descriptive behavior): `Unit_Tests/unit_test_nrpyleakage_physics.c::ma
 - [ILEAS (Ardevol-Pulpillo et al., arXiv:1808.00006v2)](https://arxiv.org/html/1808.00006v2) - Appendices B and C density-derived degeneracies and reaction pairing
 - [BNS_NURATES Repository](https://github.com/RelNucAs/bns_nurates) - independent beta-process reference kernels
 - [Chiesa et al., PRD 111, 063053 (2025)](https://doi.org/10.1103/PhysRevD.111.063053) - six DD2 BNS merger comparison states
-- [CompOSE Reference Manual v3.00](https://compose.obspm.fr/download/pdf/manual_v3.00.pdf) - sections 3.5 and 4.2.2 thermodynamic and microscopic fields
+- [CompOSE Reference Manual Version 3.01](https://compose.obspm.fr/download/pdf/manual_v3.00.pdf) - sections 3.5 and 4.2.2 thermodynamic and microscopic fields
 - [FDINT Repository](https://github.com/scott-maddox/fdint) - scalar Fermi-Dirac minimax implementation
 - [FDINT _fdint.pyx](https://github.com/scott-maddox/fdint/blob/master/fdint/_fdint.pyx) - ported `fdm1h` and `ifd1h` rational fits
 - [Fukushima (2015) Half-Odd Fermi Integrals](https://doi.org/10.1016/j.amc.2015.03.009) - $F_{-1/2}$ minimax fit

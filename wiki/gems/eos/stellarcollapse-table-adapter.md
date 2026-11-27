@@ -46,7 +46,7 @@ Evidence (descriptive behavior): `tools/compose/compose_to_grhayl.py`; corrobora
 - [CompOSE SRO SLy4 table 141](https://compose.obspm.fr/eos/141) - CompOSE table 141 catalog entry
 - [CompOSE table 141 raw archive](https://zenodo.org/records/14811397) - published raw table archive
 - [CompOSE SRO SLy4 datasheet](https://compose.obspm.fr/download/3D/SRO/SLy4/eos.pdf) - table 141 masses and bounds
-- [CompOSE Manual v3.00](https://compose.obspm.fr/download/pdf/manual_v3.00.pdf) - Secs. 3.5 and 4.2.2 chemical-potential conventions
+- [CompOSE Manual Version 3.01](https://compose.obspm.fr/download/pdf/manual_v3.00.pdf) - Secs. 3.5 and 4.2.2 chemical-potential conventions
 
 ## See Also
 

@@ -5,7 +5,7 @@
 
 ## Summary
 
-Con2Prim solvers rely on four distinct internal numerical engines: `ghl_brent` for Palenzuela, `ghl_general_newton_raphson` for hybrid/tabulated Noble, damped fixed-point density iteration with Brent cycle detection for Font1D, and local iterative pressure updates for tabulated Newman1D. Each solver records `diagnostics->n_iter` with its own scope, and `con2prim_CerdaDuran3D.cc` remains unbuilt archival code.
+Con2Prim solvers rely on distinct internal numerical engines: `ghl_brent` for Palenzuela, `ghl_general_newton_raphson` for hybrid/tabulated Noble, damped fixed-point density iteration with Brent cycle detection for Font1D, and local iterative pressure updates for tabulated Newman1D. Each solver records `diagnostics->n_iter` with its own scope, and `con2prim_CerdaDuran3D.cc` remains unbuilt archival code.
 
 ## Detail
 

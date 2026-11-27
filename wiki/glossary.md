@@ -20,7 +20,7 @@ Use these spellings when routing, citing, or writing KB leaves. Terms link to th
 | `smallb` | Fluid-frame magnetic four-vector $b^\mu$ and norm $b^2 = b_\mu b^\mu$ computed by Core helpers; see [Stress-Energy And Smallb](core/stress-energy-smallb.md). |
 | `phitilde` | Densitized scalar electromagnetic gauge variable $\tilde{\Phi} = \sqrt{\gamma}\,\Phi$ in generalized Lorenz gauge; see [Gauge RHS](gems/induction/gauge-rhs.md). |
 | `vU` | Transport three-velocity $v^i = u^i / u^0$ stored in `ghl_primitive_quantities`, distinct from Eulerian velocity; see [Velocity u0](core/velocity-u0.md). |
-| `Con2Prim` | Conservative-to-primitive root-finding gem (Noble, Palenzuela, Newman, Font, Cerda-Duran) for hybrid and tabulated EOS; see [Con2Prim](gems/con2prim/index.md). |
+| `Con2Prim` | Conservative-to-primitive root-finding gem (Noble, Palenzuela, Newman, Font) for hybrid and tabulated EOS; see [Con2Prim](gems/con2prim/index.md). |
 | `GHL_NN_C2P` | Optional C neural-network primitive-guess interface (`grhayl_nn_c2p`); see [Neural-Network Guess](gems/con2prim/neural-network-primitive-guess.md). |
 | `NRPyEOS` | Hybrid piecewise-polytrope and tabulated StellarCollapse EOS routines under `GRHayL/EOS/{Hybrid,Tabulated}/`; see [EOS](gems/eos/index.md). |
 | Hybrid EOS | Piecewise-polytropic cold component plus thermal $\Gamma_{\rm th}$ ideal-gas EOS; see [Hybrid Polytrope](gems/eos/hybrid-piecewise-polytrope.md). |

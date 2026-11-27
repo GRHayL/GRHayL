@@ -23,7 +23,7 @@ Claim status: contested; contradiction: CONTR-0003. See [CONTR-0003](../contradi
 
 Claim status: contested; contradiction: CONTR-0004. See [CONTR-0004](../contradictions.md#contr-0004).
 
-Reference data arrives via five distinct routes: local `Unit_Tests/data_gen/unit_test_data_*.c` binaries (compiled by `make datagen`, run manually), generation modes inside tests (`nrpyleakage_main.h` key `0`, `unit_test_con2prim_tabulated.c` key `0`), downloaded `GRHayL/TestData` `.bin` files, downloaded `stellarcollapse.org/EOS` `.h5.bz2` tables, and checked-in `Unit_Tests/sample_table/` files. Local PLM, WENO-z, Flux_Source, and Induction generators invoke the same library routines as replay, providing regression rather than independent-oracle checks.
+Reference data arrives via these routes: local `Unit_Tests/data_gen/unit_test_data_*.c` binaries (compiled by `make datagen`, run manually), generation modes inside tests (`nrpyleakage_main.h` key `0`, `unit_test_con2prim_tabulated.c` key `0`), downloaded `GRHayL/TestData` `.bin` files and `EOS/simple_table.h5`, downloaded `stellarcollapse.org/EOS` `.h5.bz2` tables, and checked-in `Unit_Tests/sample_table/` files. Local PLM, WENO-z, Flux_Source, and Induction generators invoke the same library routines as replay, providing regression rather than independent-oracle checks.
 
 | Module | Binary / table family | Affected tests and routing notes |
 | --- | --- | --- |

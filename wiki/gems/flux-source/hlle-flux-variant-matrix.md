@@ -5,7 +5,7 @@
 
 ## Summary
 
-GRHayL exposes four directional HLLE flux families in `GRHayL/include/ghl_flux_source.h`, each with legacy `void` (abort-on-error) and `_checked` (`ghl_error_codes_t`) entry points across `dirn0`, `dirn1`, and `dirn2`. Deprecated unsuffixed `ghl_calculate_HLLE_fluxes_dirn0/1/2` function pointers in `ghl_eos_functions.h` are never assigned by GRHayL and have incompatible `const` signatures; new callers must call the direct suffixed functions.
+GRHayL exposes directional HLLE flux families (`hybrid`, `hybrid_entropy`, `tabulated`, `tabulated_entropy`) in `GRHayL/include/ghl_flux_source.h`, each with legacy `void` (abort-on-error) and `_checked` (`ghl_error_codes_t`) entry points across `dirn0`, `dirn1`, and `dirn2`. Deprecated unsuffixed `ghl_calculate_HLLE_fluxes_dirn0/1/2` function pointers in `ghl_eos_functions.h` are never assigned by GRHayL and have incompatible `const` signatures; new callers must call the direct suffixed functions.
 
 ## Detail
 

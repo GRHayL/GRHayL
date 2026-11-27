@@ -31,7 +31,7 @@ Evidence (descriptive behavior): `Doxyfile::OUTPUT_DIRECTORY`; corroboration: `D
 
 | Generator / path | Output paths | Cleanup & safety boundary |
 | --- | --- | --- |
-| `configure`, then `make` | `configure` writes `Makefile`, `<builddir>/` (default `build/`; `.check`, header symlinks), `test/`, and `test/data_gen/`; `make` adds objects and `lib/libghl*` | `make clean` deletes library objects/libs and normal test binaries/helper objects while keeping `TEXEOBJS` and `data_gen` files; `make realclean` removes `<builddir>/` (default `build/`), `test/`, and `Makefile`; neither removes downloaded root data files. (Ev: `configure::realclean`) |
+| `configure`, then `make` | `configure` writes `Makefile`, `<builddir>/` (default `build/`; `.check`, header symlinks), `test/`, and `test/data_gen/`; `make` adds objects and `<builddir>/lib/libghl*` | `make clean` deletes library objects/libs and normal test binaries/helper objects while keeping `TEXEOBJS` and `data_gen` files; `make realclean` removes `<builddir>/` (default `build/`), `test/`, and `Makefile`; neither removes downloaded root data files. (Ev: `configure::realclean`) |
 | `generate_makefile.sh` | `Makefile`, `build/`, `lib/libgrhayl.a` (broken) | Emits GRHayLib source and invalid `-I./include`; reproduce only in a disposable checkout and never run `make`. (Ev: `generate_makefile.sh::libgrhayl.a`) |
 | `implementations/GRHayLib/src/` | Tracked `make.code.defn` + symlinks to `GRHayL/` modules and `GRHayL/include` | Repository inputs, not generated copies; see [GRHayLib Cactus Build](../implementations/grhaylib-cactus-build.md). (Ev: `implementations/GRHayLib/src/make.code.defn::SUBDIRS`) |
 

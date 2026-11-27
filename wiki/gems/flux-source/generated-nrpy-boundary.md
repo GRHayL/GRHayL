@@ -5,7 +5,7 @@
 
 ## Summary
 
-`GRHayL/Flux_Source/generate_flux_source.py` is the symbolic NRPy 2 generator for GRHayL's source-term, characteristic-speed, and all four HLLE flux kernel families. `generate_flux_source.sh <empty-staging-dir>` clones a pinned NRPy 2 revision into a temporary checkout and runs the driver into an empty directory outside `GRHayL/Flux_Source`, verifying output filenames against the `make.code.defn` manifests. Checked-in C files govern compiled behavior.
+`GRHayL/Flux_Source/generate_flux_source.py` is the symbolic NRPy 2 generator for GRHayL's source-term, characteristic-speed, and every HLLE flux kernel family. `generate_flux_source.sh <empty-staging-dir>` clones a pinned NRPy 2 revision into a temporary checkout and runs the driver into an empty directory outside `GRHayL/Flux_Source`, verifying output filenames against the `make.code.defn` manifests. Checked-in C files govern compiled behavior.
 
 ## Detail
 

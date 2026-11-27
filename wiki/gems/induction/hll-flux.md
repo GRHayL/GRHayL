@@ -23,7 +23,7 @@ Evidence (scientific/interface requirement): `GRHayL/include/ghl_induction.h::gh
 
 ### Caller Hazards And Test Boundaries
 
-- **Orientation & suffix order:** Swapping `B1`/`B2` flips cross-product sign. On velocity suffixes `rr`, `rl`, `lr`, `ll`, the first letter corresponds to label `1` and the second to label `2`; `B1` is reconstructed along label `2`, and `B2` along label `1`.
+- **Orientation & suffix order:** Swapping only `B1`/`B2` pairs each velocity with the wrong transverse field and generally changes the result rather than negating it; exchanging labels `1` and `2` consistently (velocities, fields, speeds, and suffixes `rl`/`lr`) negates it. On velocity suffixes `rr`, `rl`, `lr`, `ll`, the first letter corresponds to label `1` and the second to label `2`; `B1` is reconstructed along label `2`, and `B2` along label `1`.
 - **Unguarded denominators:** Both functions divide directly by `c1_min + c1_max` and `c2_min + c2_max` without checking for zero, flooring negative roundoff residues from `Flux_Source`, or guarding product overflow. Callers must ensure finite admissible bounds and usable denominators.
 - **Test boundaries:** `unit_test_HLL_flux.c` exercises both `B` and `Btilde` across `Ax_rhs`, `Ay_rhs`, `Az_rhs`, while `unit_test_ET_Legacy_HLL_flux.c` covers only `B` against external legacy data. Because `unit_test_data_HLL_flux.c` draws random signed speeds in `[-10, 10]` (rejecting only exact zero sums), it tests HLL algebra/packing rather than Flux_Source speed coupling or zero-denominator safety. No checked-in call site appears in `implementations/GRHayLib/`.
 

@@ -63,7 +63,7 @@ Evidence (descriptive behavior): `tools/compose/compose_to_grhayl.py::index_ther
 - [tools/compose/README.md](../../../tools/compose/README.md) - `sro-sly4-sna-141-regularized-v1` policy and invocation
 - [GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse.c](../../../GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse.c) - `NRPyEOS_stellarcollapse_read_table` 19-field reader
 - [Unit_Tests/unit_test_tabulated_eos_compose.c](../../../Unit_Tests/unit_test_tabulated_eos_compose.c) - runtime integration checks for converted table
-- [CompOSE Reference Manual v3.00](https://compose.obspm.fr/download/pdf/manual_v3.00.pdf) - sections 3.1, 3.3-3.5, 4.1, 4.2, 7.3, 7.5, tables 3.2, 3.3, 7.1, 7.7, 7.8, appendices A-C
+- [CompOSE Reference Manual Version 3.01](https://compose.obspm.fr/download/pdf/manual_v3.00.pdf) - sections 3.1, 3.3-3.5, 4.1, 4.2, 7.3, 7.5, tables 3.2, 3.3, 7.1, 7.7, 7.8, appendices A-C
 - [CompOSE Quick Guide For Users](https://compose.obspm.fr/download/pdf/CompOSE_Quick_Guide_for_Users.pdf) - task-1 workflow
 - [CompOSE Table Catalog](https://compose.obspm.fr/table/) - table pages and data sheets
 - [CompOSE Software Page](https://compose.obspm.fr/software/) - official `compose` releases

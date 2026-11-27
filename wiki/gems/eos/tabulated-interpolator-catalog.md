@@ -5,7 +5,7 @@
 
 ## Summary
 
-`GRHayL/EOS/Tabulated/interpolators/make.code.defn` builds five tabulated wrapper families keyed by `(rho, Y_e, T)`, `(rho, Y_e, eps)`, `(rho, Y_e, P)`, `(rho, Y_e, S)`, and `(rho, Y_e, h)`, all assigned in `NRPyEOS_initialize_tabulated_functions.c` alongside `ghl_tabulated_get_index_T`, beta-equilibrium `rho`-map caches, and `ghl_tabulated_free_beq_quantities`.
+`GRHayL/EOS/Tabulated/interpolators/make.code.defn` builds tabulated wrapper families keyed by `(rho, Y_e, T)`, `(rho, Y_e, eps)`, `(rho, Y_e, P)`, `(rho, Y_e, S)`, and `(rho, Y_e, h)`, all assigned in `NRPyEOS_initialize_tabulated_functions.c` alongside `ghl_tabulated_get_index_T`, beta-equilibrium `rho`-map caches, and `ghl_tabulated_free_beq_quantities`.
 
 ## Detail
 
