@@ -31,7 +31,7 @@ Evidence (descriptive behavior): `Doxyfile::OUTPUT_DIRECTORY`; corroboration: `D
 
 | Generator / path | Output paths | Cleanup & safety boundary |
 | --- | --- | --- |
-| `configure` | `Makefile`, `<builddir>/` (default `build/`, objects, `.check`, header symlinks, `lib/libghl*`), `test/`, `test/data_gen/` | `make clean` deletes library objects/libs and normal test binaries/helper objects while keeping `TEXEOBJS` and `data_gen` files; `make realclean` removes `build/`, `test/`, and `Makefile`; neither removes downloaded root data files. (Ev: `configure::realclean`) |
+| `configure`, then `make` | `configure` writes `Makefile`, `<builddir>/` (default `build/`; `.check`, header symlinks), `test/`, and `test/data_gen/`; `make` adds objects and `lib/libghl*` | `make clean` deletes library objects/libs and normal test binaries/helper objects while keeping `TEXEOBJS` and `data_gen` files; `make realclean` removes `<builddir>/` (default `build/`), `test/`, and `Makefile`; neither removes downloaded root data files. (Ev: `configure::realclean`) |
 | `generate_makefile.sh` | `Makefile`, `build/`, `lib/libgrhayl.a` (broken) | Emits GRHayLib source and invalid `-I./include`; reproduce only in a disposable checkout and never run `make`. (Ev: `generate_makefile.sh::libgrhayl.a`) |
 | `implementations/GRHayLib/src/` | Tracked `make.code.defn` + symlinks to `GRHayL/` modules and `GRHayL/include` | Repository inputs, not generated copies; see [GRHayLib Cactus Build](../implementations/grhaylib-cactus-build.md). (Ev: `implementations/GRHayLib/src/make.code.defn::SUBDIRS`) |
 
@@ -39,7 +39,7 @@ Claim status: contested; contradiction: CONTR-0002. See [CONTR-0002](../contradi
 
 ### Test Binaries, Downloaded Data, And Sample Tables
 
-`configure` discovers `Unit_Tests/unit_test_*.c` and `Unit_Tests/data_gen/unit_test_data_*.c` to emit binaries under `test/` and `test/data_gen/`. `.github/run_tests.sh` downloads `*.bin` reference files, `simple_table.h5`, and compressed StellarCollapse tables (`LS220`, `SLy4`) into repository root and cleans tracked paths on `EXIT`; see [Runner And Build Outputs](../tests/runner-and-build-outputs.md). In HDF5 mode, `unit_test_c2p_nn_guess` creates and removes its own private temporary directory for model files. `Unit_Tests/sample_table/generate_simple_table.py` synthesizes `simple_table.h5`, while the checked-in Hempel SFHo simplified `.h5` file is a tracked sample table, not a `configure` output.
+`configure` discovers `Unit_Tests/unit_test_*.c` and `Unit_Tests/data_gen/unit_test_data_*.c` and writes `Makefile` rules that `make tests` and `make datagen` build into `test/` and `test/data_gen/`. `.github/run_tests.sh` downloads `*.bin` reference files, `simple_table.h5`, and compressed StellarCollapse tables (`LS220`, `SLy4`) into repository root and cleans tracked paths on `EXIT`; see [Runner And Build Outputs](../tests/runner-and-build-outputs.md). In HDF5 mode, `unit_test_c2p_nn_guess` creates and removes its own private temporary directory for model files. `Unit_Tests/sample_table/generate_simple_table.py` synthesizes `simple_table.h5`, while the checked-in Hempel SFHo simplified `.h5` file is a tracked sample table, not a `configure` output.
 
 Evidence (descriptive behavior): `Unit_Tests/sample_table/generate_simple_table.py`; corroboration: `Unit_Tests/unit_test_c2p_nn_guess.c`.
 

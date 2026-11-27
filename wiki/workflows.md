@@ -63,9 +63,10 @@ Run before completing KB edits:
 ```bash
 PYTHONDONTWRITEBYTECODE=1 python3 -B tools/kb_lint.py
 git diff HEAD --check
+git diff --cached --check
 ```
 
-`git diff HEAD --check` covers staged and unstaged edits; run `git add -N` on new pages first so it sees them.
+`git diff HEAD --check` checks the working tree against `HEAD` and `git diff --cached --check` checks the staged copy; run `git add -N` on new pages first so the working-tree check sees them.
 
 `tools/kb_lint.py` must exit `0` and print `KB lint passed.`
 

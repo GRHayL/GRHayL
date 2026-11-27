@@ -30,7 +30,7 @@ Verify these items statically whenever `implementations/GRHayLib/` or shared `GR
 2. **Direct-compile source-list parity:** every `SUBDIRS` entry in `src/make.code.defn` resolves via tracked symlinks to an upstream directory, and every upstream source-bearing manifest directory is listed.
 3. **Parameter and parser parity:** compare `param.ccl` keywords and ranges against `parse_C2P_routine_keyword`, `parse_eos_table_type_keyword`, `GRHayLib_paramcheck`, and `GRHayLib_initialize` in `src/initialize_and_shutdown.c`.
 4. **Upstream API drift points:** recheck `configuration.ccl` (`requires HDF5`), EOS initializer and `ghl_tabulated_free_memory` signatures, `ghl_parameters` and `ghl_eos_parameters` fields, `ghl_con2prim_id_t` support in [Solver Matrix](../gems/con2prim/solver-matrix.md), PPM overrides, and `CCTK_WRAGH`/`CCTK_TERMINATE` cleanup with `ID_converter_ILGRMHD`.
-5. **Targeted upstream tests & docs guard:** run targeted `Unit_Tests/` only when upstream API behavior changed; verify `git diff -- docs Doxyfile` introduces no unintended generated-doc changes. Never invent a local Cactus build command.
+5. **Targeted upstream tests & docs guard:** run targeted `Unit_Tests/` only when upstream API behavior changed; compare `git status --short -- docs Doxyfile` and `git diff HEAD -- docs Doxyfile` with the task's starting state to confirm no unintended staged, unstaged, or new generated-doc changes (pre-existing edits belong to the starting state). Never invent a local Cactus build command.
 
 Evidence (descriptive behavior): `implementations/GRHayLib/src/initialize_and_shutdown.c::GRHayLib_paramcheck`; corroboration: `GRHayL/include/make.code.defn::install_headers`.
 

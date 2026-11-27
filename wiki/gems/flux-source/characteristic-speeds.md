@@ -24,7 +24,7 @@ Evidence (descriptive behavior): `GRHayL/include/ghl_flux_source.h::ghl_calculat
 
 - `unit_test_ET_Legacy_flux_source.c` calls all three legacy speed wrappers with a test-local `compute_h_and_cs2` callback.
 - `unit_test_hybrid_flux.c` and `unit_test_tabulated_flux.c` replay precomputed speed arrays from generators, while `unit_test_hybrid_flux.c` additionally injects first- and second-callback failures into every `_checked` speed direction to verify unchanged outputs.
-- `unit_test_tabulated_eos_compose.c` validates analytic magnetized speed bounds and production tabulated mutation across all three directions.
+- `unit_test_tabulated_eos_compose.c` validates analytic magnetized speed bounds in all three directions and, in direction 0 only, table-bound clamping of `rho`, `Y_e`, and `temperature` with finite `press` and `eps`.
 
 Evidence (descriptive behavior): `Unit_Tests/unit_test_hybrid_flux.c`; corroboration: `Unit_Tests/unit_test_tabulated_eos_compose.c`.
 

@@ -34,13 +34,13 @@ ROOT = Path(__file__).resolve().parents[1]
 WIKI = ROOT / "wiki"
 AGENTS = ROOT / "AGENTS.md"
 SOURCES = ROOT / "raw" / "SOURCES.md"
-LINK_RE = re.compile(r"(?<!!)\[([^\]\[]+)\]\(([^)\n]+)\)")
+LINK_RE = re.compile(r"(?<!!)\[((?:[^\]\[]|\[[^\]\[]*\])+)\]\(([^)\n]+)\)")
 INLINE_CODE_RE = re.compile(
     r"(?<!`)(?P<ticks>`+)(?!`)(?P<body>.*?)(?<!`)(?P=ticks)(?!`)", re.DOTALL
 )
 FENCE_OR_HTML_COMMENT_RE = re.compile(
-    r"^[ ]{0,3}`{3,}[^\n]*\n.*?^[ ]{0,3}`{3,}[ \t]*$"
-    r"|^[ ]{0,3}~{3,}[^\n]*\n.*?^[ ]{0,3}~{3,}[ \t]*$"
+    r"^[ ]{0,3}(`{3,})[^\n]*\n.*?^[ ]{0,3}\1`*[ \t]*$"
+    r"|^[ ]{0,3}(~{3,})[^\n]*\n.*?^[ ]{0,3}\2~*[ \t]*$"
     r"|<!--.*?-->",
     re.DOTALL | re.MULTILINE,
 )
@@ -300,9 +300,9 @@ def _check_evidence(pages: List[Path], failures: List[str]) -> None:
                 for token, in_parens in _evidence_tokens(span):
                     head, sep, symbol = (part.strip() for part in token.partition("::"))
                     problem: Optional[str] = None
-                    if any(
-                        ch in head for ch in " *<{"
-                    ) or not EVIDENCE_FILE_SUFFIX_RE.search(head):
+                    if any(ch in head for ch in " *<{") or not (
+                        EVIDENCE_FILE_SUFFIX_RE.search(head) or "/" in head
+                    ):
                         if sep and in_parens and prev_code:
                             problem = _symbol_problem(token, prev_code)
                         elif sep:

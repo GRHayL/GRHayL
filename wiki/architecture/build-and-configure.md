@@ -30,7 +30,7 @@ Evidence (descriptive behavior): `configure::--buildtype`; corroboration: `confi
 
 ### Recursive `make.code.defn` Parsing And Installation
 
-`configure` starts at `GRHayL/make.code.defn`, parses `subdirs`, `sources`, `headers`, and `install_headers` via `scripts/parser` and `scripts/match_all.awk`, compiles listed C files into `<builddir>`, and links `<builddir>/lib/libghl.so` (or host shared-library extension).
+`configure` starts at `GRHayL/make.code.defn`, parses `subdirs`, `sources`, `headers`, and `install_headers` via `scripts/parser` and `scripts/match_all.awk`, and writes `Makefile` rules; `make` (`make grhayl`) then compiles the listed C files into `<builddir>` and links `<builddir>/lib/libghl.so` (or host shared-library extension).
 
 - During `configure`, every `GRHayL/include/*.h` is symlinked into `<builddir>/include/ghl`.
 - During `make install`, only headers listed in `GRHayL/include/make.code.defn` (`install_headers`) are copied into `<prefix>/include/ghl`, excluding `ghl_unit_tests.h` and internal storage companion `ghl_eos_functions_declaration.h`.

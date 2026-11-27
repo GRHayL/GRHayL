@@ -15,7 +15,7 @@
 
 | Output class | Location | Cleanup & provenance boundary |
 | --- | --- | --- |
-| Library & test binaries | `build/`, `build/lib/`, `test/`, `test/data_gen/` | `make clean` keeps `TEXEOBJS` and `data_gen` binaries/objects; `make realclean` deletes `build/`, `test/`, and `Makefile`. (Ev: `configure::realclean`) |
+| Library & test binaries | `build/`, `build/lib/`, `test/`, `test/data_gen/` | `make clean` keeps `TEXEOBJS` and `data_gen` binaries/objects; `make realclean` deletes `<builddir>/` (default `build/`), `test/`, and `Makefile`. (Ev: `configure::realclean`) |
 | Downloaded root data | Repo root (`*.bin`, `*.h5`, `*.bz2`) | `.github/run_tests.sh` tracks only files it downloads/decompresses plus its private `code_error_workdir` for `EXIT` cleanup. (Ev: `.github/run_tests.sh::code_error_workdir`) |
 | Generation-mode outputs | Repo root (`*_unperturbed.bin`, `*_perturbed.bin`) | Written only when generators or key-`0` modes (`nrpyleakage_main.h`, `unit_test_con2prim_tabulated.c`) are invoked manually. (Ev: `Unit_Tests/nrpyleakage_main.h`) |
 | Checked-in sample data | `Unit_Tests/sample_table/` | Tracked repository inputs, not `configure` outputs. (Ev: `Unit_Tests/sample_table/generate_simple_table.py`) |
@@ -27,7 +27,7 @@ Claim status: contested; contradiction: CONTR-0003. See [CONTR-0003](../contradi
 `.github/run_tests.sh` executes `./configure -r`, `make tests datagen`, exports `LD_LIBRARY_PATH`, downloads missing root-level `*.bin` and EOS `.h5.bz2` files (reusing any preexisting regular files without checking provenance), decompresses `.bz2` archives, runs compiled tests including `unit_test_c2p_nn_guess`, runs `unit_test_code_error` over keys `0`–`90` inside its private `code_error_workdir`, runs `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before `./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1`, and cleans tracked downloads on `EXIT`. Always run `.github/run_tests.sh` inside a disposable checkout: `pyghl append` mutates a reused SLy4 table (while key `85` requires an unmodified SLy4 table without `grhayl_nn_c2p`), and `unit_test_nrpyleakage_optically_thin_gas` writes and removes a fixed marker filename in cwd. In HDF5 mode, `unit_test_c2p_nn_guess` manages and removes its own private temporary directory.
 
 - **TestData reference selectors:** `.github/run_tests.sh` reads `.github/con2prim-testdata-ref` for shared hybrid Con2Prim/Core and tabulated Con2Prim data, and `.github/et-legacy-testdata-ref` for ET_Legacy, analytic EOS, Core, Flux_Source, PLM, Neutrinos, and Induction data. Workflows use those selectors for Con2Prim/ET_Legacy/Flux_Source while downloading standalone Core, analytic EOS, Reconstruction, Induction, and Neutrinos files from `TestData` `main`.
-- **Omissions from `run_tests.sh`:** Default `configure` builds every `Unit_Tests/unit_test_*.c`, whereas `.github/run_tests.sh` skips `unit_test_WENOZ_reconstruction` (run in CI `reconstruction` jobs), `unit_test_tabulated_eos_compose` (run in Ubuntu-GCC `compose-regularized-eos`), and `unit_test_con2prim_debug` (manual-only).
+- **Omissions from `run_tests.sh`:** Default `make tests` builds every `Unit_Tests/unit_test_*.c`, whereas `.github/run_tests.sh` skips `unit_test_WENOZ_reconstruction` (run in CI `reconstruction` jobs), `unit_test_tabulated_eos_compose` (run in Ubuntu-GCC `compose-regularized-eos`), and `unit_test_con2prim_debug` (manual-only).
 
 Evidence (CI behavior): `.github/run_tests.sh::con2prim-testdata-ref`; corroboration: `.github/et-legacy-testdata-ref`.
 

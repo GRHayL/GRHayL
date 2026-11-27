@@ -25,7 +25,7 @@ Claim status: contested; contradiction: CONTR-0004. See [CONTR-0004](../contradi
 
 Reference data arrives via five distinct routes: local `Unit_Tests/data_gen/unit_test_data_*.c` binaries (compiled by `make datagen`, run manually), generation modes inside tests (`nrpyleakage_main.h` key `0`, `unit_test_con2prim_tabulated.c` key `0`), downloaded `GRHayL/TestData` `.bin` files, downloaded `stellarcollapse.org/EOS` `.h5.bz2` tables, and checked-in `Unit_Tests/sample_table/` files. Local PLM, WENO-z, Flux_Source, and Induction generators invoke the same library routines as replay, providing regression rather than independent-oracle checks.
 
-| Module | Binary / table family | Blast-radius & routing notes |
+| Module | Binary / table family | Affected tests and routing notes |
 | --- | --- | --- |
 | Core | `grhayl_core_test_suite_input.bin` | Lowercase name shared across generator, test, runner, and workflows ([Core Tests](../core/tests-and-reference-data.md)). |
 | Con2Prim / Core shared | `metric_Bfield_initial_data.bin`, `apply_conservative_limits_*`, `con2prim_multi_method_hybrid_*`, `enforce_primitive_limits_and_compute_u0_*`, `compute_conservs_and_Tmunu_*` | Editing `metric_Bfield_initial_data.bin` affects limits, recovery, `u0`, conservatives, and stress-energy tests. |
