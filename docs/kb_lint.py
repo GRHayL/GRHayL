@@ -10,10 +10,11 @@ FROZEN RULES:
   no unit tests for this script, and no static-analysis pragmas or wrappers.
 - Plain Markdown only (no CommonMark parser): mask only top-level fenced code
   blocks (0-3 spaces, ``` or ~~~, closing fence of >= opening length with the
-  same marker), HTML comments (<!--...-->), and backtick inline code spans. Do
-  not add parsers or regexes for blockquoted/list-indented fences, 4-space
-  indented code, backslash-escaped backticks, reference links, link titles, or
-  heading markup; write KB pages in the plain subset.
+  same marker), HTML comments (<!--...-->), and backtick inline code spans that
+  do not cross a blank line. Do not add parsers or regexes for
+  blockquoted/list-indented fences, 4-space indented code, backslash-escaped
+  backticks, reference links, link titles, or heading markup; write KB pages in
+  the plain subset.
 - Review-only rules stay out of code: page layout, byte limits, table columns,
   volatile-information prohibitions, and direct prose live in `wiki/SCHEMA.md`
   and `wiki/computational-physics-language.md`, not in this script.
@@ -46,7 +47,7 @@ SOURCES = ROOT / "raw" / "SOURCES.md"
 
 LINK_RE = re.compile(r"(?<!!)\[((?:[^\]\[]|\[[^\]\[]*\])+)\]\(([^)\n]+)\)")
 INLINE_CODE_RE = re.compile(
-    r"(?<!`)(?P<ticks>`+)(?!`)(?P<body>.*?)(?<!`)(?P=ticks)(?!`)", re.DOTALL
+    r"(?<!`)(?P<ticks>`+)(?!`)(?P<body>(?:(?!\n[ \t]*\n).)*?)(?<!`)(?P=ticks)(?!`)", re.DOTALL
 )
 FENCE_OR_COMMENT_RE = re.compile(
     r"^[ ]{0,3}(`{3,})[^`\n]*\n.*?^[ ]{0,3}\1`*[ \t]*$"
@@ -193,11 +194,8 @@ def _check_evidence(pages, failures):
                 for m in INLINE_CODE_RE.finditer(body):
                     head, sep, symbol = (part.strip() for part in m.group("body").partition("::"))
                     matches = [t for t in tracked if t == head or t.endswith("/" + head)]
-                    matches = (
-                        [t for t in matches if ROOT / t in sources]
-                        or [t for t in matches if t == head]
-                        or matches
-                    )
+                    matches = [t for t in matches if ROOT / t in sources] or matches
+                    matches = [t for t in matches if t == head] or matches
                     if len(matches) != 1:
                         msg = (
                             f"ambiguous Evidence file {head!r} matches {', '.join(matches[:3])}"

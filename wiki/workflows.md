@@ -12,7 +12,7 @@ Start at [AGENTS.md](../AGENTS.md), follow branch and sub-branch `index.md` rout
 2. For ambiguous or cross-branch queries, run `rg -n -i -F '<term>' wiki/catalog.md` and read only matching rows.
 3. Read compact leaves (`< 8,000` B) directly in one read. On leaves `>= 8,000` B, run `rg -n '^### ' <page>` first and read only the needed `###` range. Follow a `## See Also` link only when its prefix (`Depends on:`, `Implements:`, `Validated by:`, `Example:`, `Contrasts with:`, `See also:`) identifies a missing prerequisite or check.
 4. Search support tables selectively without reading whole files:
-   - Reverse file citations: `rg -l -F '<path>' wiki/`
+   - Reverse file citations: `rg -l -F '<basename>' wiki/`
    - Source or aggregate rows: ``rg -n -F '| `<key>` |' raw/SOURCES.md`` or ``rg -n -F '| `<aggregate>` |' wiki/source-map.md``
    - Contradiction entries: `rg -n -F '| <CONTR-ID> |' wiki/contradictions.md` plus the matching `### CONTR-XXXX` subsection
    - Canonical term spellings: `rg -n -i -F '<term>' wiki/glossary.md`
@@ -37,7 +37,7 @@ Do not file one-off answers. File durable syntheses only when they resolve recur
 ## Living-Source Change
 
 1. Inspect the changed code, header, manifest, Doxygen, or CI diff and verify source coverage (Ingest step 1) plus [Change Impact](architecture/change-impact.md).
-2. Locate citing wiki pages dynamically with `rg -l -F '<changed_path>' wiki/`.
+2. Locate citing wiki pages dynamically with `rg -l -F '<changed_basename>' wiki/`: prose, tables, and Evidence tags often name files by basename or a partial path, and a basename search also matches full paths; for a file named inside a `{a,b}` group, also search the text through the brace (for example `compute_{`).
 3. Run `rg -l -F '<changed_symbol>' wiki/` across other wiki pages only when a public function signature, enum/struct layout, header guard, `make.code.defn` manifest entry, or mathematical convention changed—never expand 1-hop across generic [glossary.md](glossary.md) terms.
 4. Reconcile the defining leaf; replace duplicate prose in neighboring leaves with a one-sentence link. Mark a leaf `stale` with a `CONTR-XXXX` entry only when immediate reconciliation is blocked.
 5. **Downstream GRHayLib coordination:** Before editing `implementations/GRHayLib/` or public `GRHayL/include/` structs/enums read by `GRHayLib`, check [GRHayLib Runtime Parameters](implementations/grhaylib-runtime-parameters.md) and [GRHayLib Verification](implementations/grhaylib-verification.md). Static parity in `implementations/GRHayLib/` does not prove Cactus build, schedule, or runtime behavior.
@@ -68,7 +68,7 @@ git diff --cached --check
 
 `git diff HEAD --check` checks the working tree against `HEAD` and `git diff --cached --check` checks the staged copy; run `git add -N` on new pages first so the working-tree check sees them.
 
-`docs/kb_lint.py` must exit `0` and print `KB lint passed.`
+`docs/kb_lint.py` must exit `0` and print `KB lint passed.` In a shared checkout, if the failures come only from another author's uncommitted changes, run the check in a disposable clone that carries only your changes, which must pass, and report those failures without editing that author's files.
 
 Optional review-time read-only scans (not part of `docs/kb_lint.py`):
 

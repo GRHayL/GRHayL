@@ -47,7 +47,7 @@ Default builds enable HDF5: without custom paths, `configure` tries `pkg-config 
 - excludes `unit_test_*tabulated*.c`, `unit_test_con2prim_debug.c`, and table-backed NRPyLeakage tests (`constant_density_sphere`, `luminosities`, `optically_thin_gas`) while keeping `physics` and `classifier_fallback`;
 - excludes tabulated data generators from `DGEXES`.
 
-Manual or downstream no-HDF5 builds must define `GHL_DISABLE_HDF5` and mirror this exact source-selection predicate (`README.md` documents the retained helpers and exclusion tokens). Direct tabulated HLLE flux routines remain linkable in no-HDF5 mode but require caller-supplied EOS callbacks because built-in table dispatch is disabled; see [HLLE Flux Variant Matrix](../gems/flux-source/hlle-flux-variant-matrix.md). By contrast, [GRHayLib Cactus Build](../implementations/grhaylib-cactus-build.md) hard-codes `requires HDF5`.
+Manual or downstream no-HDF5 builds must define `GHL_DISABLE_HDF5` and mirror this exact source-selection predicate (`README.md` documents the retained helpers and exclusion tokens). Direct tabulated HLLE flux routines remain linkable in no-HDF5 mode for link compatibility only, not supported execution; see [HLLE Flux Variant Matrix](../gems/flux-source/hlle-flux-variant-matrix.md). By contrast, [GRHayLib Cactus Build](../implementations/grhaylib-cactus-build.md) hard-codes `requires HDF5`.
 
 Evidence (descriptive behavior): `configure::GHL_DISABLE_HDF5`; corroboration: `README.md::GHL_DISABLE_HDF5`.
 

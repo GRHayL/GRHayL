@@ -24,10 +24,12 @@ Only the listed fields of `cons` are written; unwritten fields retain prior valu
 
 - **Wave-speed guards:** Negative `cmin`/`cmax` residues within `DBL_EPSILON * max(1, |cmin|, |cmax|)` are floored to `0`; larger negative values are rejected. Floored speeds must satisfy `cmin + cmax >= 1 / DBL_MAX` (finite) and non-overflowing product (within one rounding). Violations return `ghl_error_invalid_hlle_wavespeeds` from `_checked` before any EOS call or `cons` write (legacy wrappers abort). `_checked` does not validate geometry, `u0`, or output finiteness.
 - **EOS callback & primitive mutation:** After wave-speed checks, kernels invoke global `ghl_compute_h_and_cs2` for `prims_r`, then `prims_l` (`cs2` is requested for single-callback compatibility with custom EOS integrations and unused here), returning the first callback error before writing `cons`. Production tabulated dispatch may clamp and mutate `prims_r`/`prims_l` in place without rollback on a second-call error; pass copies to preserve face states.
-- **`--disable-hdf5` retention:** `configure --disable-hdf5` still compiles the real tabulated HLLE C kernels (excluding only tabulated flux tests/generators; Ubuntu-Clang's no-HDF5 `c2p-failure` job checks legacy tabulated symbol exports with `nm -D --defined-only` without linking a caller or inspecting `_checked` names). Calling them in no-HDF5 mode requires a caller-installed `ghl_compute_h_and_cs2` callback; the kernels do not check `eos->eos_type`.
+- **`--disable-hdf5` retention:** `configure --disable-hdf5` still compiles the real tabulated HLLE C kernels (excluding only tabulated flux tests/generators; Ubuntu-Clang's no-HDF5 `c2p-failure` job checks legacy tabulated symbol exports with `nm -D --defined-only` without linking a caller or inspecting `_checked` names). `README.md` states that these symbols are retained for link compatibility only, not for supported no-HDF5 execution: in that mode `ghl_initialize_eos_functions` cannot install table-backed `ghl_compute_h_and_cs2`, and the kernels call whatever the global pointer holds (null before EOS initialization, the hybrid routine after simple or hybrid initialization) without checking `eos->eos_type`.
 - **Coverage limits:** Focused asymmetric analytic HLLE tests use zero magnetic field; no committed test verifies production tabulated callback mutation inside an HLLE call; deprecated generic HLLE pointers have no tests.
 
 Evidence (descriptive behavior): `ghl_flux_source.h::ghl_calculate_HLLE_fluxes_dirn0_tabulated_checked`; corroboration: `generate_flux_source.py::generate_fluxes`.
+
+Evidence (normative rule): `README.md::link compatibility`; corroboration: `initialize_eos.c::ghl_initialize_eos_functions`.
 
 ## Sources
 
@@ -38,6 +40,8 @@ Evidence (descriptive behavior): `ghl_flux_source.h::ghl_calculate_HLLE_fluxes_d
 - [GRHayL/Flux_Source/tabulated/make.code.defn](../../../GRHayL/Flux_Source/tabulated/make.code.defn) - tabulated manifest
 - [GRHayL/Flux_Source/tabulated_entropy/make.code.defn](../../../GRHayL/Flux_Source/tabulated_entropy/make.code.defn) - tabulated-entropy manifest
 - [GRHayL/Flux_Source/generate_flux_source.py](../../../GRHayL/Flux_Source/generate_flux_source.py) - `generate_fluxes()`
+- [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c) - no-HDF5 `ghl_compute_h_and_cs2` installation
+- [README.md](../../../README.md) - tabulated HLLE link-compatibility rule for no-HDF5 builds
 - [Unit_Tests/unit_test_hybrid_flux.c](../../../Unit_Tests/unit_test_hybrid_flux.c) - hybrid HLLE and wave-bound/error checks
 - [Unit_Tests/unit_test_tabulated_flux.c](../../../Unit_Tests/unit_test_tabulated_flux.c) - tabulated HLLE checks
 
