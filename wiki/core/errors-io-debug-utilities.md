@@ -1,132 +1,41 @@
-# Core Errors, IO, Debug, And Utilities
+# Errors, IO, Debug, And Utilities
 
-## Purpose
+> Core `ghl_abort_if_error` switch table, `ghl_Warn_Error` termination rules, `ghl_debug.h` print helpers, and `min_max_clamp.c` utilities. · Status: confirmed
+> Up: [GRHayL Core](index.md)
 
-This page routes Core error-code handling, IO helpers, debug print helpers, and
-small utility functions. It is not a replacement for headers or source; use it
-to find the owning files and tests before changing behavior.
+## Summary
 
-Ground truth:
-[`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h),
-[`GRHayL/include/ghl_io.h`](../../GRHayL/include/ghl_io.h),
-[`GRHayL/include/ghl_debug.h`](../../GRHayL/include/ghl_debug.h),
-[`GRHayL/GRHayL_Core/abort_if_error.c`](../../GRHayL/GRHayL_Core/abort_if_error.c),
-[`GRHayL/GRHayL_Core/info_warn_error.c`](../../GRHayL/GRHayL_Core/info_warn_error.c),
-and
-[`GRHayL/GRHayL_Core/min_max_clamp.c`](../../GRHayL/GRHayL_Core/min_max_clamp.c).
+Core separates recoverable `ghl_error_codes_t` return values from `ghl_io.h` reporting macros (`ghl_warn` returns; `ghl_error`, `ghl_abort`, and nonzero-code `ghl_Error` terminate), maps error codes to messages in `abort_if_error.c`, supplies stderr debug printers in `ghl_debug.h`, and provides unchecked integer/floating-point clamp helpers in `min_max_clamp.c`.
 
-## Error Codes And Message Mapping
+## Detail
 
-`ghl_error_codes_t` lives in
-[`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h). Use that enum as the
-authority for available return codes, including EOS, Con2Prim, table, HDF5,
-atmosphere, and utility error keys.
+### Error Codes, `ghl_abort_if_error`, And Terminating IO
 
-`ghl_abort_if_error` is declared in
-[`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h) and implemented in
-[`GRHayL/GRHayL_Core/abort_if_error.c`](../../GRHayL/GRHayL_Core/abort_if_error.c).
-That source owns the mapping from `ghl_error_codes_t` values to human-readable
-messages; do not copy the full table into KB pages.
+- **`ghl_abort_if_error` (`abort_if_error.c`):** switches over every declared `ghl_error_codes_t` value in `ghl.h`: `ghl_success` returns normally, while known non-success codes call `ghl_Error(error, ...)` which invokes `exit(error)` (not `abort()`) because current enum codes are positive. Because there is no `default` switch arm, an out-of-range cast enum returns silently without terminating.
+- **`ghl_info` and `ghl_Warn_Error` (`info_warn_error.c`, `ghl_io.h`):** `ghl_info` prints a GRHayL-prefixed message to stdout. `ghl_warn`, `ghl_error`, `ghl_abort`, and `ghl_Error` pass `__FILE__`, `__LINE__`, and `__func__` to `ghl_Warn_Error`, which terminates strictly by `exit_code`: `0` returns (`ghl_warn`), `-1` (`ghl_error_abort`) calls `abort()` (`ghl_abort`), and any other nonzero value calls `exit(exit_code)` (`ghl_error` exits `1`; `ghl_Error` uses the caller's code).
+- **Expected-failure testing:** [Expected Failure And Error Keys](../tests/expected-failure-and-error-keys.md) describes how `unit_test_code_error.c` keys exit: matched error codes through `ghl_abort_if_error`, and other expected outcomes, including no-HDF5 skips, through `pass_test`.
 
-Every currently declared `ghl_error_codes_t` value has a switch case, and
-`ghl_success` returns normally. Known non-success values route through
-`ghl_Error(error, ...)`, which calls `exit(error)` because current error codes
-are positive. Despite the helper name, these cases do not use `abort()`.
-There is no `default` switch arm: a cast/out-of-range value not represented by
-the enum returns silently without terminating
-([`GRHayL/GRHayL_Core/abort_if_error.c`](../../GRHayL/GRHayL_Core/abort_if_error.c),
-[`GRHayL/GRHayL_Core/info_warn_error.c`](../../GRHayL/GRHayL_Core/info_warn_error.c)).
+Evidence (descriptive behavior): `abort_if_error.c::ghl_abort_if_error`; corroboration: `info_warn_error.c::ghl_Warn_Error`.
 
-`Unit_Tests/unit_test_code_error.c` compares producer return codes for most
-configured error cases; keys `86..88` instead supply enum values directly.
-Active error-code cases then call `ghl_abort_if_error(error)` for expected
-process failure. See [expected-failure and error keys](../tests/expected-failure-and-error-keys.md)
-and [`Unit_Tests/unit_test_code_error.c`](../../Unit_Tests/unit_test_code_error.c).
-The test deliberately exits nonzero after a matched error reaches
-`ghl_abort_if_error`; [`.github/run_tests.sh`](../../.github/run_tests.sh)
-loops keys 0 through 90 and treats a zero process status as "Failed to fail."
-This is expected-failure process coverage, not an ordinary success-status test.
+### Debug Printers And Min/Max/Clamp Utilities
 
-## Return Codes Versus Terminating IO
+- **`ghl_debug.h`:** defines inline stderr printers with function/line wrapper macros. `ghl_debug_print_prims` prints thermodynamic fields, `vU[0..2]`, and `BU[0..2]` while omitting `u0`; `ghl_debug_print_cons` prints `D`/`rho`, `tau`, `SD0`, `SD1`, `SD2`, `entropy`, and `Y_e` in that order. `unit_test_con2prim_debug.c` invokes both without asserting printed text.
+- **`min_max_clamp.c`:** implements `ghl_imin`, `ghl_imax`, `ghl_iclamp`, and `ghl_clamp`. Tabulated EOS interpolators instead call a private always-inline `NRPyEOS_iclamp` in `NRPyEOS_tabulated_helpers.h` with identical `min(max(x, x_min), x_max)` order—keep both synchronized if clamp semantics change. Neither clamp validates `x_min <= x_max`, and no direct unit test asserts Core clamp functions.
 
-Most recoverable routines return `ghl_error_codes_t` to callers. The IO macros
-in [`GRHayL/include/ghl_io.h`](../../GRHayL/include/ghl_io.h) are different:
-`ghl_warn` returns after printing, while `ghl_error`, `ghl_abort`, and
-`ghl_Error` terminate through `exit` or `abort` according to the exit code
-handled in
-[`GRHayL/GRHayL_Core/info_warn_error.c`](../../GRHayL/GRHayL_Core/info_warn_error.c).
+Evidence (descriptive behavior): `min_max_clamp.c::ghl_iclamp`; corroboration: `NRPyEOS_tabulated_helpers.h::NRPyEOS_iclamp` and `ghl_debug.h::ghl_debug_print_prims`.
 
-`ghl_info` writes a GRHayL-prefixed message to stdout. Source:
-[`GRHayL/GRHayL_Core/info_warn_error.c`](../../GRHayL/GRHayL_Core/info_warn_error.c).
+## Sources
 
-`ghl_warn`, `ghl_error`, `ghl_abort`, and `ghl_Error` route through
-`ghl_Warn_Error` with `__FILE__`, `__LINE__`, and `__func__` context supplied by
-the macros in [`GRHayL/include/ghl_io.h`](../../GRHayL/include/ghl_io.h).
-`ghl_Warn_Error` prints that file/line/function context and the formatted
-message in
-[`GRHayL/GRHayL_Core/info_warn_error.c`](../../GRHayL/GRHayL_Core/info_warn_error.c).
+- [GRHayL/include/ghl.h](../../GRHayL/include/ghl.h) - `ghl_error_codes_t`, `ghl_abort_if_error`, clamp declarations
+- [GRHayL/include/ghl_io.h](../../GRHayL/include/ghl_io.h) - `ghl_info`, `ghl_warn`, `ghl_error`, `ghl_abort`, `ghl_Error`
+- [GRHayL/include/ghl_debug.h](../../GRHayL/include/ghl_debug.h) - `ghl_debug_print_prims`, `ghl_debug_print_cons`
+- [GRHayL/GRHayL_Core/abort_if_error.c](../../GRHayL/GRHayL_Core/abort_if_error.c) - error-code message switch
+- [GRHayL/GRHayL_Core/info_warn_error.c](../../GRHayL/GRHayL_Core/info_warn_error.c) - `ghl_info` and `ghl_Warn_Error`
+- [GRHayL/GRHayL_Core/min_max_clamp.c](../../GRHayL/GRHayL_Core/min_max_clamp.c) - `ghl_imin`, `ghl_imax`, `ghl_iclamp`, `ghl_clamp`
+- [GRHayL/EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h](../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h) - private inline `NRPyEOS_iclamp`
 
-Exact termination control is the `exit_code`: zero returns, `-1`
-(`ghl_error_abort`) calls `abort()`, and every other value calls
-`exit(exit_code)`. Thus `ghl_warn` returns, `ghl_error` exits with 1,
-`ghl_abort` aborts, and `ghl_Error` follows its caller-supplied value.
+## See Also
 
-## Debug Helpers
-
-`ghl_debug.h` defines inline helpers for printing primitive and conservative
-struct contents to stderr, plus wrapper macros that add the current function and
-line. Source: [`GRHayL/include/ghl_debug.h`](../../GRHayL/include/ghl_debug.h).
-Installed public header routing is listed in
-[`GRHayL/include/make.code.defn`](../../GRHayL/include/make.code.defn).
-
-Current debug output has one bounded omission:
-
-- `ghl_debug_print_prims` omits `u0`; it prints thermodynamic fields,
-  `vU[0..2]`, and `BU[0..2]` only.
-- `ghl_debug_print_cons` prints values in its label order: `D`/`rho`, `tau`,
-  `SD0`, `SD1`, `SD2`, entropy, and `Y_e`.
-
-`Unit_Tests/unit_test_con2prim_debug.c` calls both inline printers for manual
-diagnostic output but does not assert column labels or values. No persistent
-focused debug-format assertion is visible in the listed Core evidence.
-
-## Min, Max, And Clamp Utilities
-
-Core declares `ghl_imin`, `ghl_imax`, `ghl_iclamp`, and `ghl_clamp` in
-[`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h) and implements them in
-[`GRHayL/GRHayL_Core/min_max_clamp.c`](../../GRHayL/GRHayL_Core/min_max_clamp.c).
-`ghl_iclamp` composes the integer min/max helpers; `ghl_clamp` uses the math
-library floating-point min/max route. Source:
-[`GRHayL/GRHayL_Core/min_max_clamp.c`](../../GRHayL/GRHayL_Core/min_max_clamp.c).
-
-The tabulated-EOS interpolation helpers do not call `ghl_iclamp`. Their
-header carries a private always-inline `NRPyEOS_iclamp` with the same
-`min(max(x, x_min), x_max)` order so the interpolation spots avoid external
-calls; change both together if the clamp semantics ever change. Source:
-[`GRHayL/EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h`](../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h).
-
-Neither clamp validates that `x_min <= x_max`; reversed bounds remain caller
-error and produce the literal composed min/max result. These functions expose
-no error return.
-
-Direct clamp test coverage is weak from the listed Core task sources: the Core
-suite and code-error test do not directly assert `ghl_imin`, `ghl_imax`,
-`ghl_iclamp`, or `ghl_clamp` behavior. Broader repo code uses the clamp helpers
-in EOS and Con2Prim paths, but that is indirect coverage. Sources:
-[`Unit_Tests/unit_test_grhayl_core_test_suite.c`](../../Unit_Tests/unit_test_grhayl_core_test_suite.c),
-[`Unit_Tests/unit_test_code_error.c`](../../Unit_Tests/unit_test_code_error.c),
-[`GRHayL/GRHayL_Core/min_max_clamp.c`](../../GRHayL/GRHayL_Core/min_max_clamp.c).
-
-## Source Of Truth
-
-- [`wiki/build-and-ci.md`](../build-and-ci.md)
-- [`docs/raw/GRHayL_Core.dox`](../../docs/raw/GRHayL_Core.dox)
-- [`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h)
-- [`GRHayL/include/ghl_io.h`](../../GRHayL/include/ghl_io.h)
-- [`GRHayL/include/ghl_debug.h`](../../GRHayL/include/ghl_debug.h)
-- [`GRHayL/include/make.code.defn`](../../GRHayL/include/make.code.defn)
-- [`GRHayL/GRHayL_Core/abort_if_error.c`](../../GRHayL/GRHayL_Core/abort_if_error.c)
-- [`GRHayL/GRHayL_Core/info_warn_error.c`](../../GRHayL/GRHayL_Core/info_warn_error.c)
-- [`GRHayL/GRHayL_Core/min_max_clamp.c`](../../GRHayL/GRHayL_Core/min_max_clamp.c)
-- [`Unit_Tests/unit_test_grhayl_core_test_suite.c`](../../Unit_Tests/unit_test_grhayl_core_test_suite.c)
-- [`Unit_Tests/unit_test_code_error.c`](../../Unit_Tests/unit_test_code_error.c)
+- Depends on: [Shared Parameters And Enums](shared-parameters-and-enums.md)
+- Validated by: [Expected Failure And Error Keys](../tests/expected-failure-and-error-keys.md)
+- See also: [Core Tests And Reference Data](tests-and-reference-data.md)

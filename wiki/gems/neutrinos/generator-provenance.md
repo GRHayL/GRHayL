@@ -1,298 +1,78 @@
-# NRPyLeakage Generator Provenance
+# Neutrinos Generator Provenance
 
-## Purpose
+> Ancestral NRPy+ notebooks in `Tabulated_EOS_IllinoisGRMHD`, `tmp_*` common-subexpression origin, hand-applied C corrections, and ILEAS/FDINT attribution. · Status: confirmed
+> Up: [Neutrinos](index.md)
 
-This page routes questions about where NRPyLeakage's generated C came from,
-why its formula blocks contain `tmp_*` variables, and how ancestral generator
-evidence relates to current GRHayL. For callable behavior, use the current
-[implementation flow](implementation-flow.md), public headers, build manifest,
-and tests. The external tutorial repository is provenance and derivation
-evidence, not current GRHayL source authority.
+## Summary
 
-External claims below describe the tutorial repository and its saved notebook
-contents. The linked `master` branch can move. The durable physics and
-generation facts needed by GRHayL readers are therefore summarized locally;
-recheck upstream contents before attempting regeneration.
+No Python or NRPy+ generator for NRPyLeakage resides under `GRHayL/Neutrinos/`; ancestral symbolic notebooks and generated outputs live in Leo Werneck's external `Tabulated_EOS_IllinoisGRMHD` repository. Current checked-in GRHayL C, headers, manifests, and tests govern all compiled behavior, including hand-applied physics and numerical corrections not synchronized back to those notebooks.
 
-## Authority Boundary
+## Detail
 
-The Python/NRPy+ generator is not present under
-[`GRHayL/Neutrinos/`](../../../GRHayL/Neutrinos/). It lives in Leo Werneck's
-`Tabulated_EOS_IllinoisGRMHD` repository, alongside generated standalone and
-Einstein Toolkit implementations. That repository explains the symbolic
-expressions and generation process behind GRHayL's code, but it does not define
-GRHayL's present API, error handling, build inclusion, units header, or tests.
+### Authority Order And External Notebook Roles
 
-Use this authority order:
+Treat sources in strict precedence: (1) repo-local GRHayL C, headers, manifests, and tests govern compiled behavior; (2) the external implementation notebook provides provenance for symbolic construction and initial generation; (3) the formulation and validation notebooks provide derivation cross-checks; and (4) external checked-in C is historical comparison material only, never a drop-in replacement. Because the upstream `master` branch can move and carries no pinned Python lockfile, durable facts are recorded here:
 
-1. Current GRHayL C, headers, manifests, and tests are ground truth for code
-   that builds and runs here.
-2. The external implementation notebook is direct evidence for the symbolic
-   construction and original generation flow.
-3. The external formulation and validation notebooks are derivation and
-   cross-check evidence. They do not prove current behavior.
-4. The external checked-in C is ancestral comparison evidence. Do not replace
-   current GRHayL files with it or assume rerunning the notebook reproduces
-   current files byte-for-byte.
+- **`Tutorial-Neutrino_leakage-Formulation.ipynb`:** Derives beta processes, pair annihilation, transverse plasmon decay, bremsstrahlung, opacities, optical depths, diffusion times, effective rates, and `R`/`Q` sources. Also discusses neutrino pressure, which is outside GRHayL's current build.
+- **`Tutorial-Leakage_Scheme-Implementation.ipynb`:** Imports vendored `nrpy_core`, SymPy, and Astropy constants; builds symbolic Fermi-Dirac fits of orders `0` through `5`, free rates, densities, opacities, diffusion times, and sources; emits C via `outputC.outputC`, `outputC.outCfunction`, and `optical_depth_helpers`. Geometric units are built from `M = M_sun`, `L = G M / c^2`, `time = L / c`, `D = M / L^3`, `R = D / time`, and `Q = c^2 D / time` (converted to `MeV / (cm^3 s)`), while current numeric constants live exclusively in `GRHayL/include/ghl_nrpyleakage.h`.
+- **`Tutorial-Neutrino_leakage-Numerical_implementation.ipynb`:** Annotated walkthrough of the older Fortran/C++ `ZelmaniLeak` thorn (drivers, interpolation, deleptonization profiles, neutrino pressure, scheduling); comparative evidence only, not the NRPy+ generator.
+- **`Tutorial-Neutrino_leakage-Optically_thin_semi_analytic_calculation.ipynb`:** Independent semi-analytic optically thin evolution cross-check illuminating the intent of `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`.
 
-## Notebook Roles
+### Preserved Generation Flow And `tmp_*` Origin
 
-### Formulation
+In `Tutorial-Leakage_Scheme-Implementation.ipynb`, `generate_ET_thorn` selects output paths: `false` writes `standalone/NRPyLeakage/`, whereas `true` writes C, header, and `make.code.defn` into `standalone/NRPyLeakageET/src/` plus `param.ccl`, `schedule.ccl`, and `interface.ccl` one level up. Initialization recursively deletes and recreates `standalone/<module>`, so any regeneration must run in a disposable clone. Its driver generates in order: (1) Fermi-Dirac integrals, (2) low-level combined source/opacity kernels for NRPy and HARM constant sets, (3) combined selector driver, (4) grid-level optical depth, (5) low-level opacity kernels for both constant sets, (6) opacity driver, (7) header, and (8) ET CCL/build files when enabled. Checked-in upstream directories (`standalone/NRPyLeakage/` and `NRPyLeakageET/src/`) do not form a turnkey reproducible lockfile sequence; results vary with SymPy, Astropy, and NRPy+ versions.
 
-`Tutorial-Neutrino_leakage-Formulation.ipynb` is the physics derivation. It
-develops the leakage model from GRMHD source terms through:
+Upstream `nrpy_core/outputC.py` enables SymPy common-subexpression elimination (`cse`) by default with prefix `tmp` starting at `tmp_0`, hoisting repeated expressions into `const` temporaries before final assignments. Individual `tmp_N` variables have no physical meaning and vary across symbolic ordering and SymPy versions; read named final assignments or notebook expressions instead. (`GRHayL/Flux_Source/generate_flux_source.py` uses NRPy 2 independently and does not establish NRPyLeakage's original settings.)
 
-- beta processes, electron-positron pair annihilation, transverse plasmon
-  decay, and nucleon-nucleon bremsstrahlung;
-- neutrino absorption and scattering opacities, optical depths, and diffusion
-  times;
-- free, diffusion-limited, and effective number/energy rates; and
-- the final lepton-number source `R` and cooling source `Q`.
+Evidence (generated evidence): `NRPyLeakage_compute_neutrino_opacities.c::tmp_0`; corroboration: `NRPyLeakage_compute_neutrino_luminosities.c::tmp_0`.
 
-It also discusses neutrino pressure, which is broader than the current GRHayL
-NRPyLeakage build boundary. Use it to recover the meaning and
-derivation of expressions, not to infer an additional GRHayL API.
+### GRHayL Adaptations And Hand-Applied C Corrections
 
-### Symbolic Implementation And C Generation
+GRHayL adapts the ancestral outputs into struct-based public calls with `ghl_error_codes_t` returns, tabulated EOS dispatch, `GHL_DISABLE_HDF5` returns, `NRPYLEAKAGE_FD_OR_RETURN`, and final sanitizers:
 
-`Tutorial-Leakage_Scheme-Implementation.ipynb` is the generator source. It:
+- `NRPyLeakage_Fermi_Dirac_integrals.c` returns `ghl_error_codes_t` directly and writes the integral through a `double *` output pointer instead of aborting on unsupported orders ([API And Data](api-and-data.md)).
+- `NRPyLeakage_compute_neutrino_opacities.c` and `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c` retain recognizable `tmp_*` blocks from the standalone NRPy-constant kernels.
+- `NRPyLeakage_compute_neutrino_luminosities.c` corresponds to upstream `NRPyLeakageET_compute_neutrino_luminosities_nrpy_constants.c` (no luminosity generator notebook exists upstream).
+- `NRPyLeakage_optical_depths_PathOfLeastResistance.c` extracts the pointwise face-average minimum-path calculation from the ET routine.
+- `NRPyLeakage_nucleon_blocking.h` and `NRPyLeakage_rate_helpers.h` are hand-maintained GRHayL headers tracked via `#! INCS`.
 
-- imports the vendored `nrpy_core` modules, SymPy, and Astropy constants;
-- declares interaction switches, physical constants, and unit conversions;
-- builds Fermi-Dirac approximations of orders zero through five as symbolic
-  expressions;
-- constructs free emission/cooling rates for the four processes, neutrino
-  number and energy densities, scattering and absorption opacities, diffusion
-  times, effective rates, and `R_source`/`Q_source`;
-- obtains C expressions through `outputC.outputC`, writes C functions through
-  `outputC.outCfunction`, and uses `optical_depth_helpers` for the
-  path-of-least-resistance update; and
-- emits generated C and a header; in Einstein Toolkit mode it places
-  `make.code.defn` beside them under `src/` and writes the CCL files at the
-  thorn root.
+`GRHayL/include/ghl_nrpyleakage.h` exposes one active NRPy constant family and retains dormant `NRPyLeakage_ZL_*` macros unused by current C; GRHayL has no runtime NRPy/HARM constant-set selector.
 
-The notebook's geometric-unit construction uses
-`M = M_sun`, `L = G M / c^2`, `time = L / c`, `D = M / L^3`,
-`R = D / time`, and `Q = c^2 D / time`, with `Q` converted to
-`MeV / (cm^3 s)`. Current numeric constants and conversions remain owned by
-[`ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h); do not copy
-numbers from the notebook into current code without a source-level review.
+Because no repo-local generator reproduces the complete file set, the following corrections were applied directly to checked-in C and must be preserved across any future regeneration: (1) shared cgs diffusion prefactor `6.0 / NRPyLeakage_c_light`, (2) `rho_cgs * rho_cgs` scaling in nucleon-nucleon bremsstrahlung, (3) single heavy-lepton `Q_free_nux` shared by numerator and inverse loss time, (4) stable `log1p` form for order-zero Fermi-Dirac integral, (5) density-derived free-nucleon blocking with `expm1` overlap algebra, and (6) paired shifted charged-current emission/absorption moments using $q = \widehat\mu - T(\eta_n - \eta_p)$ from a single Kirchhoff-balanced spectral parent. To regenerate a formula safely: edit symbolically in a disposable clone, diff against current C, reapply all GRHayL interfaces and hand-applied corrections, and re-verify tests.
 
-### ZelmaniLeak Numerical Walkthrough
+Evidence (descriptive behavior): `NRPyLeakage_rate_helpers.h::nrpyl_effective_emission_rate`; corroboration: `ghl_nrpyleakage.h::NRPyLeakage_ZL_Q_npmass`.
 
-`Tutorial-Neutrino_leakage-Numerical_implementation.ipynb` is an annotated
-walkthrough of the older `ZelmaniLeak` thorn. It describes its Fortran/C++
-drivers, leakage and optical-depth routines, interpolation helpers,
-deleptonization profile support, neutrino pressure, scheduling, and parameter
-checks. It is useful comparative evidence for numerical choices, but it is not
-the NRPy+ generator and is not a description of GRHayL's public interface.
+### Nucleon-Blocking Literature And Code Attribution
 
-### Optically Thin Semi-Analytic Check
+`NRPyLeakage_nucleon_blocking.h` follows Ardevol-Pulpillo et al. (ILEAS, *MNRAS* 485, 2019, `doi:10.1093/mnras/stz613`) Appendix B Eqs. (69)-(71) for density-derived free-nucleon degeneracies and Appendix C Eqs. (100)-(109) for thresholded shifted reaction pairing (implemented as an algebraic grey reduction without finite charged-lepton mass, EOS effective masses, or mean-field shifts). Scalar `fdm1h` and `ifd1h` rational fits are ported from Scott Maddox's `fdint/_fdint.pyx` (implementing T. Fukushima's 2015 minimax fits) with FDINT's full BSD-3 license retained in the header. Common density normalization, fraction ordering, `expm1` overlap, and equal-population limits are GRHayL adaptations relying on Sterbenz's exact-subtraction theorem (P. H. Sterbenz, *Floating-Point Computation*, 1974, Sec. 4.3).
 
-`Tutorial-Neutrino_leakage-Optically_thin_semi_analytic_calculation.ipynb` is
-an independent validation path. It interpolates a tabulated EOS, evaluates the
-optically thin reaction rates, forms `R` and `Q`, and evolves the resulting
-homogeneous-fluid electron fraction and energy/temperature system. It helps
-interpret the intent of
-[`unit_test_nrpyleakage_optically_thin_gas.c`](../../../Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c),
-but it neither generates GRHayL C nor establishes current test pass/fail
-behavior.
+Evidence (descriptive behavior): `NRPyLeakage_nucleon_blocking.h::nrpyl_compute_population`; corroboration: `GRHayL/Neutrinos/NRPyLeakage/make.code.defn::NRPyLeakage_rate_helpers.h`.
 
-## Preserved Generation Flow
+## Sources
 
-The generator notebook has a `generate_ET_thorn` switch. Its saved code derives
-the module name and output directory from that switch:
+- [GRHayL/Neutrinos/NRPyLeakage/make.code.defn](../../../GRHayL/Neutrinos/NRPyLeakage/make.code.defn) - built C files and `#! INCS` private headers
+- [GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities.c](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities.c) - `tmp_0` CSE sequence
+- [GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c) - `tmp_0` CSE sequence
+- [GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h) - `nrpyl_compute_population`, BSD-3 attribution
+- [GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h) - `nrpyl_effective_emission_rate`
+- [GRHayL/include/ghl_nrpyleakage.h](../../../GRHayL/include/ghl_nrpyleakage.h) - active NRPy constants and dormant `NRPyLeakage_ZL_Q_npmass`
+- [GRHayL/Flux_Source/generate_flux_source.py](../../../GRHayL/Flux_Source/generate_flux_source.py) - separate NRPy 2 generator
+- [Tabulated_EOS_IllinoisGRMHD Repository](https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD) - ancestral repository
+- [Tutorial-Neutrino_leakage-Formulation.ipynb](https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD/blob/master/Tutorial-Neutrino_leakage-Formulation.ipynb) - physics derivation notebook
+- [Tutorial-Leakage_Scheme-Implementation.ipynb](https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD/blob/master/Tutorial-Leakage_Scheme-Implementation.ipynb) - symbolic generator notebook
+- [Tutorial-Neutrino_leakage-Numerical_implementation.ipynb](https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD/blob/master/Tutorial-Neutrino_leakage-Numerical_implementation.ipynb) - ZelmaniLeak walkthrough
+- [Tutorial-Neutrino_leakage-Optically_thin_semi_analytic_calculation.ipynb](https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD/blob/master/Tutorial-Neutrino_leakage-Optically_thin_semi_analytic_calculation.ipynb) - optically thin semi-analytic check
+- [standalone/NRPyLeakage Tree](https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD/tree/master/standalone/NRPyLeakage) - checked-in standalone C outputs
+- [NRPyLeakageET/src Tree](https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD/tree/master/NRPyLeakageET/src) - checked-in ET thorn C outputs
+- [nrpy_core Tree](https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD/tree/master/nrpy_core) - `outputC.py` and `optical_depth_helpers.py`
+- [Ardevol-Pulpillo et al. (ILEAS, MNRAS 485)](https://doi.org/10.1093/mnras/stz613) - Appendices B and C
+- [FDINT _fdint.pyx](https://github.com/scott-maddox/fdint/blob/master/fdint/_fdint.pyx) - ported `fdm1h` and `ifd1h` fits
+- [Fukushima (2015) Half-Odd Fermi Integrals](https://doi.org/10.1016/j.amc.2015.03.009) - forward fit reference
+- [Fukushima (2015) Inverse Fermi Integrals](https://doi.org/10.1016/j.amc.2015.03.015) - inverse fit reference
 
-- false: `standalone/NRPyLeakage/`;
-- true: `standalone/NRPyLeakageET/src/` for generated C, its header, and
-  `make.code.defn`; `param.ccl`, `schedule.ccl`, and `interface.ccl` are written
-  one directory above `src/`.
+## See Also
 
-At initialization, the notebook recursively removes and recreates its selected
-`standalone/<module>` output directory. Run it only in a disposable clone and
-review the selected mode before execution.
-
-The notebook's final driver invokes generators in this order:
-
-1. Fermi-Dirac integral function;
-2. low-level combined source-term/opacity functions for NRPy and HARM constant
-   sets;
-3. the combined driver that selects a constant set;
-4. a grid-level optical-depth function;
-5. low-level opacity functions for both constant sets;
-6. the opacity driver;
-7. the generated header; and
-8. in Einstein Toolkit mode, parameter, schedule, interface, and build files.
-
-The tutorial repository contains these checked-in output
-families:
-
-- `standalone/NRPyLeakage/` contains the standalone header, Fermi function,
-  combined source/opacity driver and NRPy/HARM kernels, opacity driver and
-  NRPy/HARM kernels, and optical-depth routine.
-- `NRPyLeakageET/src/` contains the integrated Einstein Toolkit thorn sources,
-  including analogous generated kernels, path-of-least-resistance code, and
-  luminosity code.
-
-These checked-in directories matter because the notebook's saved
-output path and checked-in outputs do not form a single turnkey regeneration
-contract. The repository supplies no pinned Python environment or
-lockfile for the notebooks. Regeneration can therefore vary with SymPy,
-Astropy, NRPy+, and notebook state.
-
-## Why Generated C Uses `tmp_*`
-
-`nrpy_core/outputC.py` enables common-subexpression elimination by default,
-uses the variable prefix `tmp`, and calls SymPy `cse` with numbered symbols
-beginning at `tmp_0`. The implementation notebook passes the complete output
-set for a kernel to `outputC.outputC`, so repeated algebra is hoisted into
-ordered `const` temporaries before final assignments.
-
-The external tutorial's `nrpy_core/outputC.py` remains the direct evidence for
-these defaults. Flux_Source now uses NRPy 2 through its separate
-[Python generator](../../../GRHayL/Flux_Source/generate_flux_source.py); its
-temporary names do not establish NRPyLeakage's original generator settings.
-
-The `tmp_*` names therefore have no physics meaning. They are compiler-style
-common subexpressions. Their numbering and grouping depend on symbolic input,
-output ordering, SymPy/NRPy+ processing, and generator version. Read the named
-symbolic expressions in the implementation notebook or the named outputs at
-the end of a current C block; do not document a stable meaning for an
-individual `tmp_N`.
-
-## Relationship To Current GRHayL
-
-The current build manifest
-[`GRHayL/Neutrinos/NRPyLeakage/make.code.defn`](../../../GRHayL/Neutrinos/NRPyLeakage/make.code.defn)
-lists these adapted C files:
-
-- [`NRPyLeakage_Fermi_Dirac_integrals.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_Fermi_Dirac_integrals.c)
-  retains the generated approximation expressions, but GRHayL returns
-  `ghl_error_codes_t` and writes through an output pointer instead of exiting
-  on an unsupported key.
-- [`NRPyLeakage_compute_neutrino_opacities.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities.c)
-  and
-  [`NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c)
-  preserve recognizable `tmp_*` sequences from the external standalone NRPy
-  constant kernels, around a GRHayL EOS/API/error-handling adaptation.
-- [`NRPyLeakage_compute_neutrino_luminosities.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c)
-  preserves a generated formula block visible in the external
-  `NRPyLeakageET_compute_neutrino_luminosities_nrpy_constants.c`. No
-  corresponding luminosity generator appears among the notebooks, so that
-  external C file is the surviving ancestral evidence for this block.
-- [`NRPyLeakage_optical_depths_PathOfLeastResistance.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_optical_depths_PathOfLeastResistance.c)
-  extracts the pointwise face-average, neighbor-candidate, and minimum-path
-  calculation seen in the external Einstein Toolkit routine into a
-  GRHayL struct-based call.
-- [`NRPyLeakage_nucleon_blocking.h`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h)
-  is hand-maintained GRHayL code, not output recovered from the ancestral
-  notebooks. Every EOS-dependent routine includes it, and the manifest
-  tracks it through `#! INCS`.
-- [`NRPyLeakage_rate_helpers.h`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h)
-  is also hand-maintained. It centralizes corrected bremsstrahlung, diffusion,
-  and heavy-lepton source identities so production and the independent
-  analytic checks use the same production helpers.
-
-GRHayL adaptations include different public types and argument shapes,
-tabulated-EOS dispatch, HDF5-disabled returns, propagated Fermi/EOS errors,
-struct writeback, and finite-value handling. Current constants have one
-active NRPy family in
-[`ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h). The same
-header also retains dormant `NRPyLeakage_ZL_*` macros, but current leakage C
-does not reference them. By contrast, the upstream standalone output
-contains paired NRPy/HARM kernel families and a runtime selector. GRHayL has no
-current runtime NRPy/HARM selector. Review exact source before assuming an
-ancestral formula or failure mode survived unchanged.
-
-## Regeneration Rule
-
-No current repo-local command regenerates the complete GRHayL file set. If a formula
-must change:
-
-1. edit or reconstruct the named symbolic expression using the external
-   implementation notebook and vendored `nrpy_core` as provenance;
-2. generate into a disposable directory;
-3. compare formulas against the current GRHayL kernel;
-4. reapply current GRHayL API, EOS, error, unit, and finite-handling contracts;
-   and
-5. verify the built sources and tests routed by
-   [Implementation Flow](implementation-flow.md) and
-   [Tests And Fixtures](tests-and-fixtures.md).
-
-Do not treat generated C replacement as a mechanical copy operation.
-
-### Hand-Applied Corrections To The Adapted C
-
-Some formula corrections were applied directly to the checked-in C because no
-maintained repo-local producer exists. The ancestral symbolic sources were not
-re-run and are not synchronized with these edits:
-
-- the shared diffusion prefactor is `6.0/NRPyLeakage_c_light`, keeping the
-  suppression ratio in cgs;
-- nucleon-nucleon bremsstrahlung carries `rho_cgs*rho_cgs`;
-- each emission routine computes one heavy-lepton free energy rate, the local
-  `Q_free_nux`, and uses it in both the `nux` numerator and its own inverse
-  loss time;
-- the order-zero Fermi-Dirac integral uses the stable `log1p` form;
-- nucleon blocking derives common-mass kinetic degeneracies from `rho`, `T`,
-  `X_n`, and `X_p`, then evaluates bounded same-energy transition populations
-  with an algebraic overlap identity; and
-- charged-current emission and ordinary-absorption moments use the common
-  reaction shift `q = muhat - T*(eta_n-eta_p)`, opposite particle-threshold
-  orientations, and algebraic shifted moments from a single spectral parent.
-  The paired construction enforces its Kirchhoff relation while retaining the
-  existing grey representative-energy treatment of final-state lepton
-  blocking.
-
-Treat the current C as authority for these expressions. Regenerating from an
-ancestral notebook would reintroduce the uncorrected forms, so any future
-regeneration must reapply them and compare against
-[the physics and EOS contract](physics-and-eos-contract.md).
-
-### Nucleon-Blocking Sources And Adaptation Boundary
-
-The blocking helper follows the density-derived free-nucleon construction in
-A. Ardevol-Pulpillo et al., *MNRAS* 485 (2019), 4754--4787,
-[doi:10.1093/mnras/stz613](https://doi.org/10.1093/mnras/stz613), Appendix B,
-Eqs. (69)--(71). Appendix C, Eqs. (100)--(109), supplies the cited precedent
-for thresholded shifted reaction pairs and the distinction between ordinary
-and stimulated absorption used in Kirchhoff pairing. Current GRHayL implements
-an algebraic grey reduction of that structure. It does not implement a full
-energy-dependent spectral kernel with finite charged-lepton mass, EOS
-effective masses, or mean-field single-particle energies.
-
-The helper ports scalar `fdm1h` and `ifd1h` rational fits from Scott Maddox's
-[FDINT implementation](https://github.com/scott-maddox/fdint/blob/master/fdint/_fdint.pyx).
-FDINT attributes those fits to T. Fukushima's minimax approximations
-([half-odd Fermi integrals](https://doi.org/10.1016/j.amc.2015.03.009) and
-[inverse Fermi integrals](https://doi.org/10.1016/j.amc.2015.03.015)). The
-source header retains FDINT's full BSD-3 notice because coefficients and fit
-code were ported.
-
-GRHayL's common density normalization, fraction-ordering, `expm1` overlap, and
-equal-population limit are local adaptations. Do not attribute that complete
-evaluator to FDINT or ILEAS. The nearby-positive-number subtraction relies on
-the exact-subtraction condition described by P. H. Sterbenz,
-*Floating-Point Computation*, Prentice-Hall, 1974, Sec. 4.3. These techniques
-were chosen to remove the old reference dependence and quotient pole without
-adding quadrature, iterative roots, or tables to a leakage hot path.
-
-## Ground Truth References
-
-- Original tutorial and implementation repository:
-  https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD
-- Physics formulation notebook:
-  https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD/blob/master/Tutorial-Neutrino_leakage-Formulation.ipynb
-- Symbolic implementation and C-generation notebook:
-  https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD/blob/master/Tutorial-Leakage_Scheme-Implementation.ipynb
-- ZelmaniLeak numerical implementation walkthrough:
-  https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD/blob/master/Tutorial-Neutrino_leakage-Numerical_implementation.ipynb
-- Optically thin semi-analytic notebook:
-  https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD/blob/master/Tutorial-Neutrino_leakage-Optically_thin_semi_analytic_calculation.ipynb
-- Checked-in standalone generated outputs:
-  https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD/tree/master/standalone/NRPyLeakage
-- Checked-in Einstein Toolkit implementation and generated kernels:
-  https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD/tree/master/NRPyLeakageET/src
-- NRPy+ support used by the generator, including `outputC.py` and
-  `optical_depth_helpers.py`:
-  https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD/tree/master/nrpy_core
+- Implements: [Implementation Flow](implementation-flow.md)
+- See also: [Generated Boundaries](../../architecture/generated-boundaries.md)
+- See also: [Nucleon Blocking And EOS Conventions](nucleon-blocking-and-eos-conventions.md)
+- See also: [Physics Model And Sources](physics-model-and-sources.md)

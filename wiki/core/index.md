@@ -1,98 +1,16 @@
-# GRHayL Core Hub
+# GRHayL Core
 
-This page is a router for GRHayL_Core work, not replacement documentation.
-Use it to pick focused Core KB pages and repo-local ground truth before
-reviewing source, Doxygen, tests, or downstream integrations.
+> Router for `GRHayL_Core` shared structs, packing helpers, ADM metrics, velocity limiting, stress-energy, EOS dispatch, errors/IO, and Core tests.
 
-If this page conflicts with source, headers, tests, CI, or Doxygen source,
-trust the underlying repo files and update the KB route.
-
-## Focused Core Pages
-
-| Page | Route there for |
+| Page | Go here when... |
 | --- | --- |
-| [Shared parameters and enums](shared-parameters-and-enums.md) | `ghl_parameters`, `ghl_eos_parameters`, public enums, shared structs, public header surface, and cross-gem field routing. |
-| [Struct pack/unpack contract](struct-pack-unpack-contract.md) | `ghl_parameters`, primitive/conservative structs, extrinsic curvature packing, and field-copy return helpers from `ghl.h`. |
-| [Metric/ADM contract](metric-adm-contract.md) | ADM metric initialization, determinant-enforced setup, ADM auxiliaries, and inline vector metric helpers. |
-| [Velocity/u0 contract](velocity-u0-contract.md) | Core `ghl_limit_v_and_compute_u0`, velocity limiting, `u0`, and singular-`u0` error routing. |
-| [Stress-energy/smallb contract](stress-energy-smallb-contract.md) | `smallb`, `b2`, stress-energy packing, and `Tmunu` compute/return helpers. |
-| [EOS dispatch contract](eos-dispatch-contract.md) | Core EOS wrappers, process-wide pointer storage/assignment lifecycle, direct HLLE routing, and HDF5-disabled tabulated routes. |
-| [Errors/IO/debug/utilities](errors-io-debug-utilities.md) | Core return-code termination, logging, min/max/clamp preconditions, and debug-print output behavior. |
-| [Tests and fixtures](tests-and-fixtures.md) | Core unit suite, fixture generation, perturbation checks, and adjacent Con2Prim/stress-energy tests. |
+| [Shared Parameters And Enums](shared-parameters-and-enums.md) | You need `ghl_parameters`, `ghl_eos_parameters`, public enums, `GRHayL_Core/make.code.defn` source routing, or the non-Core `ghl.h` declaration audit. |
+| [Struct Pack And Unpack](struct-pack-unpack.md) | You need `ghl_initialize_*` / `ghl_return_*` copy routines, `ghl_initialize_params` Con2Prim/PPM defaults, or representation-neutral conservative storage. |
+| [Metric And ADM Helpers](metric-adm.md) | You need `ghl_initialize_metric`, `ghl_compute_ADM_auxiliaries`, `ghl_enforce_detgtij_and_initialize_ADM_metric`, or inline `ghl_metric_helpers.h` routines. |
+| [Velocity And `u0`](velocity-u0.md) | You need `ghl_limit_v_and_compute_u0`, Lorentz-factor velocity rescaling, 64-retry rounding behavior, or `ghl_error_u0_singular` bounds. |
+| [Stress-Energy And `smallb`](stress-energy-smallb.md) | You need `ghl_compute_smallb_and_b2`, `ghl_compute_TDNmunu`, `ghl_compute_TUPmunu`, upper-triangle write semantics, or stress-energy packing helpers. |
+| [EOS Dispatch](eos-dispatch.md) | You need `initialize_eos.c` wrappers, process-wide EOS function-pointer assignment, initialization ordering, or `GHL_DISABLE_HDF5` dispatch behavior. |
+| [Errors, IO, Debug, And Utilities](errors-io-debug-utilities.md) | You need `ghl_abort_if_error`, `ghl_Warn_Error`, `ghl_debug.h` print helpers, or `ghl_imin`/`ghl_imax`/`ghl_iclamp`/`ghl_clamp`. |
+| [Core Tests And Reference Data](tests-and-reference-data.md) | You need `unit_test_grhayl_core_test_suite.c`, Core reference-data generation, perturbation/randomizer helpers, or Core coverage gaps. |
 
-## Source Inventory
-
-| Ground truth | Use it for |
-| --- | --- |
-| [`GRHayL/GRHayL_Core/make.code.defn`](../../GRHayL/GRHayL_Core/make.code.defn) | Compiled Core source list and source-file ownership audit. |
-| [`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h) | Shared Core public structs, enums, initializer declarations, metric/stress-energy declarations, EOS setup declarations, and small utility declarations. |
-| [`GRHayL/include/ghl_metric_helpers.h`](../../GRHayL/include/ghl_metric_helpers.h) | Header-only 3D/4D raise/lower and vector-square helpers. |
-| [`GRHayL/include/ghl_io.h`](../../GRHayL/include/ghl_io.h) | Logging/error macros and `ghl_Warn_Error` API. |
-| [`GRHayL/include/ghl_debug.h`](../../GRHayL/include/ghl_debug.h) | Header-only primitive/conservative debug printing helpers. |
-| [`GRHayL/include/ghl_eos_functions.h`](../../GRHayL/include/ghl_eos_functions.h) | External declarations for EOS function pointers. |
-| [`GRHayL/include/ghl_eos_functions_declaration.h`](../../GRHayL/include/ghl_eos_functions_declaration.h) | Internal storage definitions for EOS and deprecated generic HLLE function pointers. |
-| [`GRHayL/include/make.code.defn`](../../GRHayL/include/make.code.defn) | Public header install/build availability list. |
-
-Related routers: [KB index](../index.md), [catalog](../catalog.md),
-[source map](../source-map.md), and [public API map](../public-api-map.md).
-
-## Current Status Boundaries
-
-- Header installation, library definition, and runtime initialization are
-  separate evidence. Test-support declarations and zero-initialized
-  function-pointer storage are not automatically linkable/callable behavior.
-- Core numeric helpers largely return `void` and assume valid metric,
-  thermodynamic, pointer, and representation inputs. Focused pages name the
-  checked and unchecked boundaries.
-- Stress-energy compute routines write ten upper-triangle components, not a
-  freshly mirrored 4-by-4 matrix.
-- Atmosphere build status is owned by the
-  [Atmosphere prescription contract](../gems/atmosphere/prescription-contract.md);
-  declaration or source presence alone does not prove build inclusion.
-
-## Boundary Audit
-
-- Core-implemented declarations in [`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h)
-  route to the focused Core pages above. Use the source-file ownership table
-  below before treating a declaration as a Core implementation.
-- `ghl_get_con2prim_routine_name` is declared in
-  [`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h) but implemented in
-  [`GRHayL/Con2Prim/get_con2prim_routine_name.c`](../../GRHayL/Con2Prim/get_con2prim_routine_name.c).
-  Route it as a shared public declaration exposed by `ghl.h`, not as a Core
-  implementation.
-- `ghl_compute_SU_Bsq_Ssq_BdotS` is declared in
-  [`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h) but implemented in
-  [`GRHayL/Con2Prim/compute_SU_Bsq_Ssq_BdotS.c`](../../GRHayL/Con2Prim/compute_SU_Bsq_Ssq_BdotS.c).
-  Route implementation details to Con2Prim, especially
-  [Con2Prim limits and conversions](../gems/con2prim/limits-and-conversions.md).
-- [`GRHayL/include/make.code.defn`](../../GRHayL/include/make.code.defn)
-  controls which public headers are installed or otherwise made available by
-  the build. Header availability claims should link that file.
-
-## Source-File Ownership
-
-Every source file listed by
-[`GRHayL/GRHayL_Core/make.code.defn`](../../GRHayL/GRHayL_Core/make.code.defn)
-routes to exactly one focused Core page:
-
-| Core file | Focused node |
-| --- | --- |
-| `abort_if_error.c` | [Errors/IO/debug/utilities](errors-io-debug-utilities.md) |
-| `compute_ADM_auxiliaries.c` | [Metric/ADM contract](metric-adm-contract.md) |
-| `compute_smallb_and_b2.c` | [Stress-energy/smallb contract](stress-energy-smallb-contract.md) |
-| `compute_TDNmunu.c` | [Stress-energy/smallb contract](stress-energy-smallb-contract.md) |
-| `compute_TUPmunu.c` | [Stress-energy/smallb contract](stress-energy-smallb-contract.md) |
-| `enforce_detgij_and_initialize_ADM_metric.c` | [Metric/ADM contract](metric-adm-contract.md) |
-| `info_warn_error.c` | [Errors/IO/debug/utilities](errors-io-debug-utilities.md) |
-| `initialize_conservatives.c` | [Struct pack/unpack contract](struct-pack-unpack-contract.md) |
-| `initialize_eos.c` | [EOS dispatch contract](eos-dispatch-contract.md) |
-| `initialize_extrinsic_curvature.c` | [Struct pack/unpack contract](struct-pack-unpack-contract.md) |
-| `initialize_metric.c` | [Metric/ADM contract](metric-adm-contract.md) |
-| `initialize_params.c` | [Struct pack/unpack contract](struct-pack-unpack-contract.md) |
-| `initialize_primitives.c` | [Struct pack/unpack contract](struct-pack-unpack-contract.md) |
-| `initialize_stress_energy.c` | [Stress-energy/smallb contract](stress-energy-smallb-contract.md) |
-| `limit_v_and_compute_u0.c` | [Velocity/u0 contract](velocity-u0-contract.md) |
-| `min_max_clamp.c` | [Errors/IO/debug/utilities](errors-io-debug-utilities.md) |
-| `return_conservatives.c` | [Struct pack/unpack contract](struct-pack-unpack-contract.md) |
-| `return_primitives.c` | [Struct pack/unpack contract](struct-pack-unpack-contract.md) |
-| `return_stress_energy.c` | [Stress-energy/smallb contract](stress-energy-smallb-contract.md) |
+Back to [AGENTS.md](../../AGENTS.md).

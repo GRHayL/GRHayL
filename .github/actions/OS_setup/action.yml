@@ -12,8 +12,12 @@ runs:
     - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
+    # GRHayL installs nothing from the runner image's Microsoft or Google APT
+    # repositories, and a refused request to either host fails `apt-get update`.
     - if: runner.os == 'Linux'
-      run: sudo rm -f /etc/apt/sources.list.d/google-chrome.list
+      run: |
+        sudo find /etc/apt/sources.list.d -type f \
+          -exec grep -qE 'packages\.microsoft\.com|dl\.google\.com' {} \; -print -delete
       shell: bash
     - if: runner.os == 'Linux' && inputs.compiler == 'gcc'
       run: |

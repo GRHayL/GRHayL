@@ -1,191 +1,50 @@
 # Tabulated Interpolator Catalog
 
-## Purpose
+> Catalog of built tabulated EOS interpolation wrapper groups, registry audit, beta-equilibrium `rho`-map caches, enthalpy/sound-speed routines, and direct-test coverage distinctions. · Status: confirmed
+> Up: [Equation Of State (EOS)](index.md)
 
-This page catalogs built tabulated EOS interpolation wrappers by input tuple and
-routes shared helper code. It complements
-[tabulated interpolation and bounds](tabulated-interpolation-and-bounds.md) by
-making wrapper ownership explicit without copying interpolation formulas.
+## Summary
 
-Public function-pointer names are declared in
-[`GRHayL/include/ghl_eos_functions.h`](../../../GRHayL/include/ghl_eos_functions.h).
-NRPyEOS declarations, table keys, index macros, and table-bound helpers are in
-[`GRHayL/include/ghl_nrpyeos_tabulated.h`](../../../GRHayL/include/ghl_nrpyeos_tabulated.h).
-Assignments from public pointers to NRPyEOS implementations are in
-[`GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c).
+`GRHayL/EOS/Tabulated/interpolators/make.code.defn` builds tabulated wrapper families keyed by `(rho, Y_e, T)`, `(rho, Y_e, eps)`, `(rho, Y_e, P)`, `(rho, Y_e, S)`, and `(rho, Y_e, h)`, all assigned in `NRPyEOS_initialize_tabulated_functions.c` alongside `ghl_tabulated_get_index_T`, beta-equilibrium `rho`-map caches, and `ghl_tabulated_free_beq_quantities`.
 
-## Registry Seam Audit
+## Detail
 
-| Seam | Current evidence | Classification |
+### Registry Audit And Wrapper Groups By Input Tuple
+
+All public `ghl_tabulated_*` pointers in `ghl_eos_functions.h` have storage in `ghl_eos_functions_declaration.h` and assignment in `NRPyEOS_initialize_tabulated_functions.c` when HDF5 is enabled, including `ghl_tabulated_free_beq_quantities` (`NRPyEOS_tabulated_free_beq_quantities`, also called by `NRPyEOS_free_memory`) and `ghl_tabulated_get_index_T` (`NRPyEOS_tabulated_get_index.c`, which rejects nonfinite/nonpositive `T` and out-of-range log-temperature endpoints with `-1`). Former prototype-only `rho`/`Y_e` index declarations and the duplicate cleanup prototype were removed.
+
+| Input tuple | Shared engine | Built public wrapper outputs |
 | --- | --- | --- |
-| Public tabulated pointer declarations | `ghl_tabulated_*` pointer names in `ghl_eos_functions.h` | Declared |
-| Pointer storage | Matching names in `ghl_eos_functions_declaration.h` | Defined global storage |
-| Initializer assignments | Includes `ghl_tabulated_free_beq_quantities` | Assigned when HDF5 enabled |
-| Direct cleanup implementation | `NRPyEOS_tabulated_free_beq_quantities` is built, assigned to the public slot, and called by `NRPyEOS_free_memory` | Supported cleanup path |
-| Index helper | Header retains only the implemented `NRPyEOS_tabulated_get_index_T` helper | Defined, built, and assigned |
+| `(rho, Y_e, T)` | `NRPyEOS_from_rho_Ye_T_interpolate_n_quantities` | `P`, `eps`, `cs2`, `P+eps`, `P+eps+S`, `P+eps+cs2`, `P+eps+S+cs2`, `P+eps+depsdT`, chemical-potential groups, and nucleon-fraction groups. (Ev: `GRHayL/EOS/Tabulated/interpolators/make.code.defn`) |
+| `(rho, Y_e, eps)` | `NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities` (`NRPyEOS_eps_key`) | `T`, `P+T`, `P+S+T`, `P+cs2+T`, `P+S+depsdT+T`. (Ev: `NRPyEOS_initialize_tabulated_functions.c`) |
+| `(rho, Y_e, P)` | Auxiliary engine (`NRPyEOS_press_key`) | `eps+T`, `eps+S+T`, `eps+cs2+T`. |
+| `(rho, Y_e, S)` | Auxiliary engine (`NRPyEOS_entropy_key`) | `P+T`, `P+eps+T`. |
+| `(rho, Y_e, h)` | Auxiliary engine (`NRPyEOS_enthalpy_key`) | `P+eps+S+T`, `P+eps+dPdrho+dPdeps+T`. |
 
-The former prototype-only rho/electron-fraction index declarations and the
-duplicate cleanup prototype were removed. Rebuild source clients against the
-corrected installed header.
+### Beta-Equilibrium `rho`-Map Caches, Derived Enthalpy, And Test Coverage
 
-## Built Wrapper Groups
+- **Beta-equilibrium caches (`NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c`):**
+  - `NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T` builds `Ye_of_lr` from the temperature-grid bin chosen by `get_index_T` (it does **not** interpolate `munu` to an off-grid `T`), recording the first strict adjacent sign crossing per density (storing minimum `Y_e` and succeeding when no strict crossing exists; an exact zero node is not a crossing).
+  - `NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T` extends the cache with `lp_of_lr`, `le_of_lr`, and `lh_of_lr` evaluated at the requested temperature (so off-grid calls do not establish exact beta equilibrium at `T`).
+  - Downstream readers (`Ye_from_rho`, `P_from_rho`, `rho_from_P`, `eps_from_rho`, `dP_drho_from_rho`, `deps_dP_from_rho`) do **not** allocate on demand and assume finite positive arguments, valid caches, monotone pressure for `rho_from_P`, and nonzero `dP_drho` for `deps_dP_from_rho`. A failed combined rebuild can update `Ye_of_lr` while retaining older pressure/energy caches, and a `Ye`-only rebuild leaves older thermodynamic caches stale; rebuild the combined cache whenever all maps must match.
+- **Derived enthalpy (`NRPyEOS_tabulate_enthalpy.c`):** `NRPyEOS_tabulate_enthalpy_checked` returns `ghl_error_invalid_eos_table` before `log(h)` on invalid points; legacy `void NRPyEOS_tabulate_enthalpy` discards status and stops at the first invalid entry.
+- **Direct-test distinctions (`Unit_Tests/unit_test_tabulated_eos.c`):** does not directly invoke `ghl_tabulated_compute_P_S_T_from_eps`, either `from_h` wrapper, `ghl_tabulated_compute_Ye_of_rho_beq_constant_T`, the `T`/`eps`/`S` enforce pointers, `ghl_tabulated_get_index_T`, `ghl_tabulated_read_table_set_EOS_params`, or the assigned `ghl_tabulated_free_beq_quantities` pointer (several run indirectly via initialization or cleanup).
 
-The built interpolator source list is
-[`GRHayL/EOS/Tabulated/interpolators/make.code.defn`](../../../GRHayL/EOS/Tabulated/interpolators/make.code.defn).
-All files listed there live under
-[`GRHayL/EOS/Tabulated/interpolators/`](../../../GRHayL/EOS/Tabulated/interpolators/).
+Evidence (descriptive behavior): `NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c`; corroboration: `NRPyEOS_tabulated_get_index.c::NRPyEOS_tabulated_get_index_T`.
 
-### rho_Ye_T
+## Sources
 
-Wrappers whose input tuple is `(rho,Y_e,T)` call the direct shared helper
-`NRPyEOS_from_rho_Ye_T_interpolate_n_quantities`. Built routes include
-`P`, `eps`, `cs2`, `P+eps`, `P+eps+S`, `P+eps+cs2`,
-`P+eps+S+cs2`, `P+eps+depsdT`, chemical-potential bundles, and neutron/proton
-fraction bundles. Direct interpolation performs table-bound checks, chooses
-interpolation spots, interpolates requested table keys, and applies source-owned
-log/energy-shift output conversions for pressure, enthalpy, and internal energy.
+- [GRHayL/include/ghl_nrpyeos_tabulated.h](../../../GRHayL/include/ghl_nrpyeos_tabulated.h) - NRPyEOS tabulated declarations
+- [GRHayL/include/ghl_eos_functions.h](../../../GRHayL/include/ghl_eos_functions.h) - `ghl_tabulated_*` public pointers
+- [GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c](../../../GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c) - pointer assignments
+- [GRHayL/EOS/Tabulated/interpolators/make.code.defn](../../../GRHayL/EOS/Tabulated/interpolators/make.code.defn) - built interpolator files
+- [GRHayL/EOS/Tabulated/NRPyEOS_tabulated_get_index.c](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_get_index.c) - `NRPyEOS_tabulated_get_index_T`
+- [GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c) - beta-equilibrium `rho`-map caches and cleanup
+- [GRHayL/EOS/Tabulated/NRPyEOS_tabulate_enthalpy.c](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulate_enthalpy.c) - checked and legacy enthalpy tabulation
+- [Unit_Tests/unit_test_tabulated_eos.c](../../../Unit_Tests/unit_test_tabulated_eos.c) - direct tabulated wrapper tests
 
-### rho_Ye_eps
+## See Also
 
-Wrappers whose input tuple is `(rho,Y_e,eps)` call
-`NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities` with
-`NRPyEOS_eps_key`, recover temperature using `eos->root_finding_precision`, and
-then reuse the direct `(rho,Y_e,T)` helper. Built routes include `T`, `P+T`,
-`P+S+T`, `P+cs2+T`, and `P+S+depsdT+T`.
-
-### rho_Ye_P
-
-Wrappers whose input tuple is `(rho,Y_e,P)` use the same auxiliary-temperature
-helper with `NRPyEOS_press_key`. Built routes include `eps+T`,
-`eps+S+T`, and `eps+cs2+T`.
-
-### rho_Ye_S
-
-Wrappers whose input tuple is `(rho,Y_e,S)` use the auxiliary-temperature
-helper with `NRPyEOS_entropy_key`. Built routes include `P+T` and
-`P+eps+T`.
-
-### rho_Ye_h
-
-Wrappers whose input tuple is `(rho,Y_e,h)` use the auxiliary-temperature
-helper with `NRPyEOS_enthalpy_key`. Built routes include `P+eps+S+T` and
-`P+eps+dPdrho+dPdeps+T`.
-
-## Shared Interpolation Helpers
-
-Generic interpolation, bounds checks, interpolation-spot lookup, linear
-interpolation, temperature recovery, and bisection helpers are source-local to
-[`GRHayL/EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h`](../../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h).
-The direct helper is
-[`GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_T_interpolate_n_quantities.c`](../../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_T_interpolate_n_quantities.c).
-The auxiliary-input helper is
-[`GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities.c`](../../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities.c).
-After temperature recovery it returns the final direct-interpolation status;
-callers therefore see a final bounds/interpolation failure instead of success.
-The temperature output has already been updated on that path. See the
-[caller domain and temperature-recovery contract](tabulated-interpolation-and-bounds.md#caller-domain)
-for finite-input requirements, valid initial guesses, unchecked generic keys
-and counts, and the bisection lower-temperature saturation rule.
-
-Table index routing currently exposes `ghl_tabulated_get_index_T`, assigned to
-`NRPyEOS_tabulated_get_index_T` in
-[`GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c).
-The target implementation is
-[`GRHayL/EOS/Tabulated/NRPyEOS_tabulated_get_index.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_get_index.c).
-The temperature index rejects non-finite and non-positive inputs before
-`log(T)`, rejects values outside stored log-temperature endpoints with `-1`,
-and computes an integer bin using the first grid spacing. Successful table load
-establishes the uniform-grid precondition.
-
-Bounds enforcement helpers live in
-[`GRHayL/EOS/Tabulated/NRPyEOS_enforce_table_bounds.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_enforce_table_bounds.c).
-They mutate caller-provided `(rho,Y_e,T)`, `(rho,Y_e,eps)`, `(rho,Y_e,S)`, or
-`(rho,Y_e,P)` variables into configured `ghl_eos_parameters` bounds. Hard-error
-checks in `NRPyEOS_tabulated_helpers.h` are separate and return table-bound
-error codes without clamping.
-
-## Beta-Equilibrium And Rho Maps
-
-Beta-equilibrium/rho-map helpers are compactly routed here instead of split into
-a separate page. The source is
-[`GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c).
-
-`NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T` builds cached
-`Ye_of_lr` from the temperature-grid bin selected by `get_index_T`; it does
-not interpolate `munu` to an off-grid requested temperature. At each density,
-it uses the first strict adjacent sign crossing. If none exists, it stores
-minimum `Ye` and still succeeds; an exact zero node alone does not count as
-a crossing. `NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T`
-extends that cache with `lp_of_lr`, `le_of_lr`, and `lh_of_lr`, evaluating
-thermodynamics at the original requested temperature. Off-grid calls therefore
-do not establish exact beta equilibrium at that temperature. Consumer routes
-include `Ye_of_rho`, `P_from_rho`, `rho_from_P`, `eps_from_rho`,
-`dP_drho_from_rho`, and `deps_dP_from_rho`. Memory cleanup is
-`NRPyEOS_tabulated_free_beq_quantities`; the tabulated registry assigns the
-public `ghl_tabulated_free_beq_quantities` slot to it. Full table cleanup also
-calls the concrete routine.
-
-Cache consumers do not allocate on demand. Call the `Ye_of_rho` builder before
-`Ye_from_rho`; call the combined `Ye_P_eps_of_rho` builder before pressure,
-energy, inverse-pressure, or derivative consumers. Require successful construction before consuming the caches. The combined
-builder can update `Ye_of_lr` and then fail while retaining older pressure/energy
-caches; non-NULL fields do not establish a consistent completed rebuild.
-A failed Ye allocation sequence can also leave a non-NULL uninitialized Ye
-cache, and a successful Ye-only rebuild leaves existing thermodynamic caches
-unchanged. Rebuild the combined cache when all maps must describe the same
-requested state. Calling consumers with null cache fields is outside the
-implemented contract; their density or pressure arguments must be finite and
-positive. Pressure inversion assumes a suitable increasing cached pressure curve.
-Derivative arithmetic must remain usable; `deps_dP_from_rho` additionally
-requires nonzero `dP_drho` because it divides by that slope. Table loading
-does not certify these cache-specific conditions.
-
-## Enthalpy And Sound Speed
-
-Derived enthalpy tabulation is owned by
-[`GRHayL/EOS/Tabulated/NRPyEOS_tabulate_enthalpy.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulate_enthalpy.c).
-It fills the enthalpy table slot and `table_logh` using already converted table
-state and the stored energy shift. `NRPyEOS_tabulate_enthalpy_checked` returns
-`ghl_error_invalid_eos_table` before evaluating or storing `log(h)`; the owning
-loader then discards the table. The original `void NRPyEOS_tabulate_enthalpy`
-function remains as a source-compatible wrapper for direct callers; it discards
-the status and stops at the first invalid point, leaving that and later entries
-unchanged.
-
-Sound-speed normalization and optional cleaning are owned by
-[`GRHayL/EOS/Tabulated/NRPyEOS_tabulated_adjust_sound_speed.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_adjust_sound_speed.c).
-That pass converts non-relativistic table sound speeds using enthalpy, counts
-non-finite, superluminal, and negative values, and only clamps values when
-`eos->clean_sound_speed` is true.
-
-Runtime enthalpy/sound-speed routing for tabulated EOS is
-[`GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_enthalpy_and_cs2.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_enthalpy_and_cs2.c).
-The callback enforces `(rho,Y_e,T)` bounds on `ghl_primitive_quantities`,
-computes pressure and internal energy, and returns enthalpy and `cs2` on
-success. It returns the interpolation status but still writes enthalpy after
-an interpolation error; bounded primitive fields may already be changed.
-Failure does not guarantee valid new thermodynamic outputs; see the
-[enthalpy error contract](tabulated-interpolation-and-bounds.md#enthalpy-and-cs2).
-
-## Direct Test Evidence
-
-`Unit_Tests/unit_test_tabulated_eos.c` directly calls many assigned public
-wrappers, but it contains no direct public-pointer call for
-`ghl_tabulated_compute_P_S_T_from_eps`, either enthalpy-input wrapper,
-`ghl_tabulated_compute_Ye_of_rho_beq_constant_T`, the `T`/`eps`/`S`
-bound-enforcement pointers, `ghl_tabulated_get_index_T`,
-`ghl_tabulated_read_table_set_EOS_params`, or the assigned
-free-beta-equilibrium pointer. Some are exercised indirectly by initialization
-or other calls; direct-call absence remains a coverage distinction, not
-evidence of failure.
-
-## Source-Of-Truth Paths
-
-- [`GRHayL/include/ghl_nrpyeos_tabulated.h`](../../../GRHayL/include/ghl_nrpyeos_tabulated.h)
-- [`GRHayL/include/ghl_eos_functions.h`](../../../GRHayL/include/ghl_eos_functions.h)
-- [`GRHayL/EOS/Tabulated/interpolators/`](../../../GRHayL/EOS/Tabulated/interpolators/)
-- [`GRHayL/EOS/Tabulated/interpolators/make.code.defn`](../../../GRHayL/EOS/Tabulated/interpolators/make.code.defn)
-- [`GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c)
-- [`GRHayL/EOS/Tabulated/NRPyEOS_tabulate_enthalpy.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulate_enthalpy.c)
-- [`GRHayL/EOS/Tabulated/NRPyEOS_tabulated_adjust_sound_speed.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_adjust_sound_speed.c)
-- [`GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_enthalpy_and_cs2.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_enthalpy_and_cs2.c)
+- Depends on: [Tabulated Interpolation And Bounds](tabulated-interpolation-and-bounds.md)
+- Depends on: [Tabulated Table Layout](tabulated-table-layout.md)
+- Validated by: [EOS Tests And Reference Data](tests-and-reference-data.md)

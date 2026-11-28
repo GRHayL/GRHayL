@@ -1,66 +1,44 @@
-# Flux Source Generated NRPy Boundary
+# Generated NRPy Boundary
 
-## Generation
+> Staging regeneration workflow (`generate_flux_source.sh`, `generate_flux_source.py`), pinned NRPy 2 usage, and manifest parity for `Flux_Source` C kernels. · Status: confirmed
+> Up: [Flux_Source](index.md)
 
-[generate_flux_source.sh](../../../GRHayL/Flux_Source/generate_flux_source.sh)
-clones the pinned NRPy 2 commit into a temporary checkout and runs the single
-[generate_flux_source.py](../../../GRHayL/Flux_Source/generate_flux_source.py)
-driver. Use a Python environment with NRPy 2's runtime dependencies available.
-From the repository root, generate into a new or empty directory:
+## Summary
+
+`GRHayL/Flux_Source/generate_flux_source.py` is the symbolic NRPy 2 generator for GRHayL's source-term, characteristic-speed, and every HLLE flux kernel family. `generate_flux_source.sh <empty-staging-dir>` clones a pinned NRPy 2 revision into a temporary checkout and runs the driver into an empty directory outside `GRHayL/Flux_Source`, verifying output filenames against the `make.code.defn` manifests. Checked-in C files govern compiled behavior.
+
+## Detail
+
+### Staging Command And Symbolic Structure
+
+From repository root (with NRPy 2 Python dependencies installed):
 
 ```sh
 GRHayL/Flux_Source/generate_flux_source.sh /tmp/grhayl-flux-stage
 ```
 
-The driver rejects output directories inside `GRHayL/Flux_Source` and nonempty
-destinations. It checks its C output names against the root and variant
-`make.code.defn` files. Review staged C and compile it before copying it into
-the checked-in source tree.
+The Python driver rejects output paths inside `GRHayL/Flux_Source` and nonempty directories, and checks its emitted file list against root and variant `make.code.defn` manifests. It uses NRPy 2's ADM metric conversions, comoving magnetic norm, magnetic fast-wave estimate, GRHD characteristic roots, and C code generator, grouping `rho_b * h + b^2` before multiplying by `u^\mu u^\nu` to preserve precision in small momentum fluxes under GRHayL's `1 / sqrt(4*pi)` magnetic normalization, while emitting both `_checked` and legacy aborting wrappers.
 
-The Python driver uses NRPy 2's ADM metric conversion and comoving magnetic
-norm to form the total GRMHD stress-energy tensor for both source and face
-fluxes. It groups `rho_b*h + b^2` before multiplication by `u^mu*u^nu` to
-preserve precision in small momentum fluxes. NRPy 2 also supplies the magnetic
-fast-wave estimate, GRHD characteristic roots, and C code generator. GRHayL's
-magnetic fields are already scaled by `1/sqrt(4 pi)` as required by the
-generated equations. The driver retains the checked C interfaces: EOS callback
-errors propagate, legacy wrappers abort on errors, and HLLE wave speeds are
-checked before any output is written.
-
-## Checked-In C Kernels
-
-The [root build list](../../../GRHayL/Flux_Source/make.code.defn) compiles the
-source-term and direction-specific characteristic-speed kernels. The variant build lists
-compile three directions each of hybrid, hybrid entropy, tabulated, and
-tabulated entropy HLLE fluxes:
-
-| Generated C | Python path | Build list |
+| Generated C file(s) | Python entry point | Build manifest |
 | --- | --- | --- |
-| `ghl_calculate_source_terms.c` | `generate_source()` | [root](../../../GRHayL/Flux_Source/make.code.defn) |
-| `ghl_calculate_characteristic_speed_dirn*.c` | `generate_speeds()` | [root](../../../GRHayL/Flux_Source/make.code.defn) |
-| `hybrid/ghl_calculate_HLLE_fluxes_dirn*_hybrid.c` | `generate_fluxes()` | [hybrid](../../../GRHayL/Flux_Source/hybrid/make.code.defn) |
-| `hybrid_entropy/ghl_calculate_HLLE_fluxes_dirn*_hybrid_entropy.c` | `generate_fluxes()` | [hybrid entropy](../../../GRHayL/Flux_Source/hybrid_entropy/make.code.defn) |
-| `tabulated/ghl_calculate_HLLE_fluxes_dirn*_tabulated.c` | `generate_fluxes()` | [tabulated](../../../GRHayL/Flux_Source/tabulated/make.code.defn) |
-| `tabulated_entropy/ghl_calculate_HLLE_fluxes_dirn*_tabulated_entropy.c` | `generate_fluxes()` | [tabulated entropy](../../../GRHayL/Flux_Source/tabulated_entropy/make.code.defn) |
+| `ghl_calculate_source_terms.c` | `generate_source()` | `GRHayL/Flux_Source/make.code.defn` (Ev: `generate_flux_source.py::generate_source`) |
+| `ghl_calculate_characteristic_speed_dirn{0,1,2}.c` | `generate_speeds()` | `GRHayL/Flux_Source/make.code.defn` (Ev: `generate_flux_source.py::generate_speeds`) |
+| `{hybrid,hybrid_entropy,tabulated,tabulated_entropy}/ghl_calculate_HLLE_fluxes_dirn*_*.c` | `generate_fluxes()` | Matching variant `make.code.defn` (Ev: `generate_flux_source.py::generate_fluxes`) |
 
-`configure --disable-hdf5` still compiles the tabulated HLLE kernels; it
-excludes the table-dependent tests and data generators. The Ubuntu-Clang
-`c2p-failure` no-HDF5 job uses `nm -D --defined-only` to inspect legacy
-tabulated export names. This is symbol-presence evidence, not a consumer link
-or an explicit check of the matching `_checked` names.
+Review staged C, numerical differences, and kernel timing before copying generated output over checked-in C files, and keep Python equations and C files synchronized on any formula, signature, or manifest edit.
 
-## Review Changes
+Evidence (generated evidence): `generate_flux_source.sh`; corroboration: `generate_flux_source.py`.
 
-Review the Python equations and affected C together when changing
-characteristic-speed roots, HLLE output fields, source-term derivatives,
-extrinsic-curvature contractions, C signatures, or build lists. Compare
-generated values with the current kernels and measure representative kernel
-timing before replacing the checked-in C. Follow
-[characteristic speeds](characteristic-speeds-contract.md),
-[HLLE variants](hlle-flux-variant-matrix.md), and
-[source terms](source-terms-contract.md) for caller and test behavior.
+## Sources
 
-Keep derivations in [GRMHD equations](../../../docs/raw/derivation.md) and
-[Flux Source documentation](../../../docs/raw/Flux_Source.dox). The checked-in
-C and active build configuration define executable behavior; the Python file
-defines the equations used to regenerate it.
+- [GRHayL/Flux_Source/generate_flux_source.sh](../../../GRHayL/Flux_Source/generate_flux_source.sh) - pinned NRPy 2 checkout and invocation wrapper
+- [GRHayL/Flux_Source/generate_flux_source.py](../../../GRHayL/Flux_Source/generate_flux_source.py) - `generate_source`, `generate_speeds`, `generate_fluxes`, manifest parity check
+- [GRHayL/Flux_Source/make.code.defn](../../../GRHayL/Flux_Source/make.code.defn) - root Flux_Source manifest
+- [docs/raw/Flux_Source.dox](../../../docs/raw/Flux_Source.dox) - Flux_Source equations and docs
+
+## See Also
+
+- Depends on: [Generated Boundaries](../../architecture/generated-boundaries.md)
+- See also: [Characteristic Speeds](characteristic-speeds.md)
+- See also: [HLLE Flux Variant Matrix](hlle-flux-variant-matrix.md)
+- See also: [Source Terms](source-terms.md)

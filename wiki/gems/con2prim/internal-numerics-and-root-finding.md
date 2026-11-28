@@ -1,306 +1,64 @@
 # Con2Prim Internal Numerics And Root-Finding
 
-Purpose: route internal numerical helpers used by Con2Prim solvers without
-changing solver support status. Public dispatch and method support remain in
-[solver matrix](solver-matrix.md); recovery order remains in
-[recovery flow](recovery-flow.md); limits and conversion helpers remain in
-[limits and conversions](limits-and-conversions.md). Repo-local source remains
-authority.
+> Internal Brent root-finding, Noble Newton-Raphson convergence and velocity-limit closure, Palenzuela `evolve_temp` callbacks, Font1D cycle detection, Newman iteration counters, and archival Cerda-Duran status. · Status: confirmed
+> Up: [Con2Prim](index.md)
 
-## Public API Versus Internal Helpers
+## Summary
 
-Public Con2Prim entry points and diagnostics types are declared in
-[`GRHayL/include/ghl_con2prim.h`](../../../GRHayL/include/ghl_con2prim.h), with
-shared enums and parameter fields in
-[`GRHayL/include/ghl.h`](../../../GRHayL/include/ghl.h). Public callers should
-route through the selector, multi-method, pre-limit, post-limit, and conversion
-functions declared there.
+Con2Prim solvers rely on distinct internal numerical engines: `ghl_brent` for Palenzuela, `ghl_general_newton_raphson` for hybrid/tabulated Noble, damped fixed-point density iteration with Brent cycle detection for Font1D, and local iterative pressure updates for tabulated Newman1D. Each solver records `diagnostics->n_iter` with its own scope, and `con2prim_CerdaDuran3D.cc` remains unbuilt archival code.
 
-The files below are internal numerical routes. They are built because they
-appear in Con2Prim build lists, are included by solver sources, or are source
-present but not built as noted below:
+## Detail
 
-- Shared build list:
-  [`GRHayL/Con2Prim/make.code.defn`](../../../GRHayL/Con2Prim/make.code.defn).
-- Hybrid build lists:
-  [`GRHayL/Con2Prim/Hybrid/make.code.defn`](../../../GRHayL/Con2Prim/Hybrid/make.code.defn),
-  [`GRHayL/Con2Prim/Hybrid/Noble/make.code.defn`](../../../GRHayL/Con2Prim/Hybrid/Noble/make.code.defn),
-  [`GRHayL/Con2Prim/Hybrid/Noble/Noble1D/make.code.defn`](../../../GRHayL/Con2Prim/Hybrid/Noble/Noble1D/make.code.defn),
-  [`GRHayL/Con2Prim/Hybrid/Noble/Noble2D/make.code.defn`](../../../GRHayL/Con2Prim/Hybrid/Noble/Noble2D/make.code.defn),
-  [`GRHayL/Con2Prim/Hybrid/Palenzuela1D/make.code.defn`](../../../GRHayL/Con2Prim/Hybrid/Palenzuela1D/make.code.defn), and
-  [`GRHayL/Con2Prim/Hybrid/Font1D/make.code.defn`](../../../GRHayL/Con2Prim/Hybrid/Font1D/make.code.defn).
-- Tabulated build lists:
-  [`GRHayL/Con2Prim/Tabulated/make.code.defn`](../../../GRHayL/Con2Prim/Tabulated/make.code.defn),
-  [`GRHayL/Con2Prim/Tabulated/Newman1D/make.code.defn`](../../../GRHayL/Con2Prim/Tabulated/Newman1D/make.code.defn),
-  [`GRHayL/Con2Prim/Tabulated/Noble2D/make.code.defn`](../../../GRHayL/Con2Prim/Tabulated/Noble2D/make.code.defn), and
-  [`GRHayL/Con2Prim/Tabulated/Palenzuela1D/make.code.defn`](../../../GRHayL/Con2Prim/Tabulated/Palenzuela1D/make.code.defn).
+### Brent Root-Finder (`ghl_brent`) And Palenzuela Internal Route
 
-## Brent And Root Helper Route
+- **`ghl_brent` (`roots.h`, `brent.c`):** records `routine_name` and caller bounds `a`, `b` in `roots_params` before any swap (preserving metadata on early returns), checks endpoint roots, rejects unbracketed intervals (`ghl_error_root_not_bracketed`), and rejects nonfinite bounds, residuals, or iterates (`ghl_error_c2p_singular`; width-based termination still requires a finite residual). Resets `rparams.n_iters = 0` per invocation; retries report only their own count.
+- **Palenzuela (`utils_Palenzuela1D.h`, `Hybrid/Palenzuela1D/`, `Tabulated/Palenzuela1D/`):** wraps `ghl_compute_SU_Bsq_Ssq_BdotS`, root bracketing, `ghl_brent`, `utilde` limiting, and success-only `which_routine` writes; tabulated `tabulated_Palenzuela1D.c` adds table bounds and an optional second Brent attempt from `T_min`.
+- **Tabulated Palenzuela `Y_e` and `evolve_temp` rules:** `tabulated_Palenzuela1D_energy.c` and `tabulated_Palenzuela1D_entropy.c` consume incoming `prims->Y_e` (never deriving `Y_e` from conserved `Y_e`; callers bypassing guesses must supply `Y_e`). When `params->evolve_temp` is true, callbacks invert energy/entropy for temperature; when false, both use bounded incoming temperature and the entropy callback ignores conserved entropy (though a failed-Brent `T_min` retry can still overwrite temperature). Neither Newman nor Noble shares this `evolve_temp` branch.
 
-[`GRHayL/Con2Prim/roots.h`](../../../GRHayL/Con2Prim/roots.h) defines the
-internal `fparams_struct`, `roots_params`, `swap`, `sign`, and
-the `ghl_brent` prototype. `fparams_struct` carries Palenzuela root-function
-state and EOS callback pointers; `roots_params` carries root-finder bounds,
-tolerance, maximum iterations, iteration count, root, and residual.
+Evidence (descriptive behavior): `brent.c::ghl_brent`; corroboration: `tabulated_Palenzuela1D.c`.
 
-[`GRHayL/Con2Prim/brent.c`](../../../GRHayL/Con2Prim/brent.c) implements
-`ghl_brent`. The helper first records `routine_name`, `a`, and `b` (the
-caller's bounds, before any endpoint swap) in `roots_params`, so the record
-exists on early returns too. It then checks endpoint roots, rejects unbracketed
-intervals with `ghl_error_root_not_bracketed`, and iterates by Brent's
-interpolation/bisection logic until success or `ghl_error_c2p_max_iter`.
+### Noble Newton Loop, Validation, And Stagnation Guards
 
-Current built users are the Palenzuela shared solvers:
-[`GRHayL/Con2Prim/Hybrid/Palenzuela1D/hybrid_Palenzuela1D.c`](../../../GRHayL/Con2Prim/Hybrid/Palenzuela1D/hybrid_Palenzuela1D.c)
-and
-[`GRHayL/Con2Prim/Tabulated/Palenzuela1D/tabulated_Palenzuela1D.c`](../../../GRHayL/Con2Prim/Tabulated/Palenzuela1D/tabulated_Palenzuela1D.c).
-Both fill `roots_params`, call `ghl_brent`, and copy `rparams.n_iters` into
-`diagnostics->n_iter` on success. Each Brent invocation initializes its counter
-to zero, including endpoint-root and already-small-interval success. A retry
-reports its own count. Nonfinite bounds, residuals, or iterates return
-`ghl_error_c2p_singular`; a successful width-based termination still requires
-a finite evaluated residual.
+`utils_Noble.h` and `Hybrid/Noble/` implement the shared Newton engine:
+- **`initialize_Noble.c`:** copies `params->con2prim_max_iterations` and `con2prim_solver_tolerance`, rejects nonfinite/nonpositive conserved density (`ghl_error_neg_rho`), and builds scalar seeds (`Noble1D_entropy2` admits finite seeds up to `max_Lorentz_factor`; older `Noble1D_entropy` keeps its historical seed ceiling).
+- **`general_newton_raphson.c` & `validate_x.c`:** runs per-invocation local budgets accumulating into `harm_aux->n_iter` (propagating nested density-solve errors before consumption). Convergence requires both relative step size (`|dx| / |x|`, absolute when `x == 0`) and recomputed residual objective `|f|` to satisfy `solver_tolerance`.
+  For hybrid Noble2D's bounded squared-velocity coordinate, step size uses actual post-validation `x - x_old` and `func_2D.c` scales momentum residual by `(Bsq + Z)^2` and energy residual by `max(|Qdotn|, |Z|, Bsq)` when `ghl_validate_2D` clips at the upper bound (preventing false acceptance of a clipped iterate with large relative error; bound must match `hybrid_Noble2D.c`). Because each iteration's end-of-step residual feeds the next step, callbacks must be deterministic at a given `x` (tabulated Noble2D warm-starts from `harm_aux->temp_guess` within table root precision); an unconverged iterate with validated `x == x_old` returns `ghl_error_c2p_max_iter` immediately.
 
-## Shared Magnetic And Momentum Contractions
+Evidence (descriptive behavior): `general_newton_raphson.c::ghl_general_newton_raphson`; corroboration: `validate_x.c::ghl_validate_2D`.
 
-[`GRHayL/Con2Prim/compute_SU_Bsq_Ssq_BdotS.c`](../../../GRHayL/Con2Prim/compute_SU_Bsq_Ssq_BdotS.c)
-implements `ghl_compute_SU_Bsq_Ssq_BdotS`. It takes ADM metric data,
-undensitized conservatives, and primitives with `BU`; computes raised momentum
-`SU`, `Bsq`, `Ssq`, and `BdotS`; and may rescale a local copy of momentum
-before contraction. It does not mutate caller conservative storage.
+### Noble Closure Under Speed Limiting And Tabulated Noble2D
 
-Built callers include
-[`GRHayL/Con2Prim/guess_primitives.c`](../../../GRHayL/Con2Prim/guess_primitives.c),
-Palenzuela shared solvers under
-[`GRHayL/Con2Prim/Hybrid/Palenzuela1D/`](../../../GRHayL/Con2Prim/Hybrid/Palenzuela1D/)
-and
-[`GRHayL/Con2Prim/Tabulated/Palenzuela1D/`](../../../GRHayL/Con2Prim/Tabulated/Palenzuela1D/),
-and Newman wrappers under
-[`GRHayL/Con2Prim/Tabulated/Newman1D/`](../../../GRHayL/Con2Prim/Tabulated/Newman1D/).
+- **`finalize_Noble.c` & hybrid wrappers (`Hybrid/Noble/Noble1D/`, `Noble2D/`):** When ordinary hybrid Noble finalization limits velocity, it recomputes `rho = D / W_final` and enthalpy density `w = Z / W_final^2`, preserving exact `Z = rho h W_final^2` closure rather than mixing pre-limit `W` with post-limit `rho`. Near the cold-pressure boundary, subtraction amplification of roundoff in `w` can make pressure sign toolchain-sensitive and expose `ghl_error_neg_pressure`; configure a robust backup (such as `Font1D`) when marginal states must recover. `Noble1D_entropy` and `Noble1D_entropy2` (`func_rho2.c`) require `neos == 1` and `Gamma_th == Gamma_ppoly[0]`. Finalization writes `speed_limited` before the pressure check; `n_iter` and `which_routine` are written only after pressure passes.
+- **Tabulated Noble2D (`Tabulated/Noble2D/tabulated_Noble2D.c`):** reuses `ghl_general_newton_raphson` with tabulated init/residual/finalization, rejects nonfinite inputs before bounding, corrects log-coordinate endpoint roundoff, returns recoverable EOS errors, and recomputes `w` with `W_final` when speed-limited.
 
-## Noble Internal Route
+Evidence (descriptive behavior): `finalize_Noble.c`; corroboration: `tabulated_Noble2D.c`.
 
-[`GRHayL/Con2Prim/utils_Noble.h`](../../../GRHayL/Con2Prim/utils_Noble.h)
-declares `harm_aux_vars_struct`, pressure/velocity helpers, Newton prototypes,
-Noble initialization/finalization helpers, validation helpers, and residual
-function prototypes.
+### Font1D, Newman1D, Diagnostics Scope, And Archival Cerda-Duran
 
-Core Noble helper files are built from
-[`GRHayL/Con2Prim/Hybrid/Noble/make.code.defn`](../../../GRHayL/Con2Prim/Hybrid/Noble/make.code.defn):
+- **Hybrid Font1D (`Hybrid/Font1D/`):** evaluates cold `P`/`eps` at EOS-clamped density while dividing `P` by the recovered conservation-driven density in enthalpy closure (preserving conservative closure below `rho_min`). Resets `diagnostics->n_iter` at entry and accumulates outer `W`/momentum iterations across retries (reporting `0` on its `S_i gamma^ij S_j < 1e-300` shortcut after checking positive finite `D`; inner density iterations are uncounted). Each inner density loop uses Brent's exact cycle detection with geometric checkpoints (distinct from `ghl_brent`), rejecting nonconvergent cycles with `ghl_error_c2p_max_iter`, keeping only completed inner solves as retry seeds, and applying geometric damping only where log-derivative `L < -1/3` (preserving the fixed point and undamped residual check).
+- **Tabulated Newman1D (`Tabulated/Newman1D/`):** uses local iterative pressure updates (`maxsteps = 300`), writes `diagnostics->n_iter = step` inside the local helper (so a `T_min` retry overwrites the prior attempt's count), and sets `which_routine` only after success.
+- **Archival Cerda-Duran (`GRHayL/Con2Prim/Tabulated/con2prim_CerdaDuran3D.cc`):** intentionally omitted from `Tabulated/make.code.defn`, `Doxyfile`, selectors, public headers, and tests; uses obsolete non-compiling API identifiers and supplies no C++ build/link evidence.
 
-- [`initialize_Noble.c`](../../../GRHayL/Con2Prim/Hybrid/Noble/initialize_Noble.c)
-  sets `harm_aux.n_iter`, copies `params->con2prim_max_iterations` and
-  `params->con2prim_solver_tolerance`, forms HARM-style contractions, and
-  produces scalar guesses for ordinary and entropy Noble paths. Ordinary
-  Noble initialization rejects nonfinite or nonpositive conserved density
-  with `ghl_error_neg_rho`. The entropy2
-  wrapper admits finite seed norms through the configured
-  `max_Lorentz_factor`; the older entropy wrapper retains its historical seed
-  ceiling.
-- [`general_newton_raphson.c`](../../../GRHayL/Con2Prim/Hybrid/Noble/general_newton_raphson.c)
-  runs the shared Newton loop, calls the supplied residual and validate
-  callbacks with a local budget per invocation, accumulates attempted work in
-  `harm_aux->n_iter`, and returns success,
-  `ghl_error_c2p_singular`, `ghl_error_c2p_max_iter`, or a callback error.
-  Failed nested density solves propagate before their output is consumed.
-  Convergence measures each proposed correction relative to the updated
-  component's magnitude (absolute when it is zero). Hybrid Noble2D's bounded
-  squared-velocity coordinate instead uses the actual update after validation,
-  `x - x_old`. Other coordinates and tabulated recovery retain the proposed
-  correction: validation can hide a large step despite a small absolute
-  residual. Where `ghl_validate_2D` clips that coordinate to its upper bound,
-  `ghl_func_2D` also evaluates the objective with the momentum residual scaled
-  by `(Bsq + Z)^2` and the energy residual scaled by the largest of
-  `|Qdotn|`, `|Z|`, and `Bsq`, and reports the larger value, so a clipped
-  iterate with a tiny absolute residual but a large relative equation error is
-  not accepted; the bound must equal the clip in `ghl_hybrid_Noble2D`, and the
-  guard is discontinuous there. The largest component measure and the
-  recomputed residual objective `|f|` must both meet `solver_tolerance`. The
-  residual evaluation that ends each iteration also supplies the next step, so
-  every residual callback must return the same step, residual, derivative, and
-  error status when called again at the same `x`. The hybrid residuals do,
-  provided the cold-EOS function pointers they call are deterministic in
-  their inputs.
-  `ghl_func_Z` does apart from the `harm_aux->n_iter` its nested solve
-  accumulates. The tabulated residual does to within the table's temperature
-  root-finding precision, because it warm-starts from `harm_aux->temp_guess`.
-  Under that contract and a validator that depends only on its arguments, an
-  unconverged iteration whose validated `x` equals `x_old` in every component
-  would repeat forever, so the loop returns `ghl_error_c2p_max_iter` at once
-  instead of spending the rest of the budget.
-- [`validate_x.c`](../../../GRHayL/Con2Prim/Hybrid/Noble/validate_x.c)
-  contains `ghl_validate_1D`, `ghl_validate_1D_entropy`, and
-  `ghl_validate_2D` constraints for Newton updates.
-- [`finalize_Noble.c`](../../../GRHayL/Con2Prim/Hybrid/Noble/finalize_Noble.c)
-  converts solved scalars into primitives and returns whether
-  `ghl_limit_utilde_and_compute_v` speed-limited the result.
+Evidence (descriptive behavior): `hybrid_Font1D_loop.c`; corroboration: `tabulated_Newman1D_energy.c` and `con2prim_CerdaDuran3D.cc`.
 
-When ordinary hybrid Noble finalization limits the velocity, it recomputes
-`rho = D/W_final` and `w = Z/W_final^2`. This preserves the defining closure
-`Z = rho h W_final^2` for the limited state instead of mixing the pre-limit
-Lorentz factor with the limited density. Here `w` is enthalpy density, not
-pressure. Near the cold-pressure boundary, its roundoff-sized change can be
-amplified by the subtraction used to recover pressure, making the pressure sign
-toolchain-sensitive. The consistent closure can therefore expose more
-`ghl_error_neg_pressure` cases than the former mixed-state closure. Configure a
-robust later backup, such as Font1D, when marginal states must recover; the
-Noble path does not clip conservative energy or impose a tabulated-EOS floor.
+## Sources
 
-Hybrid Noble 1D residual files live in
-[`GRHayL/Con2Prim/Hybrid/Noble/Noble1D/`](../../../GRHayL/Con2Prim/Hybrid/Noble/Noble1D/):
-`func_1D.c`, `func_Z.c`, `func_rho.c`, and `func_rho2.c`. The manifest builds
-all of these plus `hybrid_Noble1D.c`, `hybrid_Noble1D_entropy.c`, and
-`hybrid_Noble1D_entropy2.c`. Both entropy wrappers require a one-piece, equal-Gamma EOS. The entropy2
-path solves the momentum equation
-directly for density and rejects EOS metadata unless `neos == 1` and
-`Gamma_th == Gamma_ppoly[0]`, the constant-Gamma domain of its entropy closure.
-Each wrapper initializes Noble state, runs `ghl_general_newton_raphson`, and
-finalizes primitives. Finalization writes the direct call's `speed_limited`
-result before the wrapper's pressure gate;
-`diagnostics->n_iter` and `diagnostics->which_routine` are set only after that
-gate succeeds.
+- [GRHayL/Con2Prim/roots.h](../../../GRHayL/Con2Prim/roots.h) - `fparams_struct`, `roots_params`, `ghl_brent` declaration
+- [GRHayL/Con2Prim/brent.c](../../../GRHayL/Con2Prim/brent.c) - `ghl_brent` implementation
+- [GRHayL/Con2Prim/utils_Noble.h](../../../GRHayL/Con2Prim/utils_Noble.h) - `harm_aux_vars_struct` and Noble helpers
+- [GRHayL/Con2Prim/Hybrid/Noble/initialize_Noble.c](../../../GRHayL/Con2Prim/Hybrid/Noble/initialize_Noble.c) - Noble initialization and seed rules
+- [GRHayL/Con2Prim/Hybrid/Noble/general_newton_raphson.c](../../../GRHayL/Con2Prim/Hybrid/Noble/general_newton_raphson.c) - shared Newton-Raphson engine
+- [GRHayL/Con2Prim/Hybrid/Noble/validate_x.c](../../../GRHayL/Con2Prim/Hybrid/Noble/validate_x.c) - `ghl_validate_1D`, `ghl_validate_1D_entropy`, `ghl_validate_2D`
+- [GRHayL/Con2Prim/Hybrid/Noble/finalize_Noble.c](../../../GRHayL/Con2Prim/Hybrid/Noble/finalize_Noble.c) - speed-limited closure `w = Z / W_final^2`
+- [GRHayL/Con2Prim/Tabulated/Noble2D/tabulated_Noble2D.c](../../../GRHayL/Con2Prim/Tabulated/Noble2D/tabulated_Noble2D.c) - tabulated Noble2D solver
+- [GRHayL/Con2Prim/utils_Palenzuela1D.h](../../../GRHayL/Con2Prim/utils_Palenzuela1D.h) - shared Palenzuela helper declarations
+- [GRHayL/Con2Prim/Tabulated/Palenzuela1D/tabulated_Palenzuela1D.c](../../../GRHayL/Con2Prim/Tabulated/Palenzuela1D/tabulated_Palenzuela1D.c) - tabulated Palenzuela Brent driver and `T_min` retry
+- [GRHayL/Con2Prim/Hybrid/Font1D/hybrid_Font1D_loop.c](../../../GRHayL/Con2Prim/Hybrid/Font1D/hybrid_Font1D_loop.c) - Font1D inner density loop, cycle detection, and damping
+- [GRHayL/Con2Prim/Tabulated/Newman1D/tabulated_Newman1D_energy.c](../../../GRHayL/Con2Prim/Tabulated/Newman1D/tabulated_Newman1D_energy.c) - Newman1D pressure iteration and `n_iter`
+- [GRHayL/Con2Prim/Tabulated/con2prim_CerdaDuran3D.cc](../../../GRHayL/Con2Prim/Tabulated/con2prim_CerdaDuran3D.cc) - unbuilt archival reference
 
-Hybrid Noble 2D lives in
-[`GRHayL/Con2Prim/Hybrid/Noble/Noble2D/`](../../../GRHayL/Con2Prim/Hybrid/Noble/Noble2D/).
-`hybrid_Noble2D.c` uses `func_2D.c`, the same initialize/validate/Newton/finalize
-helpers, writes `speed_limited` during finalization, and records `n_iter` and
-`which_routine` only after the pressure gate succeeds.
+## See Also
 
-Tabulated Noble 2D lives in
-[`GRHayL/Con2Prim/Tabulated/Noble2D/`](../../../GRHayL/Con2Prim/Tabulated/Noble2D/).
-`tabulated_Noble2D.c` reuses `utils_Noble.h` and `ghl_general_newton_raphson`
-but supplies tabulated-specific initialization, residual, table-bounds, and
-finalization helpers. It rejects nonfinite inputs before bounding, corrects
-endpoint roundoff in logarithmic table coordinates, and returns recoverable
-EOS errors. Speed limiting recomputes enthalpy density with the final Lorentz
-factor. Finalization may update `speed_limited`; `n_iter` and
-`which_routine` remain success-only writes after the pressure gate.
-
-## Palenzuela Internal Route
-
-[`GRHayL/Con2Prim/utils_Palenzuela1D.h`](../../../GRHayL/Con2Prim/utils_Palenzuela1D.h)
-declares the shared `compute_rho_W_from_x_and_conservatives` helper and the
-hybrid/tabulated Palenzuela shared solver signatures. It depends on
-[`GRHayL/Con2Prim/roots.h`](../../../GRHayL/Con2Prim/roots.h) for
-`fparams_struct`, `roots_params`, and `ghl_brent`.
-
-Hybrid Palenzuela files live in
-[`GRHayL/Con2Prim/Hybrid/Palenzuela1D/`](../../../GRHayL/Con2Prim/Hybrid/Palenzuela1D/).
-`hybrid_Palenzuela1D_energy.c` and `hybrid_Palenzuela1D_entropy.c` call the
-shared `hybrid_Palenzuela1D.c` path with an energy or entropy EOS callback and
-set `diagnostics->which_routine` only after it succeeds. The shared path
-computes contractions through `ghl_compute_SU_Bsq_Ssq_BdotS`, brackets the
-root, calls `ghl_brent`, records `n_iter`, computes utilde, and records
-`speed_limited`.
-
-Tabulated Palenzuela files live in
-[`GRHayL/Con2Prim/Tabulated/Palenzuela1D/`](../../../GRHayL/Con2Prim/Tabulated/Palenzuela1D/).
-The energy and entropy wrappers mirror the hybrid success-only diagnostic
-assignment, while
-`tabulated_Palenzuela1D.c` adds table bounds, tabulated EOS calls, an optional
-second Brent attempt from `T_min`, and the same `n_iter` and `speed_limited`
-diagnostics ownership.
-
-The [energy callback](../../../GRHayL/Con2Prim/Tabulated/Palenzuela1D/tabulated_Palenzuela1D_energy.c)
-and [entropy callback](../../../GRHayL/Con2Prim/Tabulated/Palenzuela1D/tabulated_Palenzuela1D_entropy.c)
-consume incoming `prims->Y_e`; they do not derive composition from conservative
-`Y_e`. Callers using direct routines/selectors or disabling ordinary guessing
-must provide the intended composition. Internal ordinary and NN guess fallbacks
-retain a finite conservative composition ratio at positive density within EOS
-bounds. With `params->evolve_temp` true, the
-callbacks invert energy or entropy for temperature. With it false, both use
-incoming temperature subject to table bounds, and the entropy callback does
-not consume conservative entropy. The shared failed-Brent retry can replace
-temperature with `T_min`, so this is not a promise of temperature preservation.
-Newman and Noble do not share this flag-controlled thermodynamic branch.
-
-## Font And Newman Routes
-
-[`GRHayL/Con2Prim/Hybrid/Font1D/`](../../../GRHayL/Con2Prim/Hybrid/Font1D/)
-contains the hybrid Font path. `hybrid_Font1D.c` handles the public wrapper,
-calls `hybrid_Font1D_loop.c` for the density iteration, computes the remaining
-primitives, writes `diagnostics->speed_limited` when utilde limiting is called,
-and sets `diagnostics->which_routine = ghl_con2prim_id_Font1D` on success.
-Cold-EOS evaluations use density clamped to the configured EOS interval, while
-the recovered density remains conservation-owned. In particular, cold pressure
-and energy are evaluated at the bounded EOS density, but the enthalpy closure
-uses that pressure divided by the recovered density; replacing that denominator
-with the bounded density would break conservative closure below `rho_min`. It resets
-`diagnostics->n_iter` at entry and accumulates outer `W`/fluid-momentum
-iterations across retries; inner density fixed-point iterations are not
-counted. The outer solve has a local iteration budget. Each inner density
-solve rejects nonpositive/nonfinite density or enthalpy and uses Brent's exact
-cycle detection with geometrically spaced checkpoints, separately from the
-Brent root finder used by Palenzuela. Convergence is checked before a repeated
-density is rejected, so a fixed point succeeds; a nonconvergent cycle
-returns `ghl_error_c2p_max_iter`. There is no
-short inner budget tied to the outer limit, so slowly converging density
-iterations can continue. Only a completed inner solve updates the density
-seed available to a retry; an unfinished cycle cannot replace it. When successive
-densities occupy the same EOS-clamped branch and the cold pressure and
-`1 + eps_cold` are nonnegative, the density map's logarithmic derivative `L` lies
-in `(-1, 0]`. Geometric damping suppresses nearly reciprocal oscillations without
-changing the fixed point and has derivative `(1 + L) / 2`, so it is applied only
-where `L < -1/3`, where that is smaller in magnitude than the undamped `|L|`.
-Convergence still uses the undamped density residual. The wrapper requires
-finite positive conservative density before the shortcut. The shortcut reports
-zero only when the conservative momentum norm satisfies
-`S_i gamma^ij S_j < 1e-300`.
-
-[`GRHayL/Con2Prim/Tabulated/Newman1D/`](../../../GRHayL/Con2Prim/Tabulated/Newman1D/)
-contains the tabulated Newman energy and entropy paths. Both compute
-`SU/Bsq/Ssq/BdotS` through `ghl_compute_SU_Bsq_Ssq_BdotS`, use local iterative
-pressure updates with a maximum step count, set `diagnostics->n_iter = step`
-inside the local helper, write `speed_limited` through utilde limiting, and set
-`which_routine` in the public wrapper only after the retry sequence succeeds.
-If the first attempt fails and the `T_min` retry runs, `n_iter` is the final
-attempt's local counter rather than the sum of both attempts.
-
-## Diagnostics Ownership
-
-Diagnostics layout and public initialization live in
-[`GRHayL/include/ghl_con2prim.h`](../../../GRHayL/include/ghl_con2prim.h) and
-[`GRHayL/Con2Prim/initialize_diagnostics.c`](../../../GRHayL/Con2Prim/initialize_diagnostics.c).
-For this internal page, only source-proven writes are routed:
-
-- `which_routine`: set by successful solver wrappers in Noble, Font,
-  Palenzuela, and Newman paths. Multi-method backup selection is routed in
-  [recovery flow](recovery-flow.md).
-- `n_iter`: set from `harm_aux.n_iter` in built Noble paths, from
-  `rparams.n_iters` in built Palenzuela paths, and from local `step` in Newman
-  paths. Newman retry writes replace the prior attempt's value. Font1D reports
-  accumulated outer `W`/fluid-momentum iterations, not its inner density loop.
-- `speed_limited`: current-call output from direct solvers; multi-method drivers
-  preserve the OR across attempted solvers, including attempts that later fail.
-
-## Archival Source
-
-`con2prim_CerdaDuran3D.cc` is source-present at
-[`GRHayL/Con2Prim/Tabulated/con2prim_CerdaDuran3D.cc`](../../../GRHayL/Con2Prim/Tabulated/con2prim_CerdaDuran3D.cc),
-with a prominent archival header. It is retained only to preserve potentially
-useful numerical work. It uses identifiers incompatible with the current API;
-[`GRHayL/Con2Prim/Tabulated/make.code.defn`](../../../GRHayL/Con2Prim/Tabulated/make.code.defn)
-intentionally builds the shared tabulated guess helper, the
-`neural_network_guess` support, and the `Newman1D`, `Noble2D`, and
-`Palenzuela1D` subdirectories, but not the archival file. The
-public selector in
-[`GRHayL/Con2Prim/con2prim_multi_method.c`](../../../GRHayL/Con2Prim/con2prim_multi_method.c)
-has no Cerda-Duran case. There is no public declaration, method ID, active
-GRHayLib keyword, or test. Treat it as unbuilt, unsupported archival source.
-
-The configured source inventory is manifest-driven and currently contains no
-`.cc` entry for this file. File presence alone therefore supplies neither C++
-compilation nor linkage evidence.
-
-## Read-Only Evidence Routes
-
-- Doxygen method overview:
-  [`docs/raw/Con2Prim.dox`](../../../docs/raw/Con2Prim.dox).
-- Hybrid selected-method and fixture evidence:
-  [`Unit_Tests/unit_test_con2prim_multi_method_hybrid.c`](../../../Unit_Tests/unit_test_con2prim_multi_method_hybrid.c).
-- Tabulated method, backup, and fixture evidence:
-  [`Unit_Tests/unit_test_con2prim_tabulated.c`](../../../Unit_Tests/unit_test_con2prim_tabulated.c).
-- Hybrid failure and backup evidence:
-  [`Unit_Tests/unit_test_hybrid_failure.c`](../../../Unit_Tests/unit_test_hybrid_failure.c).
-- Default runner fixture routes:
-  [`.github/run_tests.sh`](../../../.github/run_tests.sh).
+- Depends on: [Solver Matrix](solver-matrix.md)
+- Depends on: [Recovery Flow](recovery-flow.md)
+- Validated by: [Con2Prim Tests And Reference Data](tests-and-reference-data.md)

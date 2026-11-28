@@ -1,40 +1,11 @@
-# Implementation KB Router
+# Implementations
 
-This page routes implementation KB work for `implementations/*`. It covers
-downstream trees that interface with GRHayL by direct-compile integration, not
-the normal installed-library path described by the root README.
+> Router for downstream direct-compile integrations of GRHayL, currently the GRHayLib Cactus/Einstein Toolkit thorn.
 
-Repo-local implementation files remain the ground truth. KB pages here point
-readers to implementation sources and Cactus metadata; they do not replace
-`implementations/*` files or upstream GRHayL source.
+| Page | Go here when... |
+| --- | --- |
+| [GRHayLib Cactus Build](grhaylib-cactus-build.md) | You need GRHayLib thorn purpose, CarpetX host-only caveat, `configuration.ccl`/`interface.ccl`/`schedule.ccl`, `GRHayLib.h`, `requires HDF5`, or `src/make.code.defn` symlink layout. |
+| [GRHayLib Runtime Parameters](grhaylib-runtime-parameters.md) | You need `GRHayLib_paramcheck`, `GRHayLib_initialize`, `GRHayLib_terminate`, `ghl_params`/`ghl_eos` allocation, EOS/Con2Prim keyword mapping, PPM overrides, or steering rules. |
+| [GRHayLib Verification](grhaylib-verification.md) | You need static CCL/header/symlink/parser parity checks, CI path-filter behavior, and the external Cactus build/runtime proof boundary. |
 
-## Scope
-
-- `implementations/*` is the implementation scope for this router.
-- [GRHayLib](grhaylib.md) routes the Cactus/Einstein Toolkit implementation:
-  [`implementations/GRHayLib/`](../../implementations/GRHayLib/).
-- Direct-compile implementation paths are for infrastructures that compile
-  GRHayL code inside their own build system. Normal users usually link against
-  a configured and installed GRHayL library instead.
-- KB routing does not imply changes to `docs/**`, generated docs, `Doxyfile`,
-  or `implementations/**`.
-
-## Routes
-
-| Page | Use it for | Ground truth |
-| --- | --- | --- |
-| [GRHayLib hub](grhaylib.md) | Overview for the Cactus/Einstein Toolkit thorn boundary. | [`implementations/GRHayLib/`](../../implementations/GRHayLib/) |
-| [Cactus build boundary](grhaylib/cactus-build-boundary.md) | CCL metadata, exported header, direct-compile source list, HDF5 requirement, and source-layout caveats. | [`configuration.ccl`](../../implementations/GRHayLib/configuration.ccl), [`interface.ccl`](../../implementations/GRHayLib/interface.ccl), [`schedule.ccl`](../../implementations/GRHayLib/schedule.ccl), [`src/make.code.defn`](../../implementations/GRHayLib/src/make.code.defn) |
-| [Runtime parameter contract](grhaylib/runtime-parameter-contract.md) | Global state, lifecycle, EOS setup, Con2Prim routing, and Cactus parameter mapping. | [`param.ccl`](../../implementations/GRHayLib/param.ccl), [`src/initialize_and_shutdown.c`](../../implementations/GRHayLib/src/initialize_and_shutdown.c), [`src/GRHayLib.h`](../../implementations/GRHayLib/src/GRHayLib.h) |
-| [Verification and drift](grhaylib/verification-and-drift.md) | Manual downstream verification and implementation drift checks. | [`README`](../../implementations/GRHayLib/README), [`doc/documentation.tex`](../../implementations/GRHayLib/doc/documentation.tex), repo CI/test maps |
-
-Boundary: source registry and aggregate-header names must have static parity
-with upstream files, and the tracked thorn `src/include` and module symlinks
-must resolve to those upstream paths. No Cactus build or runtime result is
-established by this repository's ET_Legacy/upstream tests.
-
-## Source Notes
-
-- [`README.md`](../../README.md) distinguishes installed-library use from
-  implementation trees that directly compile GRHayL for infrastructures such as
-  the Einstein Toolkit.
+Back to [AGENTS.md](../../AGENTS.md).

@@ -1,181 +1,49 @@
-# Tabulated EOS Interpolation And Bounds
+# Tabulated Interpolation And Bounds
 
-## Purpose
+> Uniform logarithmic grid requirements, direct and auxiliary-inversion interpolation, temperature recovery, bounds-check versus clamp helpers, and `NRPyEOS_tabulated_compute_enthalpy_and_cs2`. · Status: confirmed
+> Up: [Equation Of State (EOS)](index.md)
 
-This page routes tabulated EOS interpolation, temperature recovery, table-bound
-handling, beta-equilibrium rho-map helpers, and enthalpy/sound-speed entry
-points. It is not a full API reference; exact signatures stay in
-[GRHayL/include/ghl_nrpyeos_tabulated.h](../../../GRHayL/include/ghl_nrpyeos_tabulated.h) and [GRHayL/include/ghl_eos_functions.h](../../../GRHayL/include/ghl_eos_functions.h).
-For table layout, table keys, HDF5 adapter, energy shift, and table lifecycle
-context, read [tabulated table contract](tabulated-table-contract.md)
-([wiki/gems/eos/tabulated-table-contract.md](tabulated-table-contract.md)).
+## Summary
 
-## Wrapper Families
+GRHayL's tabulated EOS interpolators assume strictly increasing uniform `logrho`, `logtemp`, and `ye` axes, derive inverse spacings from the first interval, and perform eight-point trilinear interpolation. Auxiliary wrappers (`from_eps`, `from_P`, `from_S`, `from_h`) invert temperature via `NRPyEOS_findtemp_from_any` with bisection fallback before direct interpolation, and hard-error table-bound checks are separate from configured-bound clamps.
 
-Public tabulated wrappers are declared in `GRHayL/include/ghl_eos_functions.h`,
-implemented through NRPyEOS functions declared in
-`GRHayL/include/ghl_nrpyeos_tabulated.h`, and assigned in
-[GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c](../../../GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c).
+## Detail
 
-- Direct from `(rho,Y_e,T)`: routes pressure, energy, sound speed, entropy,
-  `depsdT`, chemical potentials, and nucleon fractions through
-  [GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_T_interpolate_n_quantities.c](../../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_T_interpolate_n_quantities.c)
-  plus the specific wrapper files in
-  [GRHayL/EOS/Tabulated/interpolators/](../../../GRHayL/EOS/Tabulated/interpolators).
-- From `eps`: routes temperature recovery from `(rho,Y_e,eps)`, then
-  interpolates requested outputs through
-  [GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities.c](../../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities.c).
-  Public names include `ghl_tabulated_compute_T_from_eps`,
-  `ghl_tabulated_compute_P_T_from_eps`,
-  `ghl_tabulated_compute_P_S_T_from_eps`,
-  `ghl_tabulated_compute_P_cs2_T_from_eps`, and
-  `ghl_tabulated_compute_P_S_depsdT_T_from_eps`.
-- Wrappers from `P`: routes temperature recovery from `(rho,Y_e,P)` through the same
-  auxiliary temperature finder. Public names include
-  `ghl_tabulated_compute_eps_T_from_P`,
-  `ghl_tabulated_compute_eps_cs2_T_from_P`, and
-  `ghl_tabulated_compute_eps_S_T_from_P`.
-- Wrappers from `S`: routes temperature recovery from `(rho,Y_e,S)`. Public names
-  include `ghl_tabulated_compute_P_T_from_S` and
-  `ghl_tabulated_compute_P_eps_T_from_S`.
-- Wrappers from `h`: routes temperature recovery from `(rho,Y_e,h)`. Public names
-  include `ghl_tabulated_compute_P_eps_S_T_from_h` and
-  `ghl_tabulated_compute_P_eps_dPdrho_dPdeps_T_from_h`.
-- Beta-equilibrium rho-map helpers: `ghl_tabulated_compute_Ye_of_rho_beq_constant_T`
-  and `ghl_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T` build cached
-  `rho` maps in
-  [GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c).
-  Consumers include `ghl_tabulated_compute_Ye_from_rho`,
-  `ghl_tabulated_compute_P_from_rho`, `ghl_tabulated_compute_rho_from_P`,
-  `ghl_tabulated_compute_eps_from_rho`, `ghl_tabulated_compute_dP_drho_from_rho`,
-  and `ghl_tabulated_compute_deps_dP_from_rho`.
+### Uniform Grid Assumption And Caller Input Domain
 
-[GRHayL/EOS/Tabulated/interpolators/make.code.defn](../../../GRHayL/EOS/Tabulated/interpolators/make.code.defn) owns the built
-interpolator source list for these wrapper families.
+Interpolation and temperature inversion assume uniform `logrho`, `logtemp`, and `ye` axes (logarithmic physical `rho` and `T`, linear `Y_e`) with at least two points each and take inverse spacings strictly from the first cell; nonuniform grids are unsupported. The loader's uniformity tolerance and index-representability checks are defined in [Tabulated Table Layout](tabulated-table-layout.md#table-keys-read-sequence-and-structural-acceptance-checks).
 
-## Current StellarCollapse Grid Contract
+**Caller preconditions (`NRPyEOS_tabulated_helpers.h`):**
+- Supply finite coordinates and auxiliary targets with positive `rho` and `T`: hard-error checks (`NRPyEOS_checkbounds`, `NRPyEOS_checkbounds_kt0_noTcheck`) use ordered comparisons without finiteness checks, so `NaN` can bypass them into cell indexing.
+- Auxiliary inversions take `*T` as an in/out initial guess: supply a finite positive in-table seed before `log(*T)`. Pressure and enthalpy targets must be positive; energy targets require `eps + energy_shift > 0` (source rejects negative shifted energy but does not reject exact zero before `log`).
+- Supply finite positive `eos->root_finding_precision`. Direct shared-helper callers (`NRPyEOS_from_rho_Ye_T_interpolate_n_quantities`, `NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities`) must pass valid keys and `0 <= n <= NRPyEOS_ntablekeys` (only the upper bound is checked).
 
-The live StellarCollapse path stores coordinate arrays as `logrho`, `logtemp`,
-and `ye`. For current interpolation to be correct, each stored coordinate
-array is validated as uniformly linearly spaced, strictly increasing, finite,
-and containing at least two points before bulk table data is read. The physical
-density and temperature endpoints must be finite and
-positive, so uniform spacing in `logrho` and `logtemp` means logarithmically
-spaced physical `rho` and `T`; `ye` is uniformly spaced directly.
+Evidence (descriptive behavior): `NRPyEOS_tabulated_helpers.h::NRPyEOS_checkbounds`; corroboration: `NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities.c`.
 
-`NRPyEOS_read_table_set_EOS_params.c` takes coordinate bounds from the first
-and last array entries and derives each inverse spacing from the first
-interval. `NRPyEOS_tabulated_helpers.h` then uses those values to select an
-adjacent cell and perform eight-point trilinear interpolation. The current
-path does not recover a nonuniform grid from all coordinate entries.
-Setup also rejects nonrepresentable inverse-spacing products and biased cell
-coordinates before interpolation can use them.
+### Temperature Recovery, Bounds Paths, And Enthalpy/Sound-Speed Mutation
 
-For CompOSE conversion-specific consequences, including the density and
-charge-coordinate maps, read the
-[CompOSE EOS adapter how-to](../neutrinos/compose-eos-adapter-how-to.md#grid-and-interpolation-contract).
+- **Temperature recovery (`NRPyEOS_findtemp_from_any` / `NRPyEOS_bisection`):** Auxiliary wrappers check `(rho, Y_e)` bounds first, solve for `log T` against the transformed auxiliary target `a` (`log P`, `log h`, `log(eps + energy_shift)`, or untransformed entropy), write `*T`, and then invoke direct `(rho, Y_e, T)` interpolation (applying log/energy-shift conversions for `P`, `h`, `eps`). If the final direct interpolation fails, `*T` stays mutated while other outputs stay unassigned.
+- **Inversion acceptance:** `eos->root_finding_precision` (`prec`) is a relative tolerance on the interpolated residual in `a`, not a temperature tolerance: the seed and Newton checks accept `fabs(a_interp - a) < prec*fabs(a)`, and bisection accepts `fabs(a_interp - a) <= fabs(prec*a)`. When the two temperature nodes around the current iterate bracket `a`, the Newton loop returns the linear-in-`log T` cell inversion without a residual test. If bisection is reached and the target is at or below the interpolated value at table minimum temperature, bisection returns `table_T_min = exp(eos->table_logT[0])` (not narrower configured `eos->T_min`) with success status—so success does not guarantee exact inversion at the cold boundary.
+- **Hard errors versus clamps:** `NRPyEOS_checkbounds*` check **physical table bounds** and return error codes without mutating inputs. `NRPyEOS_enforce_table_bounds_rho_Ye_{T,eps,S,P}` (`NRPyEOS_enforce_table_bounds.c`) clamp caller variables in place to **configured `ghl_eos_parameters` bounds** (which may be narrower).
+- **Enthalpy & sound speed (`NRPyEOS_tabulated_compute_enthalpy_and_cs2.c`):** clamps `prims->rho`, `Y_e`, and `temperature` via `ghl_tabulated_enforce_bounds_rho_Ye_T`, interpolates `press`, `eps`, and `cs2`, and computes/writes enthalpy even if interpolation returns an error (leaving primitive mutations); callers must check the returned status.
 
-## Caller Domain
+Evidence (descriptive behavior): `NRPyEOS_tabulated_helpers.h::NRPyEOS_findtemp_from_any`; corroboration: `NRPyEOS_tabulated_helpers.h::NRPyEOS_bisection`.
 
-Use an initialized live table and the matching dispatch family. Interpolation
-requires finite coordinates and auxiliary targets; density and temperature
-must be positive. The hard-error bounds helpers use ordered comparisons, not
-finiteness checks, so NaN can bypass them and reach integer cell indexing.
-They check physical table bounds; clamp helpers instead use configured EOS
-bounds, which may be narrower. Neither route is general input validation.
+Evidence (descriptive behavior): `NRPyEOS_enforce_table_bounds.c::NRPyEOS_enforce_table_bounds_rho_Ye_T`; corroboration: `NRPyEOS_tabulated_compute_enthalpy_and_cs2.c`.
 
-Auxiliary inversion takes `T` as an in/out initial guess: supply a finite,
-positive in-table seed before the helper evaluates `log(*T)`. Pressure and
-enthalpy targets must be positive, as must `eps + energy_shift` for energy
-inversion. The source rejects negative shifted energy but does not reject zero
-before taking its logarithm. Supply a finite positive root-finding precision.
-Direct shared-helper callers must also supply valid table keys, correctly
-sized arrays, and `0 <= n <= NRPyEOS_ntablekeys`; the implementation checks
-only the upper count limit, not negative counts or key validity.
+## Sources
 
-## Temperature Recovery
+- [GRHayL/include/ghl_nrpyeos_tabulated.h](../../../GRHayL/include/ghl_nrpyeos_tabulated.h) - tabulated wrapper declarations
+- [GRHayL/EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h](../../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h) - `NRPyEOS_checkbounds`, `NRPyEOS_findtemp_from_any`, `NRPyEOS_bisection`
+- [GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_T_interpolate_n_quantities.c](../../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_T_interpolate_n_quantities.c) - direct `(rho,Y_e,T)` helper
+- [GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities.c](../../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities.c) - auxiliary temperature-recovery helper
+- [GRHayL/EOS/Tabulated/NRPyEOS_enforce_table_bounds.c](../../../GRHayL/EOS/Tabulated/NRPyEOS_enforce_table_bounds.c) - in-place configured-bound clamps
+- [GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_enthalpy_and_cs2.c](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_enthalpy_and_cs2.c) - tabulated `ghl_compute_h_and_cs2`
+- [Unit_Tests/unit_test_tabulated_eos.c](../../../Unit_Tests/unit_test_tabulated_eos.c) - interpolator and bounds tests
 
-Auxiliary-input wrappers recover temperature before interpolation. They pass
-`eos->root_finding_precision` from `ghl_eos_parameters` into
-`NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities`, which then calls
-the helper routines in
-[GRHayL/EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h](../../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h). The helper
-path uses `NRPyEOS_findtemp_from_any` and can fall back to `NRPyEOS_bisection`
-when interpolation/Newton-style updates do not converge cleanly. The search
-assumes a suitable temperature dependence and usable slopes; loading a table
-does not establish a unique inverse for every quantity. When bisection is
-reached, a target at or below the interpolated value at the table minimum
-temperature returns that endpoint successfully: `exp(eos->table_logT[0])`,
-represented by `table_T_min`, rather than a possibly narrower configured
-`eos->T_min`. Success therefore need not mean an exact inversion of
-the supplied auxiliary target.
+## See Also
 
-After root recovery, the helper writes the new `T` before final direct
-interpolation. If that final interpolation fails, temperature is not rolled
-back even though the wrapper's other thermodynamic outputs remain unassigned.
-
-The direct `(rho,Y_e,T)` path does not recover temperature; it checks table
-bounds, finds interpolation spots, and interpolates requested table quantities.
-For pressure, enthalpy, and internal energy, the direct helper applies the
-source-owned log/energy-shift conversions before returning values.
-
-## Bounds Paths
-
-There are two different bounds contracts:
-
-- Hard-error checks: `NRPyEOS_checkbounds` and
-  `NRPyEOS_checkbounds_kt0_noTcheck` live in
-  `GRHayL/EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h`. Direct
-  `(rho,Y_e,T)` interpolation checks `rho`, `Y_e`, and `T`; auxiliary-input
-  interpolation checks `rho` and `Y_e` before recovering `T`. Failures return
-  table min/max error codes rather than mutating caller inputs.
-- Clamp/enforce helpers: `NRPyEOS_enforce_table_bounds_rho_Ye_T`,
-  `NRPyEOS_enforce_table_bounds_rho_Ye_eps`,
-  `NRPyEOS_enforce_table_bounds_rho_Ye_S`, and
-  `NRPyEOS_enforce_table_bounds_rho_Ye_P` live in
-  [GRHayL/EOS/Tabulated/NRPyEOS_enforce_table_bounds.c](../../../GRHayL/EOS/Tabulated/NRPyEOS_enforce_table_bounds.c). These mutate passed
-  variables into EOS bounds for `(rho,Y_e,T)`, `(rho,Y_e,eps)`,
-  `(rho,Y_e,S)`, and `(rho,Y_e,P)`.
-
-Use hard-error checks when out-of-table input should fail fast. Use enforce
-helpers where the caller contract is to clamp to configured `ghl_eos_parameters`
-limits before continuing.
-
-## Enthalpy And cs2
-
-`NRPyEOS_tabulated_compute_enthalpy_and_cs2` in
-[GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_enthalpy_and_cs2.c](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_enthalpy_and_cs2.c) can mutate
-`ghl_primitive_quantities`: it enforces `rho`, `Y_e`, and `temperature` bounds
-through `ghl_tabulated_enforce_bounds_rho_Ye_T`, then computes pressure, energy,
-and `cs2` through the tabulated `(rho,Y_e,T)` wrapper before forming enthalpy. It returns the interpolation status but calculates
-and writes enthalpy even on error, using the remaining pressure/energy and
-already-bounded density. Failure can therefore leave primitive mutations and
-does not guarantee valid new thermodynamic outputs; check the return code.
-
-## Coverage Routes
-
-- [Unit_Tests/unit_test_tabulated_eos.c](../../../Unit_Tests/unit_test_tabulated_eos.c) validates direct `(rho,Y_e,T)`
-  wrappers, auxiliary-input wrappers from `eps`, `P`, and `S`, the enthalpy and
-  `cs2` path through `ghl_compute_h_and_cs2`, selected enforce behavior, and
-  beta-equilibrium rho-map helpers.
-- [Unit_Tests/unit_test_code_error.c](../../../Unit_Tests/unit_test_code_error.c) links error coverage for out-of-table
-  direct interpolation, out-of-table auxiliary temperature-recovery wrappers,
-  too-many-variable calls to both shared interpolation helpers, and
-  beta-equilibrium rho-map out-of-range cases.
-
-## Source-Of-Truth Paths
-
-- `GRHayL/include/ghl_nrpyeos_tabulated.h`
-- `GRHayL/include/ghl_eos_functions.h`
-- `GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c`
-- `GRHayL/EOS/Tabulated/interpolators/`
-- `GRHayL/EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h`
-- `GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_T_interpolate_n_quantities.c`
-- `GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities.c`
-- `GRHayL/EOS/Tabulated/NRPyEOS_enforce_table_bounds.c`
-- `GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_enthalpy_and_cs2.c`
-- `GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c`
-- [GRHayL/EOS/Tabulated/NRPyEOS_tabulated_get_index.c](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_get_index.c)
-- `GRHayL/EOS/Tabulated/interpolators/make.code.defn`
-- `Unit_Tests/unit_test_tabulated_eos.c`
-- `Unit_Tests/unit_test_code_error.c`
+- Depends on: [Tabulated Table Layout](tabulated-table-layout.md)
+- Implements: [Tabulated Interpolator Catalog](tabulated-interpolator-catalog.md)
+- Validated by: [EOS Tests And Reference Data](tests-and-reference-data.md)
+- See also: [CompOSE EOS Leakage Callback](../neutrinos/compose-eos-leakage-callback.md)

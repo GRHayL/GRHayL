@@ -1,280 +1,88 @@
 # Neutrinos API And Data
 
-## Purpose
+> Public radiation containers, `NRPyLeakage_*` entry points, input/unit preconditions, error codes, and HDF5/EOS boundaries. · Status: confirmed
+> Up: [Neutrinos](index.md)
 
-This page maps Neutrinos public data shapes, callable entry points, constants,
-error behavior, and HDF5/EOS dependencies. Ground truth remains the named
-repo-local headers, source files, tests, and build scripts.
+## Summary
 
-For generator origin and regeneration limits, continue to
-[Generator Provenance](generator-provenance.md). For chemical-potential,
-composition, source-sign, species, and slot semantics needed by another EOS,
-continue to [Physics And EOS Contract](physics-and-eos-contract.md).
-For CompOSE adapter design, integration routes, and validation, continue to the
-[CompOSE EOS Adapter How-To](compose-eos-adapter-how-to.md).
+`GRHayL/include/ghl_radiation.h` defines the three-species radiation containers (`ghl_neutrino_luminosities`, `ghl_neutrino_opacities`, `ghl_neutrino_optical_depths`) and includes `GRHayL/include/ghl_nrpyleakage.h`, which exports the `NRPyLeakage_*` entry points, constants, unit macros, and finite-value classifiers. No `ghl_*` wrapper family exists for leakage calls. EOS-dependent routines require an HDF5-enabled build and an initialized six-output tabulated-EOS chemistry callback, whereas the Fermi-Dirac helper and optical-depth update do not call the EOS or HDF5.
 
-## Radiation Data
+## Detail
 
-[GRHayL/include/ghl_radiation.h](../../../GRHayL/include/ghl_radiation.h) owns the public radiation structs:
+### Radiation Data Containers
 
-- `ghl_neutrino_luminosities` has scalar `nue`, `anue`, and `nux` fields for
-  electron neutrino, electron antineutrino, and heavy-lepton neutrino
-  luminosities, in that declaration order.
-- `ghl_neutrino_opacities` has `nue[2]`, `anue[2]`, and `nux[2]`.
-- `ghl_neutrino_optical_depths` is a typedef alias of
-  `ghl_neutrino_opacities`, so depth and opacity storage share the same shape.
+`GRHayL/include/ghl_radiation.h` includes `ghl.h`, declares the radiation containers, and then includes `ghl_nrpyleakage.h`:
 
-Use `[0]` and `[1]` as two entries per species unless implementation source
-proves stronger semantics for a specific call path. Current public headers name
-the arrays but do not publish semantic labels for those two entries.
+- `ghl_neutrino_luminosities` holds scalar `nue`, `anue`, and `nux` fields in that declaration order.
+- `ghl_neutrino_opacities` holds two-element arrays `nue[2]`, `anue[2]`, and `nux[2]`.
+- `ghl_neutrino_optical_depths` is a `typedef` alias of `ghl_neutrino_opacities`.
 
-Implementation usage is stronger but still not a named public contract:
-combined source terms use slot `[0]` with `R_source` and slot `[1]` with
-`Q_source`; luminosity suppression uses slot `[1]`, while slot `[0]` also
-enters degeneracy factors. Treat “number” and “energy” labels as an inference
-from formulas, not stable field names, until the public header documents them.
+Public headers do not assign named labels to slots `[0]` and `[1]`. Implementation formulas pair slot `[0]` with `R_source` and equilibrium-degeneracy interpolation and pair slot `[1]` with `Q_source` and luminosity suppression; keep `[0]`/`[1]` indexing at caller boundaries. Binary luminosity reference files serialize both `ghl_neutrino_optical_depths` (unperturbed input records) and `ghl_neutrino_luminosities` as raw structs, making field declaration order in both `ghl_neutrino_opacities` and `ghl_neutrino_luminosities` part of luminosity reference layout, whereas constant-density-sphere opacity and optical-depth reference files store twelve separate arrays in species-then-slot order.
 
-Because tests write `ghl_neutrino_luminosities` as a raw struct, field order
-is part of current fixture layout. Opacity/depth fixtures are written as 12
-separate arrays in species-then-slot order rather than raw structs.
+Evidence (scientific/interface requirement): `ghl_radiation.h::ghl_neutrino_opacities`; corroboration: `ghl_radiation.h::ghl_neutrino_luminosities`.
 
-`ghl_radiation.h` includes `ghl.h` first, defines the radiation structs, then
-includes `ghl_nrpyleakage.h`; leakage declarations can therefore use the
-radiation types.
+### Public NRPyLeakage Entry Points And Portability Boundary
 
-## Public NRPyLeakage Calls
+`GRHayL/include/ghl_nrpyleakage.h` exports:
 
-[GRHayL/include/ghl_nrpyleakage.h](../../../GRHayL/include/ghl_nrpyleakage.h) declares these public routines:
+- `NRPyLeakage_Fermi_Dirac_integrals` (returns `ghl_error_codes_t`)
+- `NRPyLeakage_compute_neutrino_opacities` (returns `ghl_error_codes_t`)
+- `NRPyLeakage_compute_neutrino_luminosities` (returns `ghl_error_codes_t`)
+- `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms` (returns `ghl_error_codes_t`)
+- `NRPyLeakage_optical_depths_PathOfLeastResistance` (returns `void`)
 
-- `NRPyLeakage_Fermi_Dirac_integrals`
-- `NRPyLeakage_compute_neutrino_opacities`
-- `NRPyLeakage_compute_neutrino_luminosities`
-- `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms`
-- `NRPyLeakage_optical_depths_PathOfLeastResistance`
+Every implementation file includes `ghl_radiation.h`, binding signatures and bodies to `ghl_eos_parameters`, the radiation structs, `ghl_error_codes_t` (`ghl_error_used_disabled_hdf5`, `ghl_error_invalid_fermi_dirac_integral_key`, `ghl_error_nrpyleakage_blocking`, `ghl_error_nrpyleakage_nonfinite_output`), `ghl_nrpyleakage.h` unit/constant/finiteness macros (`NRPYLEAKAGE_FD_OR_RETURN`), and `-lm`. The opacity, combined source/opacity, and luminosity files also include `ghl_nrpyeos_tabulated.h`, which pulls in `hdf5.h` when HDF5 is enabled even though leakage reads EOS quantities solely through the chemistry callback.
 
-The optical-depth path routine returns `void` and writes
-`ghl_neutrino_optical_depths` output; the others return `ghl_error_codes_t`.
+Porting NRPyLeakage to another host requires: (1) supplying the six EOS outputs in the units specified in [EOS Inputs And Chemical Potentials](eos-inputs-and-chemical-potentials.md), (2) preserving or translating the three-species/two-slot arrays, (3) replacing GRHayL return codes and `NRPYLEAKAGE_FD_OR_RETURN` without altering early-exit writeback behavior, (4) keeping density, opacity, source, luminosity, and cgs suppression-ratio conversions mutually consistent, (5) carrying the private blocking and rate headers (or equivalent behavior), and (6) revalidating finite-value classification, metric conventions, and path lengths.
 
-## Portability Boundary
+Evidence (descriptive behavior): `ghl_nrpyleakage.h::NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms`; corroboration: `ghl_nrpyleakage.h::NRPYLEAKAGE_FD_OR_RETURN`.
 
-Leakage rate algebra is separable from GRHayL's hydrodynamics, but the current
-C files are not a drop-in standalone library. Every file includes
-`ghl_radiation.h`, which brings in `ghl.h` and `ghl_nrpyleakage.h`. The current
-signatures and bodies therefore depend on:
+### Input Preconditions, Constants, And Floating-Point Discipline
 
-- `ghl_eos_parameters`, `ghl_neutrino_opacities`,
-  `ghl_neutrino_optical_depths`, `ghl_neutrino_luminosities`, and
-  `ghl_error_codes_t`;
-- GRHayL success/error values, including
-  `ghl_error_used_disabled_hdf5` and
-  `ghl_error_invalid_fermi_dirac_integral_key` and
-  `ghl_error_nrpyleakage_blocking` and
-  `ghl_error_nrpyleakage_nonfinite_output`;
-- constants, unit macros, finiteness helpers, and
-  `NRPYLEAKAGE_FD_OR_RETURN` from `ghl_nrpyleakage.h`; and
-- C math facilities exposed through the GRHayL headers and the `-lm` link
-  configured by `configure`.
+Routines do not perform general null-pointer checks. Caller preconditions established by the declarations and formulas are:
 
-The opacity, combined source/opacity, and luminosity files also include
-`ghl_nrpyeos_tabulated.h`. In an HDF5-enabled GRHayL build that header includes
-`hdf5.h`, creating a compile dependency even though the routines obtain EOS
-quantities through a callback rather than reading datasets. HDF5 is therefore
-part of the current adapter and build guard, not the physical leakage algebra.
+- `rho` / `rho_b` is in GRHayL geometric density units and is converted internally via `NRPyLeakage_units_geom_to_cgs_D`.
+- `Y_e` and positive nonzero `T` (in MeV) must lie within the initialized tabulated EOS domain; formulas divide directly by `T`.
+- Opacity outputs are multiplied by `NRPyLeakage_units_geom_to_cgs_L` (inverse geometric length) to pair with geometric coordinate path lengths in dimensionless optical depths.
+- `R_source` and `Q_source` are signed fluid-frame scalar rates per proper volume and proper time, already carrying the baryon mass factor in `R_source` and the factor of four for heavy leptons in `Q_source`; metric, lapse, Lorentz, and velocity projections remain caller responsibilities (see [Physics Model And Sources](physics-model-and-sources.md)).
+- Luminosities carry `W * alpha^2 * sqrt(det(gamma_ij))` and require finite positive lapse, finite `W >= 1`, and a finite positive-definite spatial metric (a nonnegative determinant alone is insufficient). Each returned luminosity is a pointwise coordinate-volume integrand; total luminosity integrates over coordinate volume without a second `sqrt(gamma)`.
+- `NRPyLeakage_optical_depths_PathOfLeastResistance` expects `dxx[3]` in `(x, y, z)` order, metric stencils ordered `[minus-one, center, plus-one]`, finite positive cell widths and face-averaged diagonal metrics, and finite nonnegative opacities and optical depths.
 
-A port using another EOS must replace or wrap that callback, choose a host
-error policy, and remove or reinterpret the GRHayL HDF5 guard. Copying the
-EOS-dependent C files unchanged still requires the GRHayL types, callback symbol, error
-enum, headers, and compile environment. See [HDF5 And EOS](#hdf5-and-eos) for
-callback initialization and guarded-return behavior.
+`GRHayL/include/ghl_nrpyleakage.h` defines all physical constants, switches, unit macros, `robust_isnan`, `robust_isfinite`, and `NRPYLEAKAGE_FD_OR_RETURN`. On IEEE binary64 systems, `robust_isnan` and `robust_isfinite` use alias-safe `memcpy` to `uint64_t` with exponent/fraction bit masks, falling back to C99 predicates on non-binary64 targets. Because unsafe floating-point flags can corrupt preceding arithmetic, `configure` rejects `-ffast-math`, `-Ofast`, `-ffinite-math-only`, `-funsafe-math-optimizations`, `-fassociative-math`, `-freciprocal-math`, `-fno-signed-zeros`, `-fno-trapping-math`, Intel `-ftz`, and Intel fast floating-point models, probes predefined fast/finite-only macros and gradual underflow, and appends `-fp-model=precise -no-ftz` for Intel LLVM (which direct builds and executable links must retain).
 
-Repo-local portability authority is
-[`ghl_radiation.h`](../../../GRHayL/include/ghl_radiation.h),
-[`ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h),
-[`ghl_nrpyeos_tabulated.h`](../../../GRHayL/include/ghl_nrpyeos_tabulated.h),
-[`ghl_eos_functions.h`](../../../GRHayL/include/ghl_eos_functions.h),
-[`ghl_eos_functions_declaration.h`](../../../GRHayL/include/ghl_eos_functions_declaration.h),
-[`NRPyEOS_initialize_tabulated_functions.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c),
-and [`configure`](../../../configure).
+Evidence (normative rule): `configure::no-ftz`; corroboration: `ghl_nrpyleakage.h::robust_isfinite`.
 
-Minimum local adapter responsibilities are:
+### Error Behavior And Writeback Guarantees
 
-1. Provide the six EOS outputs with meanings and units specified in
-   [Physics And EOS Contract](physics-and-eos-contract.md).
-2. Preserve the three-species/two-slot data contract or translate at the call
-   boundary.
-3. Replace GRHayL return codes and early-return macro with the host error
-   policy without changing partial-write behavior accidentally.
-4. Validate density, opacity, source, and luminosity conversions as one
-   coherent set. Keep the suppression ratio in one time unit, as the current
-   cgs form does; see
-   [Suppression-Ratio Units](physics-and-eos-contract.md#suppression-ratio-units).
-5. Revalidate finite-value handling, metric conventions, and optical-depth
-   path lengths in the host ABI and unit system.
+- **Fermi-Dirac helper:** `NRPyLeakage_Fermi_Dirac_integrals` zeroes `*Fermi_Dirac_integral` before branch dispatch (`z > 1e-3` vs. `z <= 1e-3`), supports keys `0` through `5`, and returns `ghl_error_invalid_fermi_dirac_integral_key` for unsupported keys (leaving output zeroed). `Unit_Tests/unit_test_code_error.c` checks invalid keys on both branches.
+- **HDF5 and EOS errors:** Under `GHL_DISABLE_HDF5`, EOS-dependent routines return `ghl_error_used_disabled_hdf5` before table access. With HDF5 enabled, they call `ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T` and propagate any EOS error unchanged before writing outputs.
+- **Nucleon-blocking and shifted-moment errors:** Source-private `NRPyLeakage_nucleon_blocking.h` requires finite positive cgs density and temperature and finite `X_n`, `X_p` in `[0, 1]`, normalizing only endpoint excursions within the eight-corner interpolation forward-error bound. Both-zero composition succeeds neutrally; an exactly-one-zero state preserves occupied-species scattering and applies the analytic zero limit to charged-current products without forming divergent degeneracy differences. Larger excursions, nonfinite kinetic-degeneracy inversions or overlaps, or invalid/nonfinite shifted beta-moment inputs or results (including overflow from finite reaction shifts) return `ghl_error_nrpyleakage_blocking` before public output writeback.
+- **Nonfinite-output sanitization:** After ordinary writeback, every EOS-dependent routine sanitizes public outputs, replacing nonfinite opacities with the converted cgs inverse-length floor and nonfinite luminosities or signed sources with `0.0`. Any replacement returns `ghl_error_nrpyleakage_nonfinite_output` while keeping finite sibling outputs (including finite negative values) intact. Intermediate `EnsureFinite` guards can substitute values without raising this error, so `ghl_success` does not guarantee absence of intermediate fallbacks.
+- **Optical-depth update:** Returns `void` with no validation or error channel.
 
-## Input And Unit Preconditions
+No-HDF5 builds still compile all guarded NRPyLeakage implementation files so `ghl_error_used_disabled_hdf5` paths remain linkable; `configure` excludes only the table-backed NRPyLeakage tests while keeping `unit_test_nrpyleakage_physics.c` and `unit_test_nrpyleakage_classifier_fallback.c`. Test-only EOS setup calls (`ghl_initialize_tabulated_eos_functions_and_params`, `ghl_tabulated_compute_eps_from_T`, `ghl_tabulated_compute_T_from_eps`) live in `Unit_Tests/nrpyleakage_main.h` and `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`.
 
-The public declarations document units and failure behavior. The routines
-perform no general null-pointer validation. The shared blocking helper
-performs focused range and finiteness checks described below. Source and the
-physical meanings of the inputs establish these caller preconditions:
+Evidence (descriptive behavior): `NRPyLeakage_Fermi_Dirac_integrals.c::NRPyLeakage_Fermi_Dirac_integrals`; corroboration: `ghl.h::ghl_error_nrpyleakage_blocking`.
 
-- `rho`/`rho_b` is GRHayL geometric density; leakage source multiplies it by
-  `NRPyLeakage_units_geom_to_cgs_D` before cgs formulas.
-- `Y_e` and `T` must be valid for the initialized tabulated EOS. `T` is passed
-  unchanged to EOS lookup and used directly with EOS chemical potentials; the
-  source divides by `T`, so positive nonzero temperature is required.
-- Opacity results are multiplied by `NRPyLeakage_units_geom_to_cgs_L`, giving
-  the inverse-code-length representation paired with code-coordinate path
-  lengths. Optical depths are dimensionless sums of neighbor depth plus
-  `ds*kappa`.
-- `R_source` and `Q_source` are signed fluid-frame scalar rates. The mass
-  factor in `R_source` and heavy-species factor in `Q_source` are already
-  included; callers supply conservative, lapse, volume, and velocity factors
-  described in the public declaration and
-  [matter-source contract](physics-and-eos-contract.md#matter-source-signs-and-caller-meaning).
-  Sources and luminosities use the source-owned cgs-to-geometric conversion
-  macros. Luminosity additionally contains
-  `W*alpha^2*sqrt(det(gamma_ij))`. Physical inputs require finite positive
-  lapse, finite `W >= 1`, and a finite positive-definite spatial metric. A
-  nonnegative determinant alone does not establish a physical metric. Each
-  luminosity is a pointwise coordinate-volume integrand; a total requires
-  caller-supplied volume integration, without another `sqrt(gamma)` factor.
-- Optical-depth update requires `dxx[3]` and metric stencils ordered
-  `[minus-one, center, plus-one]`. Supply finite positive cell widths and
-  face-averaged diagonal metric values, finite nonnegative opacities and
-  optical depths, and representable path-length arithmetic. EOS-dependent
-  rate calls likewise require finite nonnegative optical depths. These
-  routines do not comprehensively enforce this physical domain.
+## Sources
 
-Route exact conversion factors to `ghl_nrpyleakage.h`; do not infer alternate
-unit systems from external leakage implementations.
+- [GRHayL/include/ghl_radiation.h](../../../GRHayL/include/ghl_radiation.h) - `ghl_neutrino_luminosities`, `ghl_neutrino_opacities`, `ghl_neutrino_optical_depths`
+- [GRHayL/include/ghl_nrpyleakage.h](../../../GRHayL/include/ghl_nrpyleakage.h) - public declarations, unit/physical constants, `robust_isnan`, `robust_isfinite`, `NRPYLEAKAGE_FD_OR_RETURN`
+- [GRHayL/include/ghl.h](../../../GRHayL/include/ghl.h) - `ghl_eos_parameters`, `ghl_error_codes_t`, `ghl_initialize_tabulated_eos_functions_and_params`
+- [GRHayL/include/ghl_nrpyeos_tabulated.h](../../../GRHayL/include/ghl_nrpyeos_tabulated.h) - `hdf5.h` inclusion and tabulated EOS definitions
+- [GRHayL/include/ghl_eos_functions.h](../../../GRHayL/include/ghl_eos_functions.h) - EOS function-pointer dispatch
+- [GRHayL/include/ghl_eos_functions_declaration.h](../../../GRHayL/include/ghl_eos_functions_declaration.h) - `ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T`
+- [GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_Fermi_Dirac_integrals.c](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_Fermi_Dirac_integrals.c) - Fermi-Dirac branch dispatch and invalid-key zeroing
+- [GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h) - private blocking validation and error checks
+- [GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c](../../../GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c) - tabulated chemistry callback registration
+- [configure](../../../configure) - floating-point flag rejection, gradual-underflow probe, `--disable-hdf5` filtering
+- [Unit_Tests/nrpyleakage_main.h](../../../Unit_Tests/nrpyleakage_main.h) - test-only EOS table initialization
+- [Unit_Tests/unit_test_code_error.c](../../../Unit_Tests/unit_test_code_error.c) - invalid Fermi-Dirac key checks
 
-## Constants And Units
+## See Also
 
-`GRHayL/include/ghl_nrpyleakage.h` owns leakage switches, physical constants,
-unit conversions, and derived constants. KB pages should route to that header
-instead of duplicating a constants table. Formula blocks that consume those
-constants live in `GRHayL/Neutrinos/NRPyLeakage/*.c`.
-
-The same header defines `robust_isnan`, `robust_isfinite`, and
-`NRPYLEAKAGE_FD_OR_RETURN`. That macro calls
-`NRPyLeakage_Fermi_Dirac_integrals` and returns the error immediately when the
-helper fails. On IEEE binary64 systems the robust classifiers use alias-safe
-`memcpy` plus integer exponent/fraction checks. This does not make preceding
-floating-point arithmetic safe under finite-only or other unsafe math modes.
-Supported `configure` builds reject explicit `CC` or `--cflags` tokens for
-`-ffast-math`, `-Ofast`, `-ffinite-math-only`,
-`-funsafe-math-optimizations`, `-fassociative-math`, `-freciprocal-math`,
-`-fno-signed-zeros`, `-fno-trapping-math`, Intel `-ftz`, and Intel fast
-floating-point models. The final configuration probes both fast/finite-only
-predefined macros and gradual underflow. Intel LLVM builds receive
-`-fp-model=precise -no-ftz` after user flags. Direct builds must enforce the
-same restriction, and Intel executable links must retain `-no-ftz`.
-Compile-time representation checks retain the C99 predicates as the portable
-fallback.
-
-## Fermi-Dirac Error Behavior
-
-[GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_Fermi_Dirac_integrals.c](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_Fermi_Dirac_integrals.c) supports
-keys `0` through `5` and splits approximations on `z > 1e-3`. It zeroes the
-output value before branch dispatch. Unsupported keys return
-`ghl_error_invalid_fermi_dirac_integral_key`, defined in
-[GRHayL/include/ghl.h](../../../GRHayL/include/ghl.h).
-
-[Unit_Tests/unit_test_code_error.c](../../../Unit_Tests/unit_test_code_error.c) exercises invalid Fermi-Dirac keys on both
-`z` branches and maps them to `ghl_error_invalid_fermi_dirac_integral_key`.
-
-## Nucleon-Blocking Error Behavior
-
-The EOS-dependent public routines include the source-private
-`NRPyLeakage_nucleon_blocking.h`. Public function signatures and radiation
-structs remain unchanged; the helper is not installed as public API.
-
-After EOS lookup and density conversion, the helper requires finite positive
-cgs density and temperature. It accepts finite `X_n`, `X_p` in `[0,1]` and
-normalizes only endpoint excursions within the forward-error bound of the
-eight-corner interpolation arithmetic. The both-zero composition is a neutral
-success. For exactly one normalized zero, it returns the exact overlap limit,
-retains occupied-species scattering, and leaves the degeneracy-difference
-placeholder unused while public callers apply the analytic zero limit of every
-charged-current product. The helper also rejects larger excursions and any
-non-finite kinetic-degeneracy
-inversion, overlap, or population-bound result.
-The shifted beta-moment evaluators also return
-`ghl_error_nrpyleakage_blocking` for invalid or nonfinite inputs/results,
-including overflow from finite reaction-shift inputs. These failures occur
-before public output writeback. The status therefore covers both population
-reconstruction and shifted charged-current moments, separately from EOS
-interpolation or invalid generated Fermi-moment keys.
-
-## Nonfinite-Output Error Behavior
-
-After ordinary writeback, every EOS-dependent routine sanitizes its
-public outputs. Nonfinite opacities become one named cgs inverse-length floor
-converted to the public geometrized unit. Nonfinite luminosities and signed
-sources become neutral zero. If any replacement occurs, the routine returns
-`ghl_error_nrpyleakage_nonfinite_output`; otherwise it returns `ghl_success`.
-Finite sibling outputs remain unchanged, including finite negative values.
-Selected intermediate expressions can be silently replaced by `EnsureFinite`
-without setting this status. Thus `ghl_success` does not certify absence of
-intermediate fallback or physical validity; only a replacement by the final
-sanitizers produces this particular error.
-
-Ports of any opacity, combined source/opacity, or luminosity entry point must
-carry the private blocking and rate-helper headers or provide equivalent
-blocking, rate, and error behavior.
-The motivation and equations are in
-[Physics And EOS Contract](physics-and-eos-contract.md).
-
-## HDF5 And EOS
-
-Neutrinos source routines use tabulated EOS calls directly:
-
-- `NRPyLeakage_compute_neutrino_opacities`
-- `NRPyLeakage_compute_neutrino_luminosities`
-- `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms`
-
-Those routines call
-`ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T` to obtain chemical
-potentials and composition. Under `GHL_DISABLE_HDF5`, each returns
-`ghl_error_used_disabled_hdf5` before table access.
-
-With HDF5 enabled, callers must initialize the chemistry callback and the
-state it requires. The built-in StellarCollapse callback needs a compatible
-loaded table; a caller-owned backend can supply the same six-output contract
-without that table. Callback errors are returned unchanged. HDF5-disabled and EOS-error exits occur before output writeback, so
-caller-provided output objects retain their prior contents. Later blocking and
-Fermi-Dirac errors also propagate before final writeback. These early exits
-preserve caller outputs. In contrast, final-output sanitization returns
-`ghl_error_nrpyleakage_nonfinite_output` with written fallback outputs, and
-the standalone Fermi helper zeroes its output before invalid-key dispatch.
-
-The optical-depth path routine does not call EOS or HDF5. It consumes local and
-neighbor `ghl_neutrino_opacities`/`ghl_neutrino_optical_depths`, metric stencil
-arrays, and grid spacing, then writes one optical-depth struct.
-
-Neutrinos tests use additional EOS setup calls that are test-only dependencies
-for fixture generation or replay:
-
-- [Unit_Tests/nrpyleakage_main.h](../../../Unit_Tests/nrpyleakage_main.h) calls
-  `ghl_initialize_tabulated_eos_functions_and_params` from `GRHayL/include/ghl.h`.
-- [Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c](../../../Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c) calls
-  `ghl_tabulated_compute_eps_from_T` and `ghl_tabulated_compute_T_from_eps`
-  from [GRHayL/include/ghl_eos_functions.h](../../../GRHayL/include/ghl_eos_functions.h).
-
-`configure` adds `GHL_DISABLE_HDF5` and excludes the table-backed fixture
-tests when HDF5 is disabled. The self-contained
-`unit_test_nrpyleakage_physics.c` remains available. [.github/run_tests.sh](../../../.github/run_tests.sh)
-downloads the SLy4 EOS table and Neutrinos fixture pairs before running the
-table-backed NRPyLeakage tests with key `1`, and runs the physics executable
-without table arguments.
-
-No-HDF5 builds still compile the guarded NRPyLeakage implementation files; they
-exclude only the HDF5-dependent unit tests. Current error tests cover
-invalid Fermi keys. The table-free physics test directly checks the EOS-dependent
-leakage routines' disabled-HDF5 return paths.
-
-For extraction, see [Implementation Flow](implementation-flow.md) for the
-smallest file set per entry point and [Generator Provenance](generator-provenance.md)
-before treating upstream generated output as a replacement for current GRHayL
-source.
+- Depends on: [EOS Inputs And Chemical Potentials](eos-inputs-and-chemical-potentials.md)
+- Depends on: [Physics Model And Sources](physics-model-and-sources.md)
+- Implements: [Implementation Flow](implementation-flow.md)
+- Validated by: [Neutrinos Tests And Reference Data](tests-and-reference-data.md)
+- See also: [CompOSE EOS Leakage Callback](compose-eos-leakage-callback.md)

@@ -1,158 +1,53 @@
-# Flux Source HLLE Flux Variant Matrix
+# HLLE Flux Variant Matrix
 
-## Routing Purpose
+> Direct directional HLLE flux variants (`hybrid`, `hybrid_entropy`, `tabulated`, `tabulated_entropy`), wave-speed guards, EOS callback rules, and no-HDF5 behavior. · Status: confirmed
+> Up: [Flux_Source](index.md)
 
-Use this page when choosing or auditing Flux_Source HLLE flux variants. It maps
-the public direct functions, variant directories, build lists, and EOS pointer
-surface without copying generated formulas.
+## Summary
 
-## Public Matrix
+GRHayL exposes directional HLLE flux families (`hybrid`, `hybrid_entropy`, `tabulated`, `tabulated_entropy`) in `GRHayL/include/ghl_flux_source.h`, each with legacy `void` (abort-on-error) and `_checked` (`ghl_error_codes_t`) entry points across `dirn0`, `dirn1`, and `dirn2`. Deprecated unsuffixed `ghl_calculate_HLLE_fluxes_dirn0/1/2` function pointers in `ghl_eos_functions.h` are never assigned by GRHayL and have incompatible `const` signatures; new callers must call the direct suffixed functions.
 
-All direct public functions are declared in
-[GRHayL/include/ghl_flux_source.h](../../../GRHayL/include/ghl_flux_source.h).
-Each takes reconstructed right/left face primitives, EOS parameters, a face
-metric, direction-specific `cmin`/`cmax`, and a conservative flux output.
+## Detail
 
-| Variant | Direct functions, `dirn0/1/2` | Fields written | Build modes | Direct replay |
-| --- | --- | --- | --- | --- |
-| hybrid | `ghl_calculate_HLLE_fluxes_dirn0_hybrid`<br>`ghl_calculate_HLLE_fluxes_dirn1_hybrid`<br>`ghl_calculate_HLLE_fluxes_dirn2_hybrid` | `rho`, `tau`, `SD[0..2]` | default and no-HDF5 | all three in `unit_test_hybrid_flux`; all three in ET Legacy |
-| hybrid entropy | `ghl_calculate_HLLE_fluxes_dirn0_hybrid_entropy`<br>`ghl_calculate_HLLE_fluxes_dirn1_hybrid_entropy`<br>`ghl_calculate_HLLE_fluxes_dirn2_hybrid_entropy` | hybrid fields plus `entropy` | default and no-HDF5 | all three in `unit_test_hybrid_flux` |
-| tabulated | `ghl_calculate_HLLE_fluxes_dirn0_tabulated`<br>`ghl_calculate_HLLE_fluxes_dirn1_tabulated`<br>`ghl_calculate_HLLE_fluxes_dirn2_tabulated` | hybrid fields plus `Y_e` | default and no-HDF5 | all three in `unit_test_tabulated_flux` |
-| tabulated entropy | `ghl_calculate_HLLE_fluxes_dirn0_tabulated_entropy`<br>`ghl_calculate_HLLE_fluxes_dirn1_tabulated_entropy`<br>`ghl_calculate_HLLE_fluxes_dirn2_tabulated_entropy` | hybrid fields plus `Y_e` and `entropy` | default and no-HDF5 | all three in `unit_test_tabulated_flux` |
+### Direct Variant Matrix And Output Fields
 
-Every direct symbol has a public declaration, a checked-in definition, and a
-variant-manifest entry. [configure](../../../configure) retains the real
-tabulated flux definitions under `--disable-hdf5`, and the Ubuntu-Clang
-`c2p-failure` no-HDF5 variant uses `nm -D --defined-only` to check legacy
-tabulated export names. It does not link a consumer or explicitly inspect the
-matching `_checked` names. The tabulated
-flux test and data generator still require HDF5/table support and are excluded
-in that mode.
+| Variant | Functions (`dirn0`, `dirn1`, `dirn2`; legacy & `_checked`) | Written `cons` fields | Manifest & replay test |
+| --- | --- | --- | --- |
+| `hybrid` | `ghl_calculate_HLLE_fluxes_dirn{0,1,2}_hybrid[_checked]` | `rho`, `tau`, `SD[0..2]` | `Flux_Source/hybrid/make.code.defn`; `unit_test_hybrid_flux.c`, `unit_test_ET_Legacy_flux_source.c` (Ev: `GRHayL/Flux_Source/hybrid/make.code.defn`) |
+| `hybrid_entropy` | `ghl_calculate_HLLE_fluxes_dirn{0,1,2}_hybrid_entropy[_checked]` | `rho`, `tau`, `SD[0..2]`, `entropy` | `Flux_Source/hybrid_entropy/make.code.defn`; `unit_test_hybrid_flux.c` (Ev: `GRHayL/Flux_Source/hybrid_entropy/make.code.defn`) |
+| `tabulated` | `ghl_calculate_HLLE_fluxes_dirn{0,1,2}_tabulated[_checked]` | `rho`, `tau`, `SD[0..2]`, `Y_e` | `Flux_Source/tabulated/make.code.defn`; `unit_test_tabulated_flux.c` (Ev: `GRHayL/Flux_Source/tabulated/make.code.defn`) |
+| `tabulated_entropy` | `ghl_calculate_HLLE_fluxes_dirn{0,1,2}_tabulated_entropy[_checked]` | `rho`, `tau`, `SD[0..2]`, `Y_e`, `entropy` | `Flux_Source/tabulated_entropy/make.code.defn`; `unit_test_tabulated_flux.c` (Ev: `GRHayL/Flux_Source/tabulated_entropy/make.code.defn`) |
 
-Variant build lists:
+Only the listed fields of `cons` are written; unwritten fields retain prior values. Entropy variants read `prims_r->entropy` and `prims_l->entropy` directly.
 
-- [GRHayL/Flux_Source/hybrid/make.code.defn](../../../GRHayL/Flux_Source/hybrid/make.code.defn)
-- [GRHayL/Flux_Source/hybrid_entropy/make.code.defn](../../../GRHayL/Flux_Source/hybrid_entropy/make.code.defn)
-- [GRHayL/Flux_Source/tabulated/make.code.defn](../../../GRHayL/Flux_Source/tabulated/make.code.defn)
-- [GRHayL/Flux_Source/tabulated_entropy/make.code.defn](../../../GRHayL/Flux_Source/tabulated_entropy/make.code.defn)
+### Wave-Speed Validation, EOS Callback, And `--disable-hdf5`
 
-## Direct Functions
+- **Wave-speed guards:** Negative `cmin`/`cmax` residues within `DBL_EPSILON * max(1, |cmin|, |cmax|)` are floored to `0`; larger negative values are rejected. Floored speeds must satisfy `cmin + cmax >= 1 / DBL_MAX` (finite) and non-overflowing product (within one rounding). Violations return `ghl_error_invalid_hlle_wavespeeds` from `_checked` before any EOS call or `cons` write (legacy wrappers abort). `_checked` does not validate geometry, `u0`, or output finiteness.
+- **EOS callback & primitive mutation:** After wave-speed checks, kernels invoke global `ghl_compute_h_and_cs2` for `prims_r`, then `prims_l` (`cs2` is requested for single-callback compatibility with custom EOS integrations and unused here), returning the first callback error before writing `cons`. Production tabulated dispatch may clamp and mutate `prims_r`/`prims_l` in place without rollback on a second-call error; pass copies to preserve face states.
+- **`--disable-hdf5` retention:** `configure --disable-hdf5` still compiles the real tabulated HLLE C kernels (excluding only tabulated flux tests/generators; Ubuntu-Clang's no-HDF5 `c2p-failure` job checks legacy tabulated symbol exports with `nm -D --defined-only` without linking a caller or inspecting `_checked` names). `README.md` states that these symbols are retained for link compatibility only, not for supported no-HDF5 execution: in that mode `ghl_initialize_eos_functions` cannot install table-backed `ghl_compute_h_and_cs2`, and the kernels call whatever the global pointer holds (null before EOS initialization, the hybrid routine after simple or hybrid initialization) without checking `eos->eos_type`.
+- **Coverage limits:** Focused asymmetric analytic HLLE tests use zero magnetic field; no committed test verifies production tabulated callback mutation inside an HLLE call; deprecated generic HLLE pointers have no tests.
 
-Each direct variant has a legacy `void` entry point and a matching `_checked`
-entry point that returns `ghl_error_codes_t`. The legacy wrapper aborts on a
-checked error. Tests may select checked variants through test-local function
-pointers by EOS family, entropy mode, and direction. The unsuffixed generic
-globals `ghl_calculate_HLLE_fluxes_dirn0/1/2` remain as deprecated
-compatibility storage. GRHayL never initializes them, and their `const`
-primitive signatures are incompatible with the direct routines, which may
-update primitives. New code must select a direct variant; existing manual
-assignments require an exact-signature callback.
+Evidence (descriptive behavior): `ghl_flux_source.h::ghl_calculate_HLLE_fluxes_dirn0_tabulated_checked`; corroboration: `generate_flux_source.py::generate_fluxes`.
 
-For direction `d`, simple/hybrid callers choose
-`ghl_calculate_HLLE_fluxes_dirn<d>_hybrid` or its `_entropy` form; tabulated
-callers choose the corresponding `_tabulated` or `_tabulated_entropy` form.
-Primitive inputs remain mutable because tabulated thermodynamic callbacks can
-limit them to configured EOS bounds. Supply copies when original face states must be
-preserved, and initialize the EOS global callbacks before a direct kernel call.
+Evidence (normative rule): `README.md::link compatibility`; corroboration: `initialize_eos.c::ghl_initialize_eos_functions`.
 
-## Caller Contract
+## Sources
 
-HLLE flux callers must supply:
+- [GRHayL/include/ghl_flux_source.h](../../../GRHayL/include/ghl_flux_source.h) - direct HLLE legacy and `_checked` declarations
+- [GRHayL/include/ghl_eos_functions.h](../../../GRHayL/include/ghl_eos_functions.h) - deprecated unassigned generic HLLE pointers
+- [GRHayL/Flux_Source/hybrid/make.code.defn](../../../GRHayL/Flux_Source/hybrid/make.code.defn) - hybrid manifest
+- [GRHayL/Flux_Source/hybrid_entropy/make.code.defn](../../../GRHayL/Flux_Source/hybrid_entropy/make.code.defn) - hybrid-entropy manifest
+- [GRHayL/Flux_Source/tabulated/make.code.defn](../../../GRHayL/Flux_Source/tabulated/make.code.defn) - tabulated manifest
+- [GRHayL/Flux_Source/tabulated_entropy/make.code.defn](../../../GRHayL/Flux_Source/tabulated_entropy/make.code.defn) - tabulated-entropy manifest
+- [GRHayL/Flux_Source/generate_flux_source.py](../../../GRHayL/Flux_Source/generate_flux_source.py) - `generate_fluxes()`
+- [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c) - no-HDF5 `ghl_compute_h_and_cs2` installation
+- [README.md](../../../README.md) - tabulated HLLE link-compatibility rule for no-HDF5 builds
+- [Unit_Tests/unit_test_hybrid_flux.c](../../../Unit_Tests/unit_test_hybrid_flux.c) - hybrid HLLE and wave-bound/error checks
+- [Unit_Tests/unit_test_tabulated_flux.c](../../../Unit_Tests/unit_test_tabulated_flux.c) - tabulated HLLE checks
 
-- `prims_r` and `prims_l`: reconstructed face primitive states with `u0`,
-  velocity, magnetic field, density, pressure, and EOS-specific fields already
-  valid.
-- `eos`: parameters compatible with the active `ghl_compute_h_and_cs2`
-  function pointer.
-- `metric_face`: face-centered ADM metric.
-- `cmin_dirn*` and `cmax_dirn*`: characteristic speeds computed for the same
-  direction and face. Negative algebraic residue within `DBL_EPSILON` times
-  the larger of one and both magnitudes is floored at zero. Larger negative
-  values are rejected. The floored values must have a finite sum of at least
-  `1/DBL_MAX` and a product that does not overflow; the overflow test is exact
-  only to within one rounding. Invalid bounds return
-  `ghl_error_invalid_hlle_wavespeeds` from checked entry points before EOS
-  calls or output writes; legacy wrappers abort on that error.
-- `cons`: caller-owned conservative output receiving flux components.
+## See Also
 
-`_checked` adds wave-bound validation and EOS error propagation, not general
-physical or finite-output validation. Supply finite valid geometry with
-positive lapse, finite physical primitives, a consistent initialized `u0`,
-usable EOS enthalpy, and representable intermediate arithmetic. The kernels
-do not normalize velocity or recompute `u0`.
-
-Entropy variants read `prims_r->entropy` and `prims_l->entropy` and write
-`cons->entropy`. Calling an entropy variant with unset or stale primitive
-entropy gives the conservative entropy flux a bad input even when density,
-momentum, and energy fields look valid.
-
-Only fields listed in the matrix are written. Other members of `cons` retain
-their prior value; these routines do not initialize the whole struct.
-
-After wave-bound validation, each checked routine calls `ghl_compute_h_and_cs2`
-for the right state, then the left state; it stops at the first callback error
-and returns that exact error before writing output. Primitive arguments are mutable: production
-tabulated dispatch limits `rho`, `Y_e`, and `temperature` to configured EOS bounds, then overwrites
-`press` and `eps`. If the second callback fails, mutation performed by the
-successful first callback is retained; the failing callback can also have
-mutated its input. The [EOS contract](../eos/tabulated-interpolation-and-bounds.md)
-owns those configured bounds and error semantics. Callers needing immutable reconstructed
-states must pass copies.
-
-Characteristic-speed and source-term routines use the same combined callback,
-so a custom EOS dispatch needs install only `ghl_compute_h_and_cs2`.
-HLLE and source-term kernels request `cs2` but do not use it. No enthalpy-only
-callback is offered, because existing custom EOS integrations assign only
-`ghl_compute_h_and_cs2` and would otherwise mix EOS models or call a null pointer.
-
-## Tabulated And HDF5 Boundary
-
-Tabulated variants remain built in no-HDF5 targets; only their table-dependent
-tests and generators are filtered. Tabulated EOS initialization is separately
-guarded by `GHL_DISABLE_HDF5` in
-[GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c).
-Link visibility is not runtime support: these real kernels call the global
-`ghl_compute_h_and_cs2` dispatch. A no-HDF5 build
-cannot install GRHayL's built-in table-backed EOS dispatch. A compatible
-custom callback is a separate caller-owned path; retained kernels do not check
-EOS type or provide runtime validation of that integration. An incompatible or
-unset global dispatch can produce the wrong EOS calculation or a null call.
-
-## Generated-Source Boundary
-
-[GRHayL/Flux_Source/generate_flux_source.py](../../../GRHayL/Flux_Source/generate_flux_source.py)
-contains the NRPy 2 generator path for every
-`ghl_calculate_HLLE_fluxes_dirn*_<variant>.c` file. Review generated C and the
-Python source together when formulas, variables, or output fields change.
-
-## Evidence Links
-
-- [GRHayL/include/ghl_flux_source.h](../../../GRHayL/include/ghl_flux_source.h)
-- [GRHayL/include/ghl_eos_functions.h](../../../GRHayL/include/ghl_eos_functions.h)
-- [GRHayL/include/ghl_eos_functions_declaration.h](../../../GRHayL/include/ghl_eos_functions_declaration.h)
-- [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c)
-- [GRHayL/Flux_Source/generate_flux_source.py](../../../GRHayL/Flux_Source/generate_flux_source.py)
-- [Unit_Tests/unit_test_hybrid_flux.c](../../../Unit_Tests/unit_test_hybrid_flux.c)
-- [Unit_Tests/unit_test_tabulated_flux.c](../../../Unit_Tests/unit_test_tabulated_flux.c)
-- [Unit_Tests/unit_test_ET_Legacy_flux_source.c](../../../Unit_Tests/unit_test_ET_Legacy_flux_source.c)
-- [docs/raw/Flux_Source.dox](../../../docs/raw/Flux_Source.dox)
-
-## Evidence Status
-
-- **Build-configured:** every listed direct symbol is in default and no-HDF5
-  builds. The Ubuntu-Clang `c2p-failure` no-HDF5 variant inspects legacy tabulated export symbols
-  with `nm`, without a consumer link or explicit `_checked` name checks.
-- **Direct replay:** every direction in each row is called by the named test;
-  runner and compiler workflows configure those executions.
-- **Fixture-generation:** matching data generators call every row/direction,
-  but generated outputs use the same implementation and are not an independent
-  oracle.
-- **Focused contracts:** the hybrid and tabulated replay tests check invalid
-  and one-sided wave bounds, callback errors, unchanged outputs on failure, and
-  independent asymmetric fixed-bound HLLE algebra in every variant and
-  direction.
-- **Coverage gaps:** focused analytic HLLE checks use zero magnetic field, and
-  no committed production-tabulated HLLE check verifies callback mutation. The
-  legacy generic compatibility pointer globals have no focused repository test,
-  and Core never assigns them.
-- **No-HDF5:** the matrix variant inspects retained legacy tabulated export symbols.
+- Depends on: [Characteristic Speeds](characteristic-speeds.md)
+- Depends on: [Build And Configure](../../architecture/build-and-configure.md)
+- Implements: [Generated NRPy Boundary](generated-nrpy-boundary.md)
+- Validated by: [Flux_Source Tests And Reference Data](tests-and-reference-data.md)
