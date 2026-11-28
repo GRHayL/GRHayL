@@ -5,7 +5,7 @@
 
 ## Summary
 
-EOS-dependent NRPyLeakage routines obtain thermodynamic chemistry through `ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T`, receiving `(muhat, mu_e, mu_p, mu_n, X_n, X_p)` in that exact output-pointer order. Leakage uses `mu_e` (including electron rest mass) and `muhat` (`mu_n - mu_p`) in MeV to form equilibrium degeneracies and the paired reaction shift, while reconstructing nucleon blocking exclusively from free-nucleon fractions `X_n` and `X_p` rather than raw `mu_n` or `mu_p`.
+EOS-dependent NRPyLeakage routines obtain thermodynamic chemistry through `ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T`, receiving `(muhat, mu_e, mu_p, mu_n, X_n, X_p)` in that exact output-pointer order. Leakage forms the equilibrium neutrino degeneracies from `(mu_e - muhat) / T`, with `mu_e` including electron rest mass and `muhat = mu_n - mu_p`, both in MeV. It forms the paired beta-reaction shift `q = muhat - T(eta_n - eta_p)` from `muhat` and kinetic nucleon degeneracies reconstructed from `rho`, `T`, and the free-nucleon fractions `X_n` and `X_p`, never from raw `mu_n` or `mu_p`; `q` does not depend on `mu_e`.
 
 ## Detail
 
@@ -15,7 +15,7 @@ After `(eos, rho, Y_e, T)`, `ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_
 
 | Output | Physical meaning | Direct consumption in current leakage source |
 | --- | --- | --- |
-| `muhat` | Neutron-proton chemical-potential difference (`mu_n - mu_p` in GRHayL's StellarCollapse adapter) | `(mu_e - muhat) / T` in grey equilibrium neutrino degeneracies and reaction shift `q` |
+| `muhat` | Neutron-proton chemical-potential difference (`mu_n - mu_p` in GRHayL's StellarCollapse adapter) | `(mu_e - muhat) / T` in grey equilibrium neutrino degeneracies; separately, the MeV beta-reaction shift `q = muhat - T(eta_n - eta_p)` when `X_n > 0` and `X_p > 0` ([derivation](nucleon-blocking-and-eos-conventions.md#equilibrium-pairing-and-why-raw-eos-mu_nmu_p-fail)) |
 | `mu_e` | Electron chemical potential including electron rest-mass energy (O'Connor-Ott/StellarCollapse convention) | Electron degeneracy `mu_e / T`, equilibrium neutrino degeneracy, beta/pair/plasmon rates |
 | `mu_p` | Proton chemical potential | Returned for six-output ABI compatibility; not consumed directly by leakage rates |
 | `mu_n` | Neutron chemical potential | Returned for six-output ABI compatibility; not consumed directly by leakage rates |

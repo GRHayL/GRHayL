@@ -11,7 +11,7 @@
 
 ### Piecewise-Polytrope Setup And Helper Map
 
-Simple EOS (`ghl_eos_simple`) sets `neos = 1`, `Gamma_th = Gamma_ppoly[0] = Gamma`, `K_ppoly[0] = 1`, and `rho_ppoly[0] = p_ppoly[0] = eps_integ_const[0] = 0.0`. Hybrid EOS (`ghl_eos_hybrid`) copies `neos` gammas and `neos - 1` density breakpoints (`rho_ppoly[0..neos - 2]`, never reading a one-piece or terminal breakpoint), computes continuous `K_ppoly` and `eps_integ_const` (`eps_integ_const[0] = 0.0`), and computes `neos - 1` pressure transitions in `p_ppoly` (leaving `p_ppoly[neos - 1] = 0.0`). All values stay in caller-supplied GRHayL code units.
+Simple EOS (`ghl_eos_simple`) sets `neos = 1`, `Gamma_th = Gamma_ppoly[0] = Gamma`, `K_ppoly[0] = 1`, and `rho_ppoly[0] = p_ppoly[0] = eps_integ_const[0] = 0.0`. Hybrid EOS (`ghl_eos_hybrid`) copies `neos` gammas and `neos - 1` density breakpoints (`rho_ppoly[0..neos - 2]`, never reading a one-piece or terminal breakpoint), keeps the caller-supplied `K_ppoly[0]`, sets `eps_integ_const[0] = 0.0`, and computes the remaining per-piece `K_ppoly` and `eps_integ_const` so that cold pressure `P_cold` and cold specific internal energy `eps_cold` are continuous across each density breakpoint; it then computes `neos - 1` pressure transitions in `p_ppoly` (leaving `p_ppoly[neos - 1] = 0.0`). All values stay in caller-supplied GRHayL code units.
 
 | Helper | File | Behavior & preconditions |
 | --- | --- | --- |

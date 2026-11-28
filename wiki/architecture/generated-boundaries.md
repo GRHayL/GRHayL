@@ -19,6 +19,9 @@ Because `OUTPUT_DIRECTORY = docs` encloses the tracked source subtree `docs/raw/
 (
   audit_tmp=$(mktemp -d "${TMPDIR:-/tmp}/grhayl-doxygen.XXXXXX") || exit 1
   trap 'rm -rf -- "$audit_tmp"' EXIT
+  trap 'exit 129' HUP
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
   { cat Doxyfile; printf '\nOUTPUT_DIRECTORY = "%s/output"\n' "$audit_tmp"; } | doxygen -
 )
 ```

@@ -51,7 +51,7 @@ INLINE_CODE_RE = re.compile(
 FENCE_OR_COMMENT_RE = re.compile(
     r"^[ ]{0,3}(`{3,})[^`\n]*\n.*?^[ ]{0,3}\1`*[ \t]*$"
     r"|^[ ]{0,3}(~{3,})(?!~)[^\n]*\n.*?^[ ]{0,3}\2~*[ \t]*$"
-    r"|<!--.*?-->",
+    r"|<!--.*?-->|" + INLINE_CODE_RE.pattern,
     re.DOTALL | re.MULTILINE,
 )
 CODE_SUFFIXES = (".c", ".h", ".cc", ".cpp", ".hpp", ".py")
@@ -67,7 +67,9 @@ def _blank(match):
 
 
 def _prose(path):
-    return FENCE_OR_COMMENT_RE.sub(_blank, path.read_text(encoding="utf-8"))
+    text = path.read_text(encoding="utf-8")
+    # Inline code spans match here so a backticked `<!--` cannot open a comment.
+    return FENCE_OR_COMMENT_RE.sub(lambda m: m[0] if m["ticks"] else _blank(m), text)
 
 
 def _heading_anchors(path):

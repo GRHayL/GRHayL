@@ -11,7 +11,7 @@
 
 ### Build Targets, Output Classes, And Execution Stages
 
-`make tests` and `make datagen` compile and link binaries against `<builddir>/lib/libghl*` (`<builddir>` defaults to `build`; see [Build And Configure](../architecture/build-and-configure.md#configure-options-and-floating-point-guards)); neither executes tests or generates reference data. To run them locally on Linux, prepend the absolute path of `<builddir>/lib` to `LD_LIBRARY_PATH` (for example `LD_LIBRARY_PATH="$(pwd)/build/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"` after `./configure -r`). Distinguish `targeted` (in generated `Makefile`), `compiled`, `compiled-unrun`, `executed`, and `workflow-only` evidence.
+`make tests` and `make datagen` compile and link binaries against `<builddir>/lib/libghl*` (`<builddir>` defaults to `build`; see [Build And Configure](../architecture/build-and-configure.md#configure-options-and-floating-point-guards)); neither executes tests or generates reference data. Test binaries link `libghl` without `RPATH` or `RUNPATH`, so to run them locally on Linux, prepend the absolute path of `<builddir>/lib` to an exported `LD_LIBRARY_PATH` (for example `export LD_LIBRARY_PATH="$(pwd)/build/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"` after `./configure -r`). Distinguish `targeted` (in generated `Makefile`), `compiled`, `compiled-unrun`, `executed`, and `workflow-only` evidence.
 
 | Output class | Location | Cleanup & provenance boundary |
 | --- | --- | --- |
