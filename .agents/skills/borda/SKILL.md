@@ -274,7 +274,7 @@ resolved for this exact destination:
 Verify either successful operation with `cmp "$RUN/draft.md" "./OUTPUT"`. On a failed
 write or comparison, retain the draft and report the destination's actual state;
 do not claim delivery. Run required repository checks for the output path (for example
-`git diff --check`, and `PYTHONDONTWRITEBYTECODE=1 python3 -B docs/kb_lint.py` plus the
+`git diff --check`, and `PYTHONDONTWRITEBYTECODE=1 python3 -B tools/kb_lint.py` plus the
 relevant [KB Rules](../../../wiki/SCHEMA.md) checks if OUTPUT is `AGENTS.md` or under `wiki/`). If a check rejects the
 output path, remove the rejected copy only if you created it and it remains unchanged;
 if it replaced an existing file, restore the saved original instead. Preserve any

@@ -37,7 +37,7 @@ Add an exact local path here only when no Source Map `Glob pattern` covers it.
 | `.editorconfig` | living |
 | `.gitattributes` | living |
 | `.gitignore` | living |
-| `docs/kb_lint.py` | living |
+| `tools/kb_lint.py` | living |
 
 ## External Sources
 

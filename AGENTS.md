@@ -14,7 +14,7 @@ Map outputs early and verify `/work/` paths (operational `/work/` delivery paths
 
 Load needed skills only (requested or policy-required): paired ("use di") -> `.agents/skills/dialectic/SKILL.md`, three-seat ("use tri") -> `.agents/skills/trialectic/SKILL.md`, Borda ("use borda") -> `.agents/skills/borda/SKILL.md` (ask missing task/`N`; infer filename). Mentioning, auditing, or editing a skill never activates it; never simulate agents.
 
-Review deltas, open findings, and dependencies ([Change Impact](wiki/architecture/change-impact.md), [Workflows](wiki/workflows.md)), reusing passes while inputs hold. Run `PYTHONDONTWRITEBYTECODE=1 python3 -B docs/kb_lint.py` and `git diff HEAD --check` for KB edits. On runtime failures, reproduce—or state why not—and inspect runtime values before patching. Cite exact rule and clause when blocked.
+Review deltas, open findings, and dependencies ([Change Impact](wiki/architecture/change-impact.md), [Workflows](wiki/workflows.md)), reusing passes while inputs hold. Run `PYTHONDONTWRITEBYTECODE=1 python3 -B tools/kb_lint.py` and `git diff HEAD --check` for KB edits. On runtime failures, reproduce—or state why not—and inspect runtime values before patching. Cite exact rule and clause when blocked.
 
 ## Router
 

@@ -56,7 +56,7 @@ editing `implementations/GRHayLib/`; report unavailable environments using
 ## KB And Agent Instructions
 
 Prepare one candidate, not competing KBs. Follow [KB Rules](../wiki/SCHEMA.md#page-layout)
-and run [docs/kb_lint.py](../docs/kb_lint.py) (`PYTHONDONTWRITEBYTECODE=1 python3 -B docs/kb_lint.py`)
+and run [tools/kb_lint.py](../tools/kb_lint.py) (`PYTHONDONTWRITEBYTECODE=1 python3 -B tools/kb_lint.py`)
 alongside [Workflows](../wiki/workflows.md#deterministic-and-review-checks). Reopen exact ground truth for changed claims; update affected routes, links,
 defining pages, catalog/source/test/API maps, and contradictions only as needed.
 KB-only scope does not authorize source, Doxygen, workflow, or downstream repairs;
@@ -73,4 +73,4 @@ run or review results, and no separate KB logs. Technical hash facts may be
 documented only as reviewed domain facts, never stored digest values. Operational checkpoints
 are task state, not permanent KB logs. Do not import NRPy-specific Python/SymPy codegen rules,
 Python static-analysis tools, or NRPy `main.yml` file protections outside GRHayL's adapted
-[KB Rules](../wiki/SCHEMA.md) and [docs/kb_lint.py](../docs/kb_lint.py).
+[KB Rules](../wiki/SCHEMA.md) and [tools/kb_lint.py](../tools/kb_lint.py).

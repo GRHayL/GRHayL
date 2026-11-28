@@ -4,7 +4,7 @@
 
 ## Summary
 
-Start at [AGENTS.md](../AGENTS.md), follow branch and sub-branch `index.md` routers directly, and read only the needed leaf or `###` subsection. Record each durable fact once in its defining leaf, compute reverse file dependencies dynamically with `rg -l -F`, keep builds and mutating scripts inside disposable trees, and verify edits with `docs/kb_lint.py` and [Language For Computational Physicists](computational-physics-language.md).
+Start at [AGENTS.md](../AGENTS.md), follow branch and sub-branch `index.md` routers directly, and read only the needed leaf or `###` subsection. Record each durable fact once in its defining leaf, compute reverse file dependencies dynamically with `rg -l -F`, keep builds and mutating scripts inside disposable trees, and verify edits with `tools/kb_lint.py` and [Language For Computational Physicists](computational-physics-language.md).
 
 ## Search Order
 
@@ -50,7 +50,7 @@ When sources conflict or living-source drift cannot be reconciled in the same ch
 
 ## Safe Reproduction
 
-In the shared repository checkout, run only side-effect-free scoped checks (`PYTHONDONTWRITEBYTECODE=1 python3 -B docs/kb_lint.py`, `git diff HEAD --check`, `./configure --help`, `./scripts/parser`, `sh -n`/`bash -n`, read-only YAML parsing). Run `./configure`, `make`, `make tests`, `make datagen`, `.github/run_tests.sh`, `generate_makefile.sh`, CompOSE converters, and Doxygen builds inside a unique disposable copy with redirected output paths (`OUTPUT_DIRECTORY` for Doxygen, never beside `docs/raw/`). Inspect scripts for downloads, cleanup globs, and failure leftovers before execution; never run `make` on broken `generate_makefile.sh` output, never edit `docs/raw/Reconstruction.dox` during KB work, and never add or enable tests or CI test executions without explicit user permission.
+In the shared repository checkout, run only side-effect-free scoped checks (`PYTHONDONTWRITEBYTECODE=1 python3 -B tools/kb_lint.py`, `git diff HEAD --check`, `./configure --help`, `./scripts/parser`, `sh -n`/`bash -n`, read-only YAML parsing). Run `./configure`, `make`, `make tests`, `make datagen`, `.github/run_tests.sh`, `generate_makefile.sh`, CompOSE converters, and Doxygen builds inside a unique disposable copy with redirected output paths (`OUTPUT_DIRECTORY` for Doxygen, never beside `docs/raw/`). Inspect scripts for downloads, cleanup globs, and failure leftovers before execution; never run `make` on broken `generate_makefile.sh` output, never edit `docs/raw/Reconstruction.dox` during KB work, and never add or enable tests or CI test executions without explicit user permission.
 
 ## Evidence-First Debugging
 
@@ -61,16 +61,16 @@ Follow the runtime failure inspection rule in [AGENTS.md](../AGENTS.md#agent-wor
 Run before completing KB edits:
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 python3 -B docs/kb_lint.py
+PYTHONDONTWRITEBYTECODE=1 python3 -B tools/kb_lint.py
 git diff HEAD --check
 git diff --cached --check
 ```
 
 `git diff HEAD --check` checks the working tree against `HEAD` and `git diff --cached --check` checks the staged copy; run `git add -N` on new pages first so the working-tree check sees them.
 
-`docs/kb_lint.py` must exit `0` and print `KB lint passed.` In a shared checkout, if the failures come only from another author's uncommitted changes, run the check in a disposable clone that carries only your changes, which must pass, and report those failures without editing that author's files.
+`tools/kb_lint.py` must exit `0` and print `KB lint passed.` In a shared checkout, if the failures come only from another author's uncommitted changes, run the check in a disposable clone that carries only your changes, which must pass, and report those failures without editing that author's files.
 
-Optional review-time read-only scans (not part of `docs/kb_lint.py`):
+Optional review-time read-only scans (not part of `tools/kb_lint.py`):
 
 ```bash
 # Forbidden volatile metadata, hashes, line citations, dates, and run results:
@@ -89,7 +89,7 @@ Semantic review checklist:
 ## Sources
 
 - [AGENTS.md](../AGENTS.md) - root router, working rules, computational-physics prose mandate, and test/CI restriction
-- [docs/kb_lint.py](../docs/kb_lint.py) - link, reachability, and Evidence-citation checks
+- [tools/kb_lint.py](../tools/kb_lint.py) - link, reachability, and Evidence-citation checks
 - [README.md](../README.md) - build, install, and test workflow overview
 - [configure](../configure) - build configuration options and HDF5 flags
 

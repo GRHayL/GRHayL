@@ -64,9 +64,9 @@ Rows stay `<= 220` B with `ID` in `CONTR-0001` form and `Claim status` in `{"con
 
 ## Checker And Frozen Scope
 
-`PYTHONDONTWRITEBYTECODE=1 python3 -B docs/kb_lint.py` checks only that local links and heading anchors resolve in `AGENTS.md`, `wiki/**/*.md`, and `raw/SOURCES.md` (no wikilinks), that every wiki page is reachable from `AGENTS.md`, and that every backticked token in an `Evidence (...)` line or `(Ev: ...)` span names exactly one git-tracked source file present on disk outside `wiki/` and `raw/SOURCES.md` (`## Sources` links break ties first, then exact repository path) whose cited `::` symbols appear in that text file (as whole identifiers in code files); stage new source files with `git add` before citing them.
+`PYTHONDONTWRITEBYTECODE=1 python3 -B tools/kb_lint.py` checks only that local links and heading anchors resolve in `AGENTS.md`, `wiki/**/*.md`, and `raw/SOURCES.md` (no wikilinks), that every wiki page is reachable from `AGENTS.md`, and that every backticked token in an `Evidence (...)` line or `(Ev: ...)` span names exactly one git-tracked source file present on disk outside `wiki/` and `raw/SOURCES.md` (`## Sources` links break ties first, then exact repository path) whose cited `::` symbols appear in that text file (as whole identifiers in code files); stage new source files with `git add` before citing them.
 
-Keep KB Markdown within the plain subset parsed by `docs/kb_lint.py`: use top-level fenced code blocks (not fences inside block quotes or list items), inline `[text](path#anchor)` links without link titles, and headings in plain words and inline code without emphasis or links. `docs/kb_lint.py` follows its top-of-file frozen design rules (three regex checks only, no doctests or self-tests); every other rule on this page and in [Language For Computational Physicists](computational-physics-language.md) is checked in review.
+Keep KB Markdown within the plain subset parsed by `tools/kb_lint.py`: use top-level fenced code blocks (not fences inside block quotes or list items), inline `[text](path#anchor)` links without link titles, and headings in plain words and inline code without emphasis or links. `tools/kb_lint.py` follows its top-of-file frozen design rules (three regex checks only, no doctests or self-tests); every other rule on this page and in [Language For Computational Physicists](computational-physics-language.md) is checked in review.
 
 ### Root Planning And Task Files
 
@@ -79,7 +79,7 @@ Generated outputs and scratch files (`Makefile`, `build/`, `test/`, `lib/`, `doc
 ## Sources
 
 - [AGENTS.md](../AGENTS.md) - root router, computational-physics prose mandate, and protected scope
-- [docs/kb_lint.py](../docs/kb_lint.py) - link, reachability, and Evidence-citation checks
+- [tools/kb_lint.py](../tools/kb_lint.py) - link, reachability, and Evidence-citation checks
 
 ## See Also
 
