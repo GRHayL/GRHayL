@@ -12,7 +12,7 @@ Do not add, expand, or enable tests, test cases, assertions, fixtures, generator
 
 Map outputs early and verify `/work/` paths (operational `/work/` delivery paths here and in `.agents/` are an exception to the repo-relative KB link rule). Plans request documents, not code; `DRAFT COMPLETE` is not delivery. Keep blocked drafts separate with accurate status; explicit write limits control; report incomplete handoffs honestly.
 
-Load needed skills only (requested or policy-required): paired ("use di") -> `.agents/skills/dialectic/SKILL.md`, three-seat ("use tri") -> `.agents/skills/trialectic/SKILL.md` (with `.agents/review-protocol.md` and applicable `.agents/grhayl-evidence.md` sections; seats get only their roles, assigned protocol, and evidence), Borda ("use borda") -> `.agents/skills/borda/SKILL.md` (ask missing task/`N`; infer filename). Mentioning, auditing, or editing a skill never activates it; never simulate agents.
+Load needed skills only (requested or policy-required): paired ("use di") -> `.agents/skills/dialectic/SKILL.md`, three-seat ("use tri") -> `.agents/skills/trialectic/SKILL.md`, Borda ("use borda") -> `.agents/skills/borda/SKILL.md` (ask missing task/`N`; infer filename). Mentioning, auditing, or editing a skill never activates it; never simulate agents.
 
 Review deltas, open findings, and dependencies ([Change Impact](wiki/architecture/change-impact.md), [Workflows](wiki/workflows.md)), reusing passes while inputs hold. Run `PYTHONDONTWRITEBYTECODE=1 python3 -B docs/kb_lint.py` and `git diff HEAD --check` for KB edits. On runtime failures, reproduce—or state why not—and inspect runtime values before patching. Cite exact rule and clause when blocked.
 
