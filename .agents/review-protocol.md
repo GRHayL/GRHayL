@@ -93,7 +93,7 @@ Supply a compact delta packet: old/new snapshots, exact hunks/sections and opera
 changed evidence, open finding IDs, invalidated criteria/checks, impact boundaries,
 and new/reused results, not prior debate. Use [Change Impact](../wiki/architecture/change-impact.md).
 Trace relevant callers, interfaces/shared state, manifests/configuration, generators/
-products, tests/oracles, docs/links/claims, citing KB leaves (`rg -l -F '<path>' wiki/`),
+products, tests/oracles, docs/links/claims, citing KB leaves (`rg -l -F '<basename>' wiki/`),
 and downstream consumers until unchanged contracts bound effects. Do not inspect every
 category by default.
 

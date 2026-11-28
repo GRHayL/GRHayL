@@ -30,7 +30,7 @@ Review deltas, open findings, and dependencies ([Change Impact](wiki/architectur
 | Terms | [Glossary](wiki/glossary.md) |
 | KB rules, ingest, lint | [KB Rules](wiki/SCHEMA.md), [Workflows](wiki/workflows.md) |
 
-Selective lookups (never read whole tables): `rg -l -F '<path>' wiki/`, ``rg -n -F '| `<key>` |' <file>`` ([Sources](raw/SOURCES.md), [Source Map](wiki/source-map.md)), `rg -n -F '| <ID> |' wiki/contradictions.md` ([Contradictions](wiki/contradictions.md)), `rg -n -i -F '<term>' <file>` ([Catalog](wiki/catalog.md), [Glossary](wiki/glossary.md)).
+Selective lookups (never read whole tables): `rg -l -F '<basename>' wiki/`, ``rg -n -F '| `<key>` |' <file>`` ([Sources](raw/SOURCES.md), [Source Map](wiki/source-map.md)), `rg -n -F '| <ID> |' wiki/contradictions.md` ([Contradictions](wiki/contradictions.md)), `rg -n -i -F '<term>' <file>` ([Catalog](wiki/catalog.md), [Glossary](wiki/glossary.md)).
 
 ## Human-Facing Language
 
