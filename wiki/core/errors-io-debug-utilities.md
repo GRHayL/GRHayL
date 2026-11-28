@@ -5,7 +5,7 @@
 
 ## Summary
 
-Core separates recoverable `ghl_error_codes_t` return values from terminating `ghl_io.h` macros (`ghl_warn`, `ghl_error`, `ghl_abort`, `ghl_Error`), maps error codes to messages in `abort_if_error.c`, supplies stderr debug printers in `ghl_debug.h`, and provides unchecked integer/floating-point clamp helpers in `min_max_clamp.c`.
+Core separates recoverable `ghl_error_codes_t` return values from `ghl_io.h` reporting macros (`ghl_warn` returns; `ghl_error`, `ghl_abort`, and nonzero-code `ghl_Error` terminate), maps error codes to messages in `abort_if_error.c`, supplies stderr debug printers in `ghl_debug.h`, and provides unchecked integer/floating-point clamp helpers in `min_max_clamp.c`.
 
 ## Detail
 
@@ -13,7 +13,7 @@ Core separates recoverable `ghl_error_codes_t` return values from terminating `g
 
 - **`ghl_abort_if_error` (`abort_if_error.c`):** switches over every declared `ghl_error_codes_t` value in `ghl.h`: `ghl_success` returns normally, while known non-success codes call `ghl_Error(error, ...)` which invokes `exit(error)` (not `abort()`) because current enum codes are positive. Because there is no `default` switch arm, an out-of-range cast enum returns silently without terminating.
 - **`ghl_info` and `ghl_Warn_Error` (`info_warn_error.c`, `ghl_io.h`):** `ghl_info` prints a GRHayL-prefixed message to stdout. `ghl_warn`, `ghl_error`, `ghl_abort`, and `ghl_Error` pass `__FILE__`, `__LINE__`, and `__func__` to `ghl_Warn_Error`, which terminates strictly by `exit_code`: `0` returns (`ghl_warn`), `-1` (`ghl_error_abort`) calls `abort()` (`ghl_abort`), and any other nonzero value calls `exit(exit_code)` (`ghl_error` exits `1`; `ghl_Error` uses the caller's code).
-- **Expected-failure testing:** `Unit_Tests/unit_test_code_error.c` exercises keys `0`–`90` (with keys `86`–`88` passing enum values directly) and terminates nonzero via `ghl_abort_if_error`; see [Expected Failure And Error Keys](../tests/expected-failure-and-error-keys.md).
+- **Expected-failure testing:** [Expected Failure And Error Keys](../tests/expected-failure-and-error-keys.md) describes how `unit_test_code_error.c` keys exit: matched error codes through `ghl_abort_if_error`, and other expected outcomes, including no-HDF5 skips, through `pass_test`.
 
 Evidence (descriptive behavior): `abort_if_error.c::ghl_abort_if_error`; corroboration: `info_warn_error.c::ghl_Warn_Error`.
 

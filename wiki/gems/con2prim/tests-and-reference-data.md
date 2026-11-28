@@ -5,7 +5,7 @@
 
 ## Summary
 
-Con2Prim tests span shared-data hybrid/limit/conversion replay (`unit_test_data_con2prim_multi_method_hybrid.c`), hard-coded failure/round-trip checks (`unit_test_hybrid_failure.c`), HDF5-backed tabulated replay (`unit_test_con2prim_tabulated.c` with `SLy4` and `pyghl append`), self-contained NN checks (`unit_test_c2p_nn_guess.c`), ET_Legacy replay, and manual-only `unit_test_con2prim_debug.c`. Newman final-iteration memory safety requires ASan/UBSan.
+Con2Prim tests span shared-data hybrid/limit/conversion replay (`unit_test_con2prim_multi_method_hybrid.c` and the limit/conversion drivers, replaying `unit_test_data_con2prim_multi_method_hybrid.c` output), hard-coded failure/round-trip checks (`unit_test_hybrid_failure.c`), HDF5-backed tabulated replay (`unit_test_con2prim_tabulated.c` with `SLy4` and `pyghl append`), self-contained NN checks (`unit_test_c2p_nn_guess.c`), ET_Legacy replay, and manual-only `unit_test_con2prim_debug.c`. Newman final-iteration memory safety requires ASan/UBSan.
 
 ## Detail
 
@@ -17,7 +17,7 @@ Con2Prim tests span shared-data hybrid/limit/conversion replay (`unit_test_data_
 | `unit_test_hybrid_failure.c` | Hard-coded `Noble2D` max-iter/singular failures, finite-difference Noble derivatives across unequal-Gamma pieces, independent Newton budgets, direct `ghl_brent` checks, Font1D curved/multi-piece/cyclic-EOS round trips, `utilde` monotone rescaling, and `Noble1D_entropy2` round trips and incompatible-EOS rejection. (Ev: `unit_test_hybrid_failure.c`) | Hard-coded (no external data); default runner & `c2p-failure`. |
 | `unit_test_apply_conservative_limits.c` | Poisoned diagnostics init, low-field and high-`psi6` momentum rescaling, and synthetic energies around `tau_atm`. (Ev: `unit_test_apply_conservative_limits.c`) | Shared `metric_Bfield_initial_data.bin` + `apply_conservative_limits_*.bin`; default runner & `c2p-routines`. |
 | `unit_test_enforce_primitive_limits_and_compute_u0.c` | Wrapper floors/ceilings, entropy recompute, and `u0`, plus direct `ghl_limit_v_and_compute_u0` cap/non-limit cases. (Ev: `unit_test_enforce_primitive_limits_and_compute_u0.c`) | Shared `metric_Bfield_initial_data.bin` + `enforce_primitive_limits_and_compute_u0_*.bin`; default runner & `c2p-routines`. |
-| `unit_test_compute_conservs_and_Tmunu.c` & `unit_test_ET_Legacy_{conservs,primitives}.c` | Forward conservative/`T_{\mu\nu}` checks and ET_Legacy compatibility replay. (Ev: `unit_test_ET_Legacy_primitives.c`) | `compute_conservs_and_Tmunu_*.bin` / `ET_Legacy_*.bin`; default runner & `c2p-routines`/`ET-Legacy`. |
+| `unit_test_compute_conservs_and_Tmunu.c` & `unit_test_ET_Legacy_{conservs,primitives}.c` | Forward conservative/`T_{\mu\nu}` checks and ET_Legacy compatibility replay. (Ev: `unit_test_ET_Legacy_primitives.c`) | Shared `metric_Bfield_initial_data.bin` + `compute_conservs_and_Tmunu_*.bin`; `ET_Legacy_*.bin`; default runner & `c2p-routines`/`ET-Legacy`. |
 
 ### Tabulated, NN Guess, Debug, And Sanitizer Requirements
 
@@ -30,7 +30,9 @@ Evidence (descriptive behavior): `unit_test_con2prim_tabulated.c`; corroboration
 
 ### Targeted Reruns And Companion TestData Coordination
 
-After `./configure -r && make tests` and exporting `LD_LIBRARY_PATH="$(pwd)/build/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"`, run only the binaries matching the edit (`unit_test_apply_conservative_limits`, `unit_test_con2prim_multi_method_hybrid`, `unit_test_hybrid_failure`, `unit_test_enforce_primitive_limits_and_compute_u0`, `unit_test_compute_conservs_and_Tmunu`, `unit_test_ET_Legacy_{conservs,primitives}`, `unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1`, `unit_test_c2p_nn_guess`).
+In a disposable checkout, after `./configure -r && make tests` and exporting `LD_LIBRARY_PATH="$(pwd)/build/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"`, run only the binaries matching the edit from the repository root as `./test/<name>`. `unit_test_hybrid_failure` and `unit_test_c2p_nn_guess` need no external data. `unit_test_apply_conservative_limits`, `unit_test_con2prim_multi_method_hybrid`, `unit_test_enforce_primitive_limits_and_compute_u0`, `unit_test_compute_conservs_and_Tmunu`, and `unit_test_ET_Legacy_{conservs,primitives}` read the `.bin` files listed in the `Reference data & runner mode` column from the working directory, so first stage the `GRHayL/TestData` files as [Runner And Build Outputs](../../tests/runner-and-build-outputs.md#githubrun_testssh-reference-selectors-and-matrix-differences) describes.
+
+`./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1` also needs the staged `con2prim_tabulated_*` files and a table prepared with `pyghl append SLy4_3335_rho391_temp163_ye66.h5`, because key `1` loads the `grhayl_nn_c2p` model group from that table.
 
 Generated hybrid data are implementation-derived regression bars (the forward round trips in `unit_test_hybrid_failure.c` supply independent closure checks). Keep producer and reader synchronized for entropy settings and never alter signed perturbations or the field-aligned momentum edge merely to widen tolerances. When updating companion `GRHayL/TestData` files, publish an immutable revision before updating `.github/con2prim-testdata-ref`.
 

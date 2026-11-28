@@ -88,6 +88,12 @@ def _heading_anchors(path):
     return anchors
 
 
+def _local_target(page, link_path):
+    if link_path.startswith("/"):
+        return (ROOT / unquote(link_path).lstrip("/")).resolve()
+    return (page.parent / unquote(link_path)).resolve()
+
+
 def _check_links(files, failures):
     graph = {}
     for path in files:
@@ -102,12 +108,7 @@ def _check_links(files, failures):
             if parsed.scheme in {"http", "https", "mailto", "tel"} or parsed.netloc:
                 continue
             anchor = unquote(parsed.fragment)
-            if not parsed.path:
-                resolved = path
-            elif parsed.path.startswith("/"):
-                resolved = (ROOT / unquote(parsed.path).lstrip("/")).resolve()
-            else:
-                resolved = (path.parent / unquote(parsed.path)).resolve()
+            resolved = _local_target(path, parsed.path) if parsed.path else path
             if ROOT not in resolved.parents and resolved != ROOT:
                 _fail(failures, path, line, f"link target escapes repository: {target}")
             elif not resolved.exists():
@@ -171,7 +172,7 @@ def _check_evidence(pages, failures):
         text = _prose(page)
         src_block = re.search(r"^## Sources\s*$(.*?)(?=^## |\Z)", text, re.M | re.S)
         sources = {
-            (page.parent / unquote(m.group(2).split("#", 1)[0].strip())).resolve()
+            _local_target(page, m.group(2).split("#", 1)[0].strip())
             for m in LINK_RE.finditer(src_block.group(1) if src_block else "")
         }
         for line_no, line in enumerate(text.splitlines(), start=1):

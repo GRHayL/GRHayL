@@ -17,7 +17,7 @@
 
 It leaves `prims->BU[0..2]` and `prims->u0` untouched, returns `void`, and performs no pointer, EOS-family, or finiteness validation. Callers needing a complete primitive state preserve `BU` separately and recompute `u0`.
 
-- **Production caller:** `GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c` invokes `ghl_set_prims_to_constant_atm` on atmosphere fallback, then sets `vU = -betaU` and `u0 = lapseinv` ([Limits And Conversions](con2prim/limits-and-conversions.md), [Neural-Network Primitive Guess](con2prim/neural-network-primitive-guess.md)).
+- **Production caller:** `GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c` invokes `ghl_set_prims_to_constant_atm` on atmosphere fallback, then sets the bounded electron fraction defined in [Limits And Conversions](con2prim/limits-and-conversions.md#pre-recovery-limits-and-ordinary-primitive-guesses), `vU = -betaU`, and `u0 = lapseinv` ([Neural-Network Primitive Guess](con2prim/neural-network-primitive-guess.md)).
 - **EOS initialization coupling:** `GRHayL/GRHayL_Core/initialize_eos.c` populates `rho_atm`, `press_atm`, `eps_atm`, `entropy_atm`, and `tau_atm` for simple/hybrid EOS while storing deterministic zero placeholders in unused `Y_e_atm` and `T_atm` so constant reset always reads defined values; tabulated EOS derives `press_atm`, `eps_atm`, and `entropy_atm` from unclamped in-table `(rho_atm, Y_e_atm, T_atm)` (only min/max bounds are clamped; see [EOS Initialization And Dispatch](eos/initialization-and-dispatch.md)).
 
 Evidence (descriptive behavior): `set_prims_to_constant_atm.c::ghl_set_prims_to_constant_atm`; corroboration: `tabulated_primitive_guess_helpers.c` and `initialize_eos.c`.

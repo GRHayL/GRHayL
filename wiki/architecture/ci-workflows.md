@@ -42,7 +42,7 @@ Evidence (CI behavior): `github-actions-Ubuntu-gcc.yml::paths-ignore`; corrobora
 
 - `.github/actions/OS_setup/action.yml` installs compiler and HDF5 dependencies.
 - `.github/actions/compile_GRHayL/action.yml` runs `configure`, `make tests datagen`, and `make install` (data generators are compiled only, not executed).
-- `.github/actions/code-coverage/action.yml` selects compiler/OS collection commands—Linux GCC uses `gcovr`; Linux clang runs `llvm-profdata` and `llvm-cov` to export `coverage.lcov` (under a comment noting expected coverage files are still not generated); Linux Intel and macOS bodies are commented out—then invokes `codecov/codecov-action@v5` unconditionally whenever called.
+- `.github/actions/code-coverage/action.yml` selects compiler/OS collection commands—Linux GCC uses `gcovr`; Linux clang runs `llvm-profdata` and `llvm-cov` to export `coverage.lcov` (under a comment noting expected coverage files are still not generated); Linux Intel and macOS bodies are commented out—then runs `codecov/codecov-action@v5` under the default `success()` step condition, so a failed collection step skips the upload.
 - `codecov.yml` defines per-gem components, ignores test paths, targets 100% global patch coverage and 100% zero-threshold CompOSE project/patch coverage, defers notifications until explicit finalization, and documents validation via `curl -X POST --data-binary @codecov.yml https://codecov.io/validate`. The Ubuntu-GCC `compose-regularized-eos` job uploads only `compose-coverage.xml` under flag `compose` with search disabled and fail-on-error enabled.
 
 Claim status: contested; contradiction: CONTR-0006. See [CONTR-0006](../contradictions.md#contr-0006).

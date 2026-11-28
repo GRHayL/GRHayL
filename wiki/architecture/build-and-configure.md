@@ -43,7 +43,7 @@ Evidence (descriptive behavior): `GRHayL/include/make.code.defn::install_headers
 Default builds enable HDF5: without custom paths, `configure` tries `pkg-config hdf5` when available, then compiles and links (without executing) a small HDF5 probe. With `--disable-hdf5`, `configure`:
 
 - adds `-DGHL_DISABLE_HDF5` to `CFLAGS`;
-- filters implementation sources with its path/name predicate while explicitly retaining `Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c`, `Con2Prim/Tabulated/neural_network_guess/`, direct tabulated HLLE flux sources, and the non-mutating disabled-feature direct tabulated Con2Prim stubs;
+- filters implementation sources with its path/name predicate while explicitly retaining `Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c`, `Con2Prim/Tabulated/neural_network_guess/`, and direct tabulated HLLE flux sources; the non-mutating disabled-feature direct tabulated Con2Prim stubs (`Con2Prim/hdf5_disabled_stubs.c`) pass the same predicate because their path carries no `tabulated` token;
 - excludes `unit_test_*tabulated*.c`, `unit_test_con2prim_debug.c`, and table-backed NRPyLeakage tests (`constant_density_sphere`, `luminosities`, `optically_thin_gas`) while keeping `physics` and `classifier_fallback`;
 - excludes tabulated data generators from `DGEXES`.
 

@@ -18,7 +18,7 @@ For compiler-workflow `paths-ignore` selection on `implementations/**`, see [CI 
 | Claim | Verification boundary in this repository |
 | --- | --- |
 | CCL, `GRHayLib.h`, `SUBDIRS`, and parameter/parser parity | Checkable statically against `GRHayL/include/` and `GRHayL/**/make.code.defn`. (Ev: `implementations/GRHayLib/src/make.code.defn::SUBDIRS`) |
-| Upstream source/header paths resolve under `src/` | Verified locally via tracked symlinks; does not prove Cactus build compatibility. (Ev: `GRHayLib.h`) |
+| Upstream source/header paths resolve under `src/` | Checkable locally through the tracked `src/` symlinks described in [GRHayLib Cactus Build](grhaylib-cactus-build.md#aggregate-header-and-direct-compile-source-symlinks); does not prove Cactus build compatibility. (Ev: `GRHayLib.h`) |
 | Cactus compile, link, schedule, parameter steering, and runtime cleanup | Unverified here; requires an external Cactus/Einstein Toolkit checkout and build command. (Ev: `schedule.ccl`) |
 | Upstream `Unit_Tests/` or `ET_Legacy` prove GRHayLib | Inapplicable; they test standalone GRHayL C routines, not thorn integration. |
 

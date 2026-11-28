@@ -33,7 +33,7 @@ Evidence (CI behavior): `run_tests.sh::con2prim-testdata-ref`; corroboration: `e
 
 ### `--disable-hdf5` Test Filtering
 
-Passing `./configure --disable-hdf5` adds `-DGHL_DISABLE_HDF5`, retains `tabulated_primitive_guess_helpers.c`, `Con2Prim/Tabulated/neural_network_guess/`, disabled direct-C2P stubs, and concrete tabulated HLLE flux kernels, and excludes `unit_test_*tabulated*.c`, `unit_test_con2prim_debug.c`, `unit_test_nrpyleakage_{constant_density_sphere,luminosities,optically_thin_gas}.c`, and `Unit_Tests/data_gen/*tabulated*`. Table-free NRPyLeakage `physics`/`classifier_fallback` and `unit_test_c2p_nn_guess` (with HDF5 paths compiled out) remain built; `unit_test_code_error.c` skips HDF5-only keys internally. `.github/run_tests.sh` uses default HDF5 `./configure -r` and is not a no-HDF5 driver.
+Passing `./configure --disable-hdf5` applies the library-source, test, and data-generator filters defined in [Build And Configure](../architecture/build-and-configure.md#hdf5-detection-and---disable-hdf5-filtering). In that build, `test/unit_test_c2p_nn_guess` stays built with its HDF5 paths compiled out, and `test/unit_test_code_error` skips HDF5-only keys internally ([Expected Failure And Error Keys](expected-failure-and-error-keys.md)). `.github/run_tests.sh` uses default HDF5 `./configure -r` and is not a no-HDF5 driver.
 
 Evidence (descriptive behavior): `configure::GHL_DISABLE_HDF5`; corroboration: `github-actions-Ubuntu-clang.yml::c2p_nn_guess`.
 

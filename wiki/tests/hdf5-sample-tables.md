@@ -28,7 +28,7 @@ Evidence (descriptive behavior): `generate_simple_table.py::N_rho`; corroboratio
 | `unit_test_code_error.c` | Uses `SLy4` (without `grhayl_nn_c2p` for key `85`) for tabulated setup/bound/bisection keys and temporary or missing `test.h5` for keys `34`–`60`, `73`–`74`. (Ev: `unit_test_code_error.c::test.h5`) |
 | `unit_test_c2p_nn_guess.c` | Creates and removes its own private temporary HDF5 model files in HDF5 mode (no external table); skips temp setup under `GHL_DISABLE_HDF5`. (Ev: `unit_test_c2p_nn_guess.c`) |
 
-`./configure --disable-hdf5` sets `-DGHL_DISABLE_HDF5` and excludes `*tabulated*`, `unit_test_con2prim_debug.c`, table-backed NRPyLeakage tests, and tabulated data generators while keeping `tabulated_primitive_guess_helpers.c`, NN sources, disabled direct-C2P stubs, and concrete tabulated HLLE kernels ([Build And Configure](../architecture/build-and-configure.md)).
+`./configure --disable-hdf5` applies the source, test, and data-generator filters defined in [Build And Configure](../architecture/build-and-configure.md#hdf5-detection-and---disable-hdf5-filtering).
 
 ## Sources
 
