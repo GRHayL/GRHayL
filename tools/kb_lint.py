@@ -27,8 +27,9 @@ Checks on `AGENTS.md`, `wiki/**/*.md`, and `raw/SOURCES.md`:
 3. Evidence citations: every backticked token in a wiki `Evidence (...)` line
    or `(Ev: ...)` span names one git-tracked file on disk outside `wiki/` and
    `raw/SOURCES.md` (ties break by `## Sources` links first, then exact repo
-   path), and any `::symbol` exists in that text file (whole identifier in code
-   files; substring in other text files; `.h5` files reject `::symbol`).
+   path), and any `::symbol` exists in that text file (whole identifier in C,
+   C++, and Python files; substring in other text files; `.h5` files reject
+   `::symbol`).
 
 Adapted from NRPy's tools/kb_lint.py (Zachariah B. Etienne).
 """

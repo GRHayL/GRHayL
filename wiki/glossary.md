@@ -21,7 +21,7 @@ Use these spellings when routing, citing, or writing KB leaves. Terms link to th
 | `phitilde` | Densitized scalar electromagnetic gauge variable $\tilde{\Phi} = \sqrt{\gamma}\,\Phi$ in generalized Lorenz gauge; see [Gauge RHS](gems/induction/gauge-rhs.md). |
 | `vU` | Transport three-velocity $v^i = u^i / u^0$ stored in `ghl_primitive_quantities`, distinct from Eulerian velocity; see [Velocity u0](core/velocity-u0.md). |
 | `Con2Prim` | Conservative-to-primitive root-finding gem (Noble, Palenzuela, Newman, Font) for hybrid and tabulated EOS; see [Con2Prim](gems/con2prim/index.md). |
-| `GHL_NN_C2P` | Optional C neural-network primitive-guess interface (`grhayl_nn_c2p`); see [Neural-Network Guess](gems/con2prim/neural-network-primitive-guess.md). |
+| Neural-network primitive guess | Optional tabulated Con2Prim retry guess (flag `enable_neural_net_c2p`, HDF5 group `grhayl_nn_c2p`); see [Neural-Network Guess](gems/con2prim/neural-network-primitive-guess.md). |
 | `NRPyEOS` | Hybrid piecewise-polytrope and tabulated StellarCollapse EOS routines under `GRHayL/EOS/{Hybrid,Tabulated}/`; see [EOS](gems/eos/index.md). |
 | Hybrid EOS | Piecewise-polytropic cold component plus thermal $\Gamma_{\rm th}$ ideal-gas EOS; see [Hybrid Polytrope](gems/eos/hybrid-piecewise-polytrope.md). |
 | StellarCollapse | O'Connor-Ott 19-field HDF5 tabulated EOS format read by `NRPyEOS_stellarcollapse_read_table`; see [StellarCollapse Adapter](gems/eos/stellarcollapse-table-adapter.md). |
