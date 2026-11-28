@@ -27,7 +27,7 @@ Only the listed fields of `cons` are written; unwritten fields retain prior valu
 - **`--disable-hdf5` retention:** `configure --disable-hdf5` still compiles the real tabulated HLLE C kernels (excluding only tabulated flux tests/generators; Ubuntu-Clang's no-HDF5 `c2p-failure` job checks legacy tabulated symbol exports with `nm -D --defined-only` without linking a caller or inspecting `_checked` names). Calling them in no-HDF5 mode requires a caller-installed `ghl_compute_h_and_cs2` callback; the kernels do not check `eos->eos_type`.
 - **Coverage limits:** Focused asymmetric analytic HLLE tests use zero magnetic field; no committed test verifies production tabulated callback mutation inside an HLLE call; deprecated generic HLLE pointers have no tests.
 
-Evidence (descriptive behavior): `GRHayL/include/ghl_flux_source.h::ghl_calculate_HLLE_fluxes_dirn0_tabulated_checked`; corroboration: `GRHayL/Flux_Source/generate_flux_source.py::generate_fluxes`.
+Evidence (descriptive behavior): `ghl_flux_source.h::ghl_calculate_HLLE_fluxes_dirn0_tabulated_checked`; corroboration: `generate_flux_source.py::generate_fluxes`.
 
 ## Sources
 

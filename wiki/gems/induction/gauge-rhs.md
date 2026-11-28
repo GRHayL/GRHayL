@@ -20,7 +20,7 @@ Declared in `GRHayL/include/ghl_induction.h` and built in both default and `--di
 
 Routine-local stencil reach is two points backward/forward along shift and `phitilde` lines and one forward point for `sqrtg_Ai`. Cell-centered interpolators supply all needed fields, whereas vertex-centered ADM callers supply vertex `alpha` and shift separately ([Interpolation And Staggering](interpolation-and-staggering.md)).
 
-Evidence (descriptive behavior): `GRHayL/Induction/calculate_phitilde_rhs.c::ghl_calculate_phitilde_rhs`; corroboration: `GRHayL/include/ghl_induction.h::ghl_calculate_phitilde_rhs`.
+Evidence (descriptive behavior): `calculate_phitilde_rhs.c::ghl_calculate_phitilde_rhs`; corroboration: `ghl_induction.h::ghl_calculate_phitilde_rhs`.
 
 ### ET_Legacy Coverage And Gaps
 

@@ -19,7 +19,7 @@ Claim status: contested; contradiction: CONTR-0010. See [CONTR-0010](../contradi
 - Keys `86`–`88` pass enum values directly (`ghl_abort_if_error` coverage for NRPyLeakage blocking/nonfinite errors and `ghl_error_invalid_hlle_wavespeeds`) rather than invoking the producing physics routines.
 - Under `GHL_DISABLE_HDF5`, keys `6..32`, `34..60`, `63`, `66`, `69..85`, and `89..90` take expected-skip exits.
 
-Evidence (descriptive behavior): `Unit_Tests/unit_test_code_error.c::expect_error_code`; corroboration: `Unit_Tests/unit_test_code_error.c::fail_test` and `.github/run_tests.sh::Failed to fail!`.
+Evidence (descriptive behavior): `unit_test_code_error.c::expect_error_code`; corroboration: `unit_test_code_error.c::fail_test` and `run_tests.sh::Failed to fail!`.
 
 ### Error-Key Ranges By Subsystem
 
@@ -32,7 +32,7 @@ Evidence (descriptive behavior): `Unit_Tests/unit_test_code_error.c::expect_erro
 | `12..31` | Too-many-variable helper calls and out-of-table `rho`/`Y_e`/`T` bounds in direct and root-finding interpolators. | [Tabulated Interpolation And Bounds](../gems/eos/tabulated-interpolation-and-bounds.md) |
 | `34..60`, `73`, `74` | Missing (`34`) and malformed temporary `test.h5` HDF5 open/rank/read failures (standalone invocations can leave `test.h5` in cwd). | [HDF5 Sample Tables](hdf5-sample-tables.md) |
 | `75..77` | Null `ghl_eos_parameters`, non-tabulated EOS type, and invalid `ghl_eos_table_t`. | [EOS Initialization And Dispatch](../gems/eos/initialization-and-dispatch.md) |
-| `78..82` | Beta-equilibrium out-of-range density/pressure `root not bracketed` errors. | [Tabulated Interpolation And Bounds](../gems/eos/tabulated-interpolation-and-bounds.md) |
+| `78..82` | Beta-equilibrium out-of-range density/pressure `root not bracketed` errors. | [Tabulated Interpolator Catalog](../gems/eos/tabulated-interpolator-catalog.md#beta-equilibrium-rho-map-caches-derived-enthalpy-and-test-coverage) |
 | `83..85` | `ghl_c2p_nn_load_hdf5` null EOS (`83`), empty path (`84`), and `enable_neural_net_c2p` on `SLy4` lacking `grhayl_nn_c2p` (`85`). | [Neural-Network Primitive Guess](../gems/con2prim/neural-network-primitive-guess.md) |
 | `86..88` | Direct enum abort checks for NRPyLeakage blocking/nonfinite errors (`86`, `87`) and `ghl_error_invalid_hlle_wavespeeds` (`88`). | [Errors, IO, Debug, And Utilities](../core/errors-io-debug-utilities.md) |
 | `89`, `90` | Tabulated `ghl_tabulated_Newman1D_energy` (`89`) and `ghl_tabulated_Palenzuela1D_energy` (`90`) returning `ghl_error_table_bisection` on over-range `tau`. | [Recovery Flow](../gems/con2prim/recovery-flow.md) |

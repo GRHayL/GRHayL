@@ -15,7 +15,7 @@
 
 `GRHayLib_terminate` checks `ghl_eos`: if non-null and `ghl_eos->eos_type == ghl_eos_tabulated`, it calls `ghl_tabulated_free_memory(ghl_eos)`, frees `ghl_eos` and `ghl_params`, and sets both to `NULL`. Null globals and repeated calls after cleanup are safe; non-null globals must denote valid heap allocations with initialized cleanup dispatch. When `ID_converter_ILGRMHD` is active, `schedule.ccl` skips `GRHayLib_initialize` while still scheduling `GRHayLib_terminate`, which releases globals allocated by GRHayLET's downstream `IllinoisGRMHD_backward_compatible_initialize` (which has no termination hook of its own).
 
-Evidence (descriptive behavior): `implementations/GRHayLib/src/initialize_and_shutdown.c::GRHayLib_initialize`; corroboration: `implementations/GRHayLib/src/initialize_and_shutdown.c::GRHayLib_terminate` and `implementations/GRHayLib/schedule.ccl`.
+Evidence (descriptive behavior): `initialize_and_shutdown.c::GRHayLib_initialize`; corroboration: `initialize_and_shutdown.c::GRHayLib_terminate` and `schedule.ccl`.
 
 ### Parameter Mapping, PPM Overrides, And Steering Limits
 
@@ -23,7 +23,7 @@ Evidence (descriptive behavior): `implementations/GRHayLib/src/initialize_and_sh
 
 Although `param.ccl` marks selected solver, bound, table-path, and PPM parameters `STEERABLE=RECOVER`, `schedule.ccl` provides no post-recovery refresh hook and re-invoking `GRHayLib_initialize` would overwrite live pointers without freeing them (`doc/documentation.tex`). Any downstream runtime update must maintain derived fields, free tabulated/NN allocations before reinitialization, and keep global EOS function pointers synchronized.
 
-Evidence (descriptive behavior): `implementations/GRHayLib/src/initialize_and_shutdown.c::GRHayLib_paramcheck`; corroboration: `implementations/GRHayLib/param.ccl::STEERABLE=RECOVER`.
+Evidence (descriptive behavior): `initialize_and_shutdown.c::GRHayLib_paramcheck`; corroboration: `param.ccl::STEERABLE=RECOVER`.
 
 ### EOS Branches And Required/Optional Limits
 
@@ -46,7 +46,7 @@ Empty or unrecognized `EOS_type` errors. Core still rejects several inputs that 
 
 Because ordinary hybrid Noble recovery can reject marginal cold-boundary states after velocity-limit finalization exposes nonpositive pressure, deployments needing those states should configure a robust backup such as `Font1D`. `enable_backup_nn_primitive_guess` is not a `ghl_con2prim_id_t` solver: it sets `enable_neural_net_c2p` on tabulated EOS initialization so `ghl_con2prim_tabulated_multi_method` can retry via `ghl_c2p_nn_guess_primitives` after main/backup failure ([Neural-Network Primitive Guess](../gems/con2prim/neural-network-primitive-guess.md)).
 
-Evidence (descriptive behavior): `implementations/GRHayLib/src/initialize_and_shutdown.c::parse_C2P_routine_keyword`; corroboration: `implementations/GRHayLib/param.ccl::enable_backup_nn_primitive_guess`.
+Evidence (descriptive behavior): `initialize_and_shutdown.c::parse_C2P_routine_keyword`; corroboration: `param.ccl::enable_backup_nn_primitive_guess`.
 
 ## Sources
 

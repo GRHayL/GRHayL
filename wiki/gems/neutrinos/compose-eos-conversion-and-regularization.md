@@ -21,7 +21,7 @@ Use three authorities in order: (1) repo-local GRHayL source and headers for cal
 
 CompOSE's `eoscompose.h5` is incompatible with `NRPyEOS_stellarcollapse_read_table`. The StellarCollapse format requires 19 three-dimensional datasets, three 1D grid arrays, three grid-size scalars, and `energy_shift` — including pressure, entropy, sound speed, internal energy and shift, thermodynamic derivatives, adiabatic-index convention, `munu`, and nuclear composition (`Abar`, `Zbar`, `Xh`, `Xa`). If those non-leakage fields cannot be constructed consistently, build a native backend instead of writing placeholders; grouped nuclear fields never replace free `X_n` and `X_p`.
 
-Evidence (descriptive behavior): `GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse.c::NRPyEOS_stellarcollapse_read_table`; corroboration: `tools/compose/compose_to_grhayl.py::main`.
+Evidence (descriptive behavior): `NRPyEOS_stellarcollapse.c::NRPyEOS_stellarcollapse_read_table`; corroboration: `compose_to_grhayl.py::main`.
 
 ### Implemented Offline Profile `sro-sly4-sna-141-regularized-v1`
 
@@ -29,7 +29,7 @@ Evidence (descriptive behavior): `GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_s
 
 This profile intentionally produces a physics-changing regularized surrogate: strict temperature-ray regression, entropy reconstruction, joint causal derivative projection, chemical canonicalization, and constrained composition projection repair invalid raw fields. Never treat its output as official unmodified table 141 or as an oracle for raw CompOSE values; inspect the embedded manifest and tool report for exact policies and measured deltas. Independent trilinear interpolation of `Abar`, `Zbar`, and `Xh` does not preserve nonlinear charge closure away from grid nodes (recorded diagnostic; NRPyLeakage consumes `X_n` and `X_p`, not `Abar`/`Zbar`/`Xh`). `Unit_Tests/compose/` and `Unit_Tests/unit_test_tabulated_eos_compose.c` verify serialization, runtime interpolation, temperature inversions from distinct guesses, six-output callback order, and range errors with runtime sound-speed cleaning disabled.
 
-Evidence (descriptive behavior): `tools/compose/README.md::sro-sly4-sna-141-regularized-v1`; corroboration: `Unit_Tests/unit_test_tabulated_eos_compose.c::main`.
+Evidence (descriptive behavior): `tools/compose/README.md::sro-sly4-sna-141-regularized-v1`; corroboration: `unit_test_tabulated_eos_compose.c::main`.
 
 ### Prerequisites And Table Preflight Checklist
 
@@ -55,7 +55,7 @@ Decode **exactly one** input layer:
 - **Generated `eos.table` or `eoscompose.h5`:** Parse ASCII `eos.table` columns (`T`, `n_b`, `Y_q`, then selected quantities) from `eos.quantities`, never hard-coded column positions. In `eoscompose.h5` (per official `hdf5compose.f90`, whose group hierarchy is omitted from manual tables), axes reside at `Parameters/nb`, `Parameters/t`, `Parameters/yq` with attributes `pointsnb`, `pointst`, `pointsyq`, and `tabulation_scheme`.
 - **Generated index lookup:** Identifier `3` stores `bshift` $= \mu_b - m_n$ (MeV), `4` stores $\mu_q$ (MeV), and `5` stores $\mu_l$ (MeV) — never multiply them by $m_n$. Locate thermodynamic slots dynamically via `Thermo_qty/index_thermo` into `Thermo_qty/thermo` (attribute `pointsqty`, group omitted if zero selected), recover $\mu_b = \texttt{bshift} + m_n$, and locate free neutrons/protons (`10`, `11`) via `Composition_pairs/index_yi` into `Composition_pairs/yi` (attribute `pointspairs`). Abort if required groups or indices are absent, and preserve raw-header $m_n$, $m_p$, and $I_l$ alongside generated HDF5 because the manual's generated dataset list does not guarantee all three.
 
-Evidence (descriptive behavior): `tools/compose/compose_to_grhayl.py::index_thermo`; corroboration: `tools/compose/compose_to_grhayl.py::index_yi`.
+Evidence (descriptive behavior): `compose_to_grhayl.py::index_thermo`; corroboration: `compose_to_grhayl.py::index_yi`.
 
 ## Sources
 

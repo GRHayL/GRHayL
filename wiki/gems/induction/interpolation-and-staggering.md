@@ -17,7 +17,7 @@
 - **ADM vs. BSSN discretization:** ADM stencils initialize `lapse`, `betaU`, `gammaUU`, `sqrt_detgamma` and average the combined `alpha * sqrt(gamma) * gamma^{ij}`. BSSN expects conformal inverse `psi^4 * gamma^{ij}` in `metric_stencil.gammaUU` (upper triangle only; ignores `sqrt_detgamma`), assumes a unit-determinant conformal metric (`psi^6` without `sqrt(det(gamma_tilde))`), and averages `alpha * psi^2` and conformal `gamma^{ij}` separately before multiplying—so ADM and BSSN need not match numerically on spatially varying geometry.
 - **Internal helpers (`ghl_induction_helpers.h`, `interpolate_helper.c`):** `ghl_A_i_avg`, `ghl_ADM_cell_interp`, `ghl_BSSN_cell_interp`, and `ghl_ADM_vertex_interp` are internal machinery behind the public wrappers.
 
-Evidence (descriptive behavior): `GRHayL/Induction/Interpolators/interpolate_with_vertex_centered_ADM.c::ghl_interpolate_with_vertex_centered_ADM`; corroboration: `GRHayL/Induction/Interpolators/interpolate_helper.c::ghl_ADM_vertex_interp`.
+Evidence (descriptive behavior): `interpolate_with_vertex_centered_ADM.c::ghl_interpolate_with_vertex_centered_ADM`; corroboration: `interpolate_helper.c::ghl_ADM_vertex_interp`.
 
 ### Backward/Current Vertex-Centered ADM Packing And Downstream Evidence
 

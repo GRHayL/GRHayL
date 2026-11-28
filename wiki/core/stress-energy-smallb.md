@@ -15,7 +15,7 @@ Core provides `ghl_compute_smallb_and_b2`, `ghl_compute_TDNmunu`, `ghl_compute_T
 
 `ghl_compute_smallb_and_b2` (`compute_smallb_and_b2.c`) takes caller-supplied lowered four-velocity `uDN` (trusted without validation) and already-rescaled `prims->BU` (divided by `sqrt(4*pi)`, matching `ONE_OVER_SQRT_4PI` and `docs/raw/derivation.md`), overwriting all four entries of `smallb[0..3]` (`b^\mu`) and scalar `smallb2` (`b^2`).
 
-Evidence (descriptive behavior): `GRHayL/GRHayL_Core/compute_smallb_and_b2.c::ghl_compute_smallb_and_b2`; corroboration: `docs/raw/derivation.md`.
+Evidence (descriptive behavior): `compute_smallb_and_b2.c::ghl_compute_smallb_and_b2`; corroboration: `derivation.md`.
 
 ### `TDNmunu`, `TUPmunu`, Packing, And Coverage Gaps
 
@@ -25,7 +25,7 @@ Evidence (descriptive behavior): `GRHayL/GRHayL_Core/compute_smallb_and_b2.c::gh
 - **Packing/unpacking:** `ghl_initialize_stress_energy` (`initialize_stress_energy.c`) copies ten symmetric components into `T4[4][4]` and mirrors off-diagonals; `ghl_return_stress_energy` (`return_stress_energy.c`) reads the same ten upper-triangle components back.
 - **Test coverage:** `Unit_Tests/unit_test_compute_conservs_and_Tmunu.c` (with `pert_test_fail_stress_energy.c`) checks combined conservative/stress-energy output and standalone `ghl_compute_TDNmunu`, exercising `ghl_compute_smallb_and_b2` indirectly. Neither `ghl_compute_TUPmunu` nor standalone `ghl_compute_smallb_and_b2` has a direct reference-data assertion.
 
-Evidence (descriptive behavior): `GRHayL/GRHayL_Core/compute_TDNmunu.c::ghl_compute_TDNmunu`; corroboration: `GRHayL/GRHayL_Core/compute_TUPmunu.c::ghl_compute_TUPmunu` and `Unit_Tests/unit_test_compute_conservs_and_Tmunu.c`.
+Evidence (descriptive behavior): `compute_TDNmunu.c::ghl_compute_TDNmunu`; corroboration: `compute_TUPmunu.c::ghl_compute_TUPmunu` and `unit_test_compute_conservs_and_Tmunu.c`.
 
 ## Sources
 

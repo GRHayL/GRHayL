@@ -29,7 +29,7 @@ None of these routines validates pointers, aliasing, or finiteness; callers trac
 
 The direct Core test suite does not assert every `ghl_initialize_params` default or full pack/unpack round trips; see [Core Tests And Reference Data](tests-and-reference-data.md).
 
-Evidence (descriptive behavior): `GRHayL/GRHayL_Core/initialize_params.c::ghl_initialize_params`; corroboration: `GRHayL/include/ghl.h::ghl_parameters`.
+Evidence (descriptive behavior): `initialize_params.c::ghl_initialize_params`; corroboration: `ghl.h::ghl_parameters`.
 
 ## Sources
 

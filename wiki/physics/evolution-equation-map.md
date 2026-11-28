@@ -14,7 +14,7 @@ This page maps each GRMHD evolution stage in `docs/raw/derivation.md` and `docs/
 - **Primitive-to-conservative & limits:** `ghl_compute_conservs` (`compute_conservs.c`), `ghl_compute_conservs_and_Tmunu` (`compute_conservs_and_Tmunu.c`), `ghl_apply_conservative_limits` (`apply_conservative_limits.c`), and `ghl_undensitize_conservatives` (`undensitize_conservatives.c`) implement conservative conversion and limiting ([Limits And Conversions](../gems/con2prim/limits-and-conversions.md)). Tested by `unit_test_compute_conservs_and_Tmunu.c`, `unit_test_apply_conservative_limits.c`, and `unit_test_ET_Legacy_conservs.c`.
 - **Stress-energy tensor (`ghl_stress_energy`):** `ghl_compute_smallb_and_b2` (`compute_smallb_and_b2.c`), `ghl_compute_TDNmunu` (`compute_TDNmunu.c`), and `ghl_compute_TUPmunu` (`compute_TUPmunu.c`) compute the magnetic four-vector and combined fluid-EM tensor ([Stress-Energy And `smallb`](../core/stress-energy-smallb.md)). `unit_test_compute_conservs_and_Tmunu.c` exercises `ghl_compute_TDNmunu` and indirectly `smallb` (using comparison helper `pert_test_fail_stress_energy.c` and reference data from `unit_test_data_con2prim_multi_method_hybrid.c`), but does not call `ghl_compute_TUPmunu`.
 
-Evidence (descriptive behavior): `GRHayL/Con2Prim/compute_conservs_and_Tmunu.c::ghl_compute_conservs_and_Tmunu`; corroboration: `GRHayL/GRHayL_Core/compute_TDNmunu.c::ghl_compute_TDNmunu`.
+Evidence (descriptive behavior): `compute_conservs_and_Tmunu.c::ghl_compute_conservs_and_Tmunu`; corroboration: `compute_TDNmunu.c::ghl_compute_TDNmunu`.
 
 ### Hydrodynamic Fluxes And Geometric/Neutrino Source Terms
 
@@ -22,14 +22,14 @@ Evidence (descriptive behavior): `GRHayL/Con2Prim/compute_conservs_and_Tmunu.c::
 - **Geometric source terms:** `ghl_calculate_source_terms` (`ghl_calculate_source_terms.c`, generated from `generate_flux_source.py`) takes primitives, caller-supplied metric derivatives, and extrinsic curvature, computing tensor algebra inline without accepting `ghl_stress_energy` or calling `compute_TDNmunu`/`compute_TUPmunu` ([Source Terms](../gems/flux-source/source-terms.md)). Tested by `unit_test_ET_Legacy_flux_source.c`.
 - **Neutrino matter sources:** `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c` computes local `R_source` and `Q_source` separately; geometric `ghl_calculate_source_terms` does not add leakage terms ([Physics Model And Sources](../gems/neutrinos/physics-model-and-sources.md)).
 
-Evidence (descriptive behavior): `GRHayL/Flux_Source/ghl_calculate_source_terms.c::ghl_calculate_source_terms`; corroboration: `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`.
+Evidence (descriptive behavior): `ghl_calculate_source_terms.c::ghl_calculate_source_terms`; corroboration: `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`.
 
 ### Induction Vector Potential And Con2Prim Recovery
 
 - **Induction (`ghl_induction.h`):** Separates magnetic HLL fluxes (`HLL_flux_with_B.c`, `HLL_flux_with_Btilde.c`), staggered interpolators (`GRHayL/Induction/Interpolators/`), and Lorenz scalar-potential RHS (`calculate_phitilde_rhs.c`), depending on `Flux_Source` characteristic speeds. Tested by `unit_test_HLL_flux.c`, `unit_test_ET_Legacy_HLL_flux.c`, `unit_test_induction_{ccc_ADM,ccc_BSSN,vvv_ADM}.c`, and `unit_test_ET_Legacy_induction_gauge_rhs.c` (helpers `compute_A_flux_with_B.c`, `compute_A_flux_with_Btilde.c`); see [Induction](../gems/induction/index.md).
 - **Con2Prim recovery (`ghl_con2prim.h`):** `con2prim_multi_method.c` dispatches across hybrid (`GRHayL/Con2Prim/Hybrid/`) and tabulated (`GRHayL/Con2Prim/Tabulated/`) solvers with primitive guesses (`guess_primitives.c`), limits (`enforce_primitive_limits_and_compute_u0.c`), and diagnostics (`initialize_diagnostics.c`, where `apply_conservative_limits` accumulates `diagnostics.tau_fix` when raising `tau` to family-specific `tau_atm`). Tested by `unit_test_con2prim_multi_method_hybrid.c`, `unit_test_con2prim_tabulated.c`, `unit_test_con2prim_debug.c`, and `unit_test_hybrid_failure.c`; see [Recovery Flow](../gems/con2prim/recovery-flow.md).
 
-Evidence (descriptive behavior): `GRHayL/Induction/calculate_phitilde_rhs.c::ghl_calculate_phitilde_rhs`; corroboration: `GRHayL/Con2Prim/apply_conservative_limits.c::ghl_apply_conservative_limits`.
+Evidence (descriptive behavior): `calculate_phitilde_rhs.c::ghl_calculate_phitilde_rhs`; corroboration: `apply_conservative_limits.c::ghl_apply_conservative_limits`.
 
 ## Sources
 

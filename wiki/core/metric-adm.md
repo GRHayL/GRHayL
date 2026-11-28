@@ -17,7 +17,7 @@ Claim status: contested; contradiction: CONTR-0011. See [CONTR-0011](../contradi
 - **`ghl_compute_ADM_auxiliaries` (`compute_ADM_auxiliaries.c`):** lowers shift with `ghl_raise_lower_vector_3D` and populates 4-metric `g4DD` and inverse `g4UU` in `ghl_ADM_aux_quantities`, assuming `metric_adm` already holds a consistent metric and inverse.
 - **`ghl_enforce_detgtij_and_initialize_ADM_metric` (`enforce_detgij_and_initialize_ADM_metric.c`):** calls `ghl_initialize_metric`, computes a local `ghl_compute_ADM_auxiliaries` result that it never reads or returns, forms conformal metric components, scales by `fabs(1.0 / cbrt(gtijdet))`, rebuilds the ADM 3-metric, and re-invokes `ghl_initialize_metric`. For negative `gtijdet`, `fabs(...)` preserves the negative sign rather than restoring `+1`, emits a warning, and returns `void` with no error status.
 
-Evidence (descriptive behavior): `GRHayL/GRHayL_Core/initialize_metric.c::ghl_initialize_metric`; corroboration: `GRHayL/GRHayL_Core/enforce_detgij_and_initialize_ADM_metric.c::ghl_enforce_detgtij_and_initialize_ADM_metric`.
+Evidence (descriptive behavior): `initialize_metric.c::ghl_initialize_metric`; corroboration: `enforce_detgij_and_initialize_ADM_metric.c::ghl_enforce_detgtij_and_initialize_ADM_metric`.
 
 ### Header-Only Inline Vector Helpers And Test Coverage
 
@@ -27,7 +27,7 @@ Evidence (descriptive behavior): `GRHayL/GRHayL_Core/initialize_metric.c::ghl_in
 
 `Unit_Tests/unit_test_grhayl_core_test_suite.c` (using `grhayl_core_test_suite_input.bin` from `unit_test_data_grhayl_core_test_suite.c`) directly tests `ghl_compute_vec2_from_vec4D`, `ghl_raise_lower_vector_4D`, and `ghl_enforce_detgtij_and_initialize_ADM_metric` (including a negative-determinant warning trigger without asserting positive conformal determinant). Because the determinant-enforced path discards its local ADM auxiliaries, `ghl_compute_ADM_auxiliaries` is numerically checked indirectly via `unit_test_compute_conservs_and_Tmunu.c`, and no standalone fixed-array check for `ghl_compute_vec2_from_vec3D` exists in the Core suite.
 
-Evidence (descriptive behavior): `GRHayL/include/ghl_metric_helpers.h::ghl_raise_lower_vector_4D`; corroboration: `Unit_Tests/unit_test_grhayl_core_test_suite.c`.
+Evidence (descriptive behavior): `ghl_metric_helpers.h::ghl_raise_lower_vector_4D`; corroboration: `unit_test_grhayl_core_test_suite.c`.
 
 ## Sources
 

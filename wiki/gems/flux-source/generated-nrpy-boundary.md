@@ -21,13 +21,13 @@ The Python driver rejects output paths inside `GRHayL/Flux_Source` and nonempty 
 
 | Generated C file(s) | Python entry point | Build manifest |
 | --- | --- | --- |
-| `ghl_calculate_source_terms.c` | `generate_source()` | `GRHayL/Flux_Source/make.code.defn` (Ev: `GRHayL/Flux_Source/generate_flux_source.py::generate_source`) |
-| `ghl_calculate_characteristic_speed_dirn{0,1,2}.c` | `generate_speeds()` | `GRHayL/Flux_Source/make.code.defn` (Ev: `GRHayL/Flux_Source/generate_flux_source.py::generate_speeds`) |
-| `{hybrid,hybrid_entropy,tabulated,tabulated_entropy}/ghl_calculate_HLLE_fluxes_dirn*_*.c` | `generate_fluxes()` | Matching variant `make.code.defn` (Ev: `GRHayL/Flux_Source/generate_flux_source.py::generate_fluxes`) |
+| `ghl_calculate_source_terms.c` | `generate_source()` | `GRHayL/Flux_Source/make.code.defn` (Ev: `generate_flux_source.py::generate_source`) |
+| `ghl_calculate_characteristic_speed_dirn{0,1,2}.c` | `generate_speeds()` | `GRHayL/Flux_Source/make.code.defn` (Ev: `generate_flux_source.py::generate_speeds`) |
+| `{hybrid,hybrid_entropy,tabulated,tabulated_entropy}/ghl_calculate_HLLE_fluxes_dirn*_*.c` | `generate_fluxes()` | Matching variant `make.code.defn` (Ev: `generate_flux_source.py::generate_fluxes`) |
 
 Review staged C, numerical differences, and kernel timing before copying generated output over checked-in C files, and keep Python equations and C files synchronized on any formula, signature, or manifest edit.
 
-Evidence (generated evidence): `GRHayL/Flux_Source/generate_flux_source.sh`; corroboration: `GRHayL/Flux_Source/generate_flux_source.py`.
+Evidence (generated evidence): `generate_flux_source.sh`; corroboration: `generate_flux_source.py`.
 
 ## Sources
 

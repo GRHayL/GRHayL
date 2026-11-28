@@ -13,13 +13,13 @@
 
 | RHS component | Helper `A_dir` | Label `1` | Label `2` | Helper sample offsets (`v1*`/`v2*`, `B1*`, `B2*`) |
 | --- | ---: | --- | --- | --- |
-| `A_x` | `1` | `y` | `z` | `v`: `(i, j+1, k+1)`; `B1`: `(i, j, k+1)`; `B2`: `(i, j+1, k)` (Ev: `Unit_Tests/compute_A_flux_with_B.c`) |
-| `A_y` | `2` | `z` | `x` | `v`: `(i+1, j, k+1)`; `B1`: `(i+1, j, k)`; `B2`: `(i, j, k+1)` (Ev: `Unit_Tests/compute_A_flux_with_Btilde.c`) |
+| `A_x` | `1` | `y` | `z` | `v`: `(i, j+1, k+1)`; `B1`: `(i, j, k+1)`; `B2`: `(i, j+1, k)` (Ev: `compute_A_flux_with_B.c`) |
+| `A_y` | `2` | `z` | `x` | `v`: `(i+1, j, k+1)`; `B1`: `(i+1, j, k)`; `B2`: `(i, j, k+1)` (Ev: `compute_A_flux_with_Btilde.c`) |
 | `A_z` | `3` | `x` | `y` | `v`: `(i+1, j+1, k)`; `B1`: `(i, j+1, k)`; `B2`: `(i+1, j, k)` |
 
 In `compute_A_flux_with_{B,Btilde}.c` (which evaluate interior `2 <= i,j,k < dirlength - 2`), `c1_*` comes from label `1` at the `B2` offset and `c2_*` from label `2` at the `B1` offset. `ghl_HLL_flux_with_B` multiplies the complete scalar HLL result by caller-supplied `psi6 = sqrt(gamma)` at the `A_i` point (never densitizes individual packed face values), whereas `ghl_HLL_flux_with_Btilde` assumes magnetic fields are already densitized `Btilde = sqrt(gamma) * B`. Packed velocities are transport velocities `u^i / u^0`, and magnetic fields use GRHayL's `1 / sqrt(4*pi)` normalization without conversion.
 
-Evidence (scientific/interface requirement): `GRHayL/include/ghl_induction.h::ghl_HLL_vars`; corroboration: `GRHayL/Induction/HLL_flux_with_B.c::ghl_HLL_flux_with_B` and `GRHayL/Induction/HLL_flux_with_Btilde.c::ghl_HLL_flux_with_Btilde`.
+Evidence (scientific/interface requirement): `ghl_induction.h::ghl_HLL_vars`; corroboration: `HLL_flux_with_B.c::ghl_HLL_flux_with_B` and `HLL_flux_with_Btilde.c::ghl_HLL_flux_with_Btilde`.
 
 ### Caller Hazards And Test Boundaries
 

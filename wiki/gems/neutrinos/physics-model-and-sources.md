@@ -17,7 +17,7 @@ Public containers order species as `nue` ($\nu_e$), `anue` ($\bar\nu_e$), and `n
 
 Pointwise luminosities returned in `ghl_neutrino_luminosities` equal `W * alpha^2 * sqrt(det(gamma)) * Q_eff` converted to geometric units. The routine takes no cell volume and performs no spatial sum; callers integrate over coordinate volume without multiplying by a second `sqrt(gamma)`.
 
-Evidence (descriptive behavior): `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c::NRPyLeakage_compute_neutrino_luminosities`; corroboration: `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`.
+Evidence (descriptive behavior): `NRPyLeakage_compute_neutrino_luminosities.c::NRPyLeakage_compute_neutrino_luminosities`; corroboration: `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`.
 
 ### Number And Energy Slots And Optical Depths
 
@@ -32,7 +32,7 @@ $$\kappa_{t,j}^{\nu_e} = \kappa_{s,j}^{\nu_e n} + \kappa_{s,j}^{\nu_e p} + \kapp
 
 Dimensionless optical depth represents $\tau_j^{\nu_i} = \int ds\,\kappa_{t,j}^{\nu_i}$. `NRPyLeakage_optical_depths_PathOfLeastResistance` performs one six-face-neighbor update with no diagonal paths; global iteration to convergence, outer-boundary initialization, and AMR synchronization remain caller responsibilities.
 
-Evidence (descriptive behavior): `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_optical_depths_PathOfLeastResistance.c::NRPyLeakage_optical_depths_PathOfLeastResistance`; corroboration: `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c::run_unit_test`.
+Evidence (descriptive behavior): `NRPyLeakage_optical_depths_PathOfLeastResistance.c::NRPyLeakage_optical_depths_PathOfLeastResistance`; corroboration: `unit_test_nrpyleakage_constant_density_sphere.c::run_unit_test`.
 
 ### Effective Rates And Heavy-Lepton Timescale
 
@@ -44,7 +44,7 @@ In cgs, $t_{\nu_i,j}^{\rm diff} = 6(\tau_j^{\nu_i})^2 / (c\,\kappa_{t,j}^{\nu_i}
 
 Both the matter-source and luminosity routines evaluate the single-species heavy-lepton free energy rate `Q_free_nux` once and use it both as the `nux` effective-energy numerator and in its inverse loss time $(t_{\nu_x,1}^{\rm loss})^{-1} = Q_{\nu_x}^{\rm free} / e_{\nu_x}$ paired with `nux` energy optical depth and opacity. Luminosity reference generation exercises nonzero optical depths in `[1, 1000]` across this suppression path, whereas the optically thin gas test sets all optical depths to zero. Electron-neutrino and antineutrino degeneracies interpolate between zero (transparent) and equilibrium using `exp(-tau.nue[0])` and `exp(-tau.anue[0])`; heavy-lepton degeneracy is zero.
 
-Evidence (descriptive behavior): `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h::nrpyl_effective_emission_rate`; corroboration: `Unit_Tests/unit_test_nrpyleakage_luminosities.c::generate_test_data`.
+Evidence (descriptive behavior): `NRPyLeakage_rate_helpers.h::nrpyl_effective_emission_rate`; corroboration: `unit_test_nrpyleakage_luminosities.c::generate_test_data`.
 
 ### Matter-Source Signs And Valencia Projections
 
@@ -60,7 +60,7 @@ $$\Delta_D = 0, \qquad \Delta_\tau = \alpha\sqrt{\gamma}\,W Q_{\rm source}, \qqu
 
 where $D = \rho_b W$, $W = \alpha u^0$, and $u_j = W v_j$ for the covariant Eulerian Valencia velocity. Because GRHayL stores transport velocity `prims.vU[i] = u^i / u^0`, form the contravariant Eulerian velocity as `(prims.vU[i] + beta^i) / alpha` before lowering its index. Returned scalars carry no metric factors, velocity factors, or timestep, and already include baryon mass and the factor of four for heavy leptons.
 
-Evidence (scientific/interface requirement): `GRHayL/include/ghl_nrpyleakage.h::NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms`; corroboration: `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c::run_unit_test`.
+Evidence (scientific/interface requirement): `ghl_nrpyleakage.h::NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms`; corroboration: `unit_test_nrpyleakage_optically_thin_gas.c::run_unit_test`.
 
 ### Units, Suppression-Ratio Scaling, And Model Limits
 
@@ -70,7 +70,7 @@ The diffusion-to-loss-time ratio is built entirely in cgs using `6.0 / NRPyLeaka
 
 Model limits: grey energy-averaged rates only; no nonlocal heating or momentum deposition; four equal heavy-lepton species; limited reaction and opacity channels; focused blocking input checks rather than full thermodynamic validation; `EnsureFinite` guards are numerical fallbacks rather than EOS-convention checks; and six-face-neighbor path updates without built-in global convergence or outer boundaries.
 
-Evidence (descriptive behavior): `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h::NRPyLeakage_c_light`; corroboration: `GRHayL/include/ghl_nrpyleakage.h::NRPyLeakage_units_cgs_to_geom_T`.
+Evidence (descriptive behavior): `NRPyLeakage_rate_helpers.h::NRPyLeakage_c_light`; corroboration: `ghl_nrpyleakage.h::NRPyLeakage_units_cgs_to_geom_T`.
 
 ## Sources
 

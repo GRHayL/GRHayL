@@ -15,7 +15,7 @@
 - **Reader & cleanup (`stellarcollapse/NRPyEOS_stellarcollapse.c`, `.h`):** defines the dataset-name list, initializes output to `NULL`, frees partial reads on error, reads scalar dims, `energy_shift`, optional 1-element `have_rel_cs2`, uniform increasing grid axes, and table quantities into a temporary struct freed by `NRPyEOS_stellarcollapse_free_table`.
 - **Conversion (`stellarcollapse/NRPyEOS_stellarcollapse_to_ghl.c`):** rechecks dimension/count representability, allocates the six GRHayL arrays (freeing and nulling all six on allocation failure), converts density-grid and `energy_shift` units, and maps StellarCollapse slots into `NRPyEOS_keys`. Remaining unit conversions, enthalpy tabulation, and sound-speed adjustment run in `NRPyEOS_read_table_set_EOS_params.c`. Excluded under `configure --disable-hdf5`.
 
-Evidence (descriptive behavior): `GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse.c::NRPyEOS_stellarcollapse_read_table`; corroboration: `GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse_to_ghl.c` and `GRHayL/EOS/Tabulated/NRPyEOS_hdf5_helpers.c`.
+Evidence (descriptive behavior): `NRPyEOS_stellarcollapse.c::NRPyEOS_stellarcollapse_read_table`; corroboration: `NRPyEOS_stellarcollapse_to_ghl.c` and `NRPyEOS_hdf5_helpers.c`.
 
 ### Producer Chemical-Potential Energy References
 
@@ -31,7 +31,7 @@ In `tools/compose/compose_to_grhayl.py`, `raw["mu_b"]` is already rest-shifted b
 
 `tools/compose/compose_to_grhayl.py` produces the fixed surrogate profile `sro-sly4-sna-141-regularized-v1` in StellarCollapse HDF5 layout (`have_rel_cs2 = 1`, requiring `clean_sound_speed = false`) with no C runtime dispatch changes; GRHayL's reader loads the standard axes, scalars, and 19 fields while ignoring `grhayl_compose/manifest_json`. Mass/charge closure holds at grid nodes, whereas off-grid trilinear interpolation of `Abar`, `Zbar`, and `Xh` cannot preserve the nonlinear heavy-charge product; NRPyLeakage instead uses the six-output `(muhat, mu_e, mu_p, mu_n, Xn, Xp)` callback and density-derived blocking. See [CompOSE EOS Conversion And Regularization](../neutrinos/compose-eos-conversion-and-regularization.md) and [CompOSE EOS Leakage Callback](../neutrinos/compose-eos-leakage-callback.md).
 
-Evidence (descriptive behavior): `tools/compose/compose_to_grhayl.py`; corroboration: `Unit_Tests/unit_test_tabulated_eos_compose.c`.
+Evidence (descriptive behavior): `compose_to_grhayl.py`; corroboration: `unit_test_tabulated_eos_compose.c`.
 
 ## Sources
 

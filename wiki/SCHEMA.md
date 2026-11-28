@@ -8,7 +8,7 @@ The GRHayL knowledge base separates authoritative repository sources (`GRHayL/`,
 
 ## Volatile Information Policy
 
-Source-manifest tables in [raw/SOURCES.md](../raw/SOURCES.md) use `Source | Provenance | Status | Ingest` for aggregate rows, `Source | Status` for exact local file rows (added only when no aggregate row covers the path), and `Source | Tier | Provenance | Status | Ingest | Notes` (`<= 80` B) for external URL rows, where `Status` is `living`, `frozen`, or `frozen-historical`, `Ingest` is `registered`, `partial`, or `ingested`, and `Tier` is `external-spec` or `background`. Leaf `Status:` values (`confirmed`, `provisional`, `contested`, `stale`) and `raw/SOURCES.md` `Status`/`Ingest` states record current structural source-alignment state, never dated audit verdicts or test-run outcomes.
+Source-manifest tables in [raw/SOURCES.md](../raw/SOURCES.md) use `Source | Provenance | Status | Ingest` for aggregate rows, `Source | Status` for exact local file rows (added only when no [source-map.md](source-map.md) `Glob pattern` covers the path), and `Source | Tier | Provenance | Status | Ingest | Notes` (`<= 80` B) for external URL rows, where `Status` is `living`, `frozen`, or `frozen-historical`, `Ingest` is `registered`, `partial`, or `ingested`, and `Tier` is `external-spec` or `background`. Leaf `Status:` values (`confirmed`, `provisional`, `contested`, `stale`) and `raw/SOURCES.md` `Status`/`Ingest` states record current structural source-alignment state, never dated audit verdicts or test-run outcomes.
 
 Authored KB files (`AGENTS.md`, `wiki/**/*.md`, and `raw/SOURCES.md`) forbid volatile snapshots: no dates, times, timestamps, `mtime` values, commit or file hashes/digests, inventory/file/page/source/test/job/function/line counts, line numbers or line ranges in citations, audit/reconciliation/resolution dates, environment or tool-version tuples, recorded run or review results, `"as of"` statements, or separate maintenance logs (Git history records changes). Stable scientific constants, array extents, stencil widths, tensor component counts, documented tolerances, publication years, versioned specification URLs, arXiv/DOI identifiers, durable code measurements (accuracy/convergence comparisons, memory footprints, and benchmark timings), and reviewed technical hash facts remain allowed.
 
@@ -19,7 +19,7 @@ Universal layered availability and execution rule: declaration in a header, C de
 Every table row across `catalog.md`, `tests/unit-test-catalog.md`, `glossary.md`, `source-map.md`, `contradictions.md`, and `raw/SOURCES.md` must stay `<= 450` B:
 
 - `wiki/catalog.md` and `wiki/tests/unit-test-catalog.md`: `<= 240` B/row; `catalog.md` uses the 3-column leaf index (`Page | Scope | Query terms`) listing each normal leaf once with non-duplicate symbol and topic search terms (no `Type` or `Status` columns; update it only when adding, moving, renaming, or deleting a leaf).
-- `wiki/source-map.md`: aggregate scope table (`Source or aggregate | Glob pattern | Authority tier | Uncovered scope`, `<= 450` B/row) covering only the multi-file aggregates from `raw/SOURCES.md`, which alone records their `Status` and `Ingest`. Single-file rows and manual dependent-page lists are prohibited; compute reverse citations dynamically with `rg -l -F '<path>' wiki/`.
+- `wiki/source-map.md`: aggregate scope table (`Source or aggregate | Glob pattern | Authority tier | Uncovered scope`, `<= 450` B/row) covering only the multi-file aggregates from `raw/SOURCES.md`, which alone records their provenance, `Status`, and `Ingest`; the `Glob pattern` column alone defines their path membership. Single-file rows and manual dependent-page lists are prohibited; compute reverse citations dynamically with `rg -l -F '<path>' wiki/`.
 - `wiki/contradictions.md`: active conflict register (`ID | Claim status | Affected pages | Summary`, `<= 220` B/row) paired with self-contained `### CONTR-XXXX` subsections.
 - `wiki/glossary.md`: canonical `Term | Meaning` table (`<= 450` B/row, `Meaning <= 180` B) where every `Meaning` cell links its defining leaf or marks external/background context, carries no `## Sources` section, and uses typed `## See Also` bullets.
 - `wiki/workflows.md` and `wiki/computational-physics-language.md`: KB procedures, deterministic and review checks, and direct computational-physics prose rules.
@@ -48,7 +48,7 @@ Legacy multi-line `Claim evidence:` blocks are prohibited. Add a single-line evi
 Evidence (<role>): `<subpath.c::symbol>`; corroboration: `<source>`
 ```
 
-Allowed roles are `descriptive behavior`, `normative rule`, `scientific/interface requirement`, `CI behavior`, and `generated evidence`. Cite sources in `## Detail` via shortest-unambiguous `` `subpath.c::symbol` `` tags matching `## Sources` (adding parent directories when basenames collide in that leaf), omitting `corroboration:` when none exists. Inside tables, attach compact ``(Ev: `file.c::symbol`)`` tags directly in cells instead of repeating table rows in prose. Cite C struct members with dot or double-colon notation (for example `ghl.h::ghl_eos_parameters.rho_atm`), never pointer arrows (`->`). Cite binary HDF5 files (`.h5`) by file path only, never with `::symbol`.
+Allowed roles are `descriptive behavior`, `normative rule`, `scientific/interface requirement`, `CI behavior`, and `generated evidence`. Cite primary source files (outside `wiki/` and `raw/SOURCES.md`) in `## Detail` via `` `subpath.c::symbol` `` tags matching `## Sources`, using the bare basename when no other tracked source file shares it and otherwise a repository path that names one file (for example `GRHayL/Flux_Source/make.code.defn`, `tools/compose/README.md`, or root `README.md` when no other `README.md` is in `## Sources`), omitting `corroboration:` when none exists. Inside tables, attach compact ``(Ev: `file.c::symbol`)`` tags directly in cells instead of repeating table rows in prose. Cite C struct members with dot or double-colon notation (for example `ghl.h::ghl_eos_parameters.rho_atm`), never pointer arrows (`->`). Cite binary HDF5 files (`.h5`) without `::symbol`.
 
 ## Router Rules
 
@@ -64,7 +64,9 @@ Rows stay `<= 220` B with `ID` in `CONTR-0001` form and `Claim status` in `{"con
 
 ## Checker And Frozen Scope
 
-`PYTHONDONTWRITEBYTECODE=1 python3 -B tools/kb_lint.py` checks only that local links and heading anchors resolve in `AGENTS.md`, `wiki/**/*.md`, and `raw/SOURCES.md` (no wikilinks), that every wiki page is reachable from `AGENTS.md`, and that each backticked source file in an `Evidence (...)` line or `(Ev: ...)` span names exactly one git-tracked file present on disk (the page's `## Sources` links break ties) whose cited `::` symbols appear in that text file (as whole identifiers in code files); stage new source files with `git add` before citing them. Write local links inline as `[text](path#anchor)` without link titles, and write headings in plain words and inline code without emphasis or links; the checker does not parse link titles, reference-style links, or heading markup. Every other rule on this page and in [Language For Computational Physicists](computational-physics-language.md) is checked in review, not by `tools/kb_lint.py`.
+`PYTHONDONTWRITEBYTECODE=1 python3 -B docs/kb_lint.py` checks only that local links and heading anchors resolve in `AGENTS.md`, `wiki/**/*.md`, and `raw/SOURCES.md` (no wikilinks), that every wiki page is reachable from `AGENTS.md`, and that every backticked token in an `Evidence (...)` line or `(Ev: ...)` span names exactly one git-tracked source file present on disk outside `wiki/` and `raw/SOURCES.md` (`## Sources` links break ties first, then exact repository path) whose cited `::` symbols appear in that text file (as whole identifiers in code files); stage new source files with `git add` before citing them.
+
+Keep KB Markdown within the plain subset parsed by `docs/kb_lint.py`: use top-level fenced code blocks (not fences inside block quotes or list items), inline `[text](path#anchor)` links without link titles, and headings in plain words and inline code without emphasis or links. `docs/kb_lint.py` follows its top-of-file frozen design rules (three regex checks only, no doctests or self-tests); every other rule on this page and in [Language For Computational Physicists](computational-physics-language.md) is checked in review.
 
 ### Root Planning And Task Files
 
@@ -77,7 +79,7 @@ Generated outputs and scratch files (`Makefile`, `build/`, `test/`, `lib/`, `doc
 ## Sources
 
 - [AGENTS.md](../AGENTS.md) - root router, computational-physics prose mandate, and protected scope
-- [tools/kb_lint.py](../tools/kb_lint.py) - link, reachability, and Evidence-citation checks
+- [docs/kb_lint.py](../docs/kb_lint.py) - link, reachability, and Evidence-citation checks
 
 ## See Also
 

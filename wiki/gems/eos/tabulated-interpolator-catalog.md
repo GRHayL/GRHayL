@@ -16,7 +16,7 @@ All public `ghl_tabulated_*` pointers in `ghl_eos_functions.h` have storage in `
 | Input tuple | Shared engine | Built public wrapper outputs |
 | --- | --- | --- |
 | `(rho, Y_e, T)` | `NRPyEOS_from_rho_Ye_T_interpolate_n_quantities` | `P`, `eps`, `cs2`, `P+eps`, `P+eps+S`, `P+eps+cs2`, `P+eps+S+cs2`, `P+eps+depsdT`, chemical-potential groups, and nucleon-fraction groups. (Ev: `GRHayL/EOS/Tabulated/interpolators/make.code.defn`) |
-| `(rho, Y_e, eps)` | `NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities` (`NRPyEOS_eps_key`) | `T`, `P+T`, `P+S+T`, `P+cs2+T`, `P+S+depsdT+T`. (Ev: `GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c`) |
+| `(rho, Y_e, eps)` | `NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities` (`NRPyEOS_eps_key`) | `T`, `P+T`, `P+S+T`, `P+cs2+T`, `P+S+depsdT+T`. (Ev: `NRPyEOS_initialize_tabulated_functions.c`) |
 | `(rho, Y_e, P)` | Auxiliary engine (`NRPyEOS_press_key`) | `eps+T`, `eps+S+T`, `eps+cs2+T`. |
 | `(rho, Y_e, S)` | Auxiliary engine (`NRPyEOS_entropy_key`) | `P+T`, `P+eps+T`. |
 | `(rho, Y_e, h)` | Auxiliary engine (`NRPyEOS_enthalpy_key`) | `P+eps+S+T`, `P+eps+dPdrho+dPdeps+T`. |
@@ -30,7 +30,7 @@ All public `ghl_tabulated_*` pointers in `ghl_eos_functions.h` have storage in `
 - **Derived enthalpy (`NRPyEOS_tabulate_enthalpy.c`):** `NRPyEOS_tabulate_enthalpy_checked` returns `ghl_error_invalid_eos_table` before `log(h)` on invalid points; legacy `void NRPyEOS_tabulate_enthalpy` discards status and stops at the first invalid entry.
 - **Direct-test distinctions (`Unit_Tests/unit_test_tabulated_eos.c`):** does not directly invoke `ghl_tabulated_compute_P_S_T_from_eps`, either `from_h` wrapper, `ghl_tabulated_compute_Ye_of_rho_beq_constant_T`, the `T`/`eps`/`S` enforce pointers, `ghl_tabulated_get_index_T`, `ghl_tabulated_read_table_set_EOS_params`, or the assigned `ghl_tabulated_free_beq_quantities` pointer (several run indirectly via initialization or cleanup).
 
-Evidence (descriptive behavior): `GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c`; corroboration: `GRHayL/EOS/Tabulated/NRPyEOS_tabulated_get_index.c::NRPyEOS_tabulated_get_index_T`.
+Evidence (descriptive behavior): `NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c`; corroboration: `NRPyEOS_tabulated_get_index.c::NRPyEOS_tabulated_get_index_T`.
 
 ## Sources
 

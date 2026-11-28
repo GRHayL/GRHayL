@@ -23,7 +23,7 @@ using `expm1` and Sterbenz exact subtraction for close populations, plus the ana
 
 Scalar $F_{-1/2}$ and inverse-$F_{1/2}$ minimax rational fits are ported from FDINT / Fukushima under BSD-3 attribution, avoiding runtime quadrature, root iteration, or extra EOS lookups. GRHayL's density normalization, overlap algebra, endpoint handling, and reaction pairing are local adaptations.
 
-Evidence (descriptive behavior): `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h::nrpyl_compute_population`; corroboration: `Unit_Tests/unit_test_nrpyleakage_physics.c::main`.
+Evidence (descriptive behavior): `NRPyLeakage_nucleon_blocking.h::nrpyl_compute_population`; corroboration: `unit_test_nrpyleakage_physics.c::main`.
 
 ### Equilibrium Pairing And Why Raw EOS `mu_n`/`mu_p` Fail
 
@@ -35,7 +35,7 @@ with opposite threshold orientations and algebraic shifted Fermi moments derived
 
 In a nonrelativistic quasiparticle EOS, $\mu_i^{\rm table} = \mu_i^{\rm full} - E_{\rm ref}$ and $\eta_i^{\rm kin} = (\mu_i^{\rm table} + E_{\rm ref} - m_i - U_i) / T$, where $E_{\rm ref}$ is a producer zero-point shift and $U_i$ is the interaction mean field. Because the six-output callback exposes neither $E_{\rm ref}$, $U_i$, nor effective masses (and the table's `energy_shift` is strictly for logarithmic internal-energy storage), absolute `mu_n / T` and `mu_p / T` cannot serve as kinetic degeneracies. The legacy implementation fed raw `mu_n`, `mu_p` to scattering and full `muhat / T` to a transition quotient, creating zero-point dependence and a pole near equal populations; subtracting a vacuum mass gap alone cannot fix that quotient because even a classical unequal-mass gas adds a temperature-dependent kinetic term.
 
-Evidence (descriptive behavior): `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h::nrpyl_compute_beta_emission_moments`; corroboration: `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h::nrpyl_compute_beta_absorption_moments_with_fermi`.
+Evidence (descriptive behavior): `NRPyLeakage_nucleon_blocking.h::nrpyl_compute_beta_emission_moments`; corroboration: `NRPyLeakage_nucleon_blocking.h::nrpyl_compute_beta_absorption_moments_with_fermi`.
 
 ### Free Populations And Dense-Matter Effective-Mass Limitation
 
@@ -70,7 +70,7 @@ At Point A, the full-model comparison differs by factors of ~`58--356` ($\nu_e$)
 
 Whole-BNS runtime overhead is unmeasured: an alternating 500-invocation whole-process test of the optically thin generator vs. an `LD_PRELOAD` stub (`3.315 s` vs. `3.205 s`, `3.43%`) included loading an ~`879 MB` EOS table and cannot be scaled by a `35%` leakage share. Replacing common bare mass or adding coherent nuclear scattering requires an extended EOS interface exposing effective masses, mean-field shifts, or bound nuclear composition.
 
-Evidence (descriptive behavior): `Unit_Tests/unit_test_nrpyleakage_physics.c::main`; corroboration: `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h::nrpyl_compute_population`.
+Evidence (descriptive behavior): `unit_test_nrpyleakage_physics.c::main`; corroboration: `NRPyLeakage_nucleon_blocking.h::nrpyl_compute_population`.
 
 ## Sources
 

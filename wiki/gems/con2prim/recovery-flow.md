@@ -21,18 +21,18 @@ A logical Con2Prim recovery proceeds from diagnostics initialization and optiona
 
 | Routine | Conservative input | Conservative output | Boundary note |
 | --- | --- | --- | --- |
-| `ghl_apply_conservative_limits` | Densitized `cons` (`prims->BU` only) | Mutated densitized `cons` | Updates `tau_fix` and `Stilde_fix`. (Ev: `GRHayL/Con2Prim/apply_conservative_limits.c::ghl_apply_conservative_limits`) |
-| `ghl_undensitize_conservatives` | Densitized `cons`, `psi6` | Undensitized `cons_undens` | Divides `rho`, `SD`, `tau`, `Y_e`, `entropy` by `psi6`. (Ev: `GRHayL/Con2Prim/undensitize_conservatives.c::ghl_undensitize_conservatives`) |
-| `ghl_guess_primitives` & selectors/drivers | Undensitized `cons_undens` | Primitives only | Multi-method saves/restores guess across backups. (Ev: `GRHayL/Con2Prim/con2prim_multi_method.c::ghl_con2prim_hybrid_multi_method`) |
-| `ghl_enforce_primitive_limits_and_compute_u0` | None | None | Recomputes EOS fields and `u0`; failure can leave partial writes. (Ev: `GRHayL/Con2Prim/enforce_primitive_limits_and_compute_u0.c`) |
-| `ghl_compute_conservs` / `_and_Tmunu` | Primitives (`eps`, `u0` required) | Densitized `cons` (+ `Tmunu`) | Post-limit synchronization. (Ev: `GRHayL/Con2Prim/compute_conservs.c::ghl_compute_conservs`) |
+| `ghl_apply_conservative_limits` | Densitized `cons` (`prims->BU` only) | Mutated densitized `cons` | Updates `tau_fix` and `Stilde_fix`. (Ev: `apply_conservative_limits.c::ghl_apply_conservative_limits`) |
+| `ghl_undensitize_conservatives` | Densitized `cons`, `psi6` | Undensitized `cons_undens` | Divides `rho`, `SD`, `tau`, `Y_e`, `entropy` by `psi6`. (Ev: `undensitize_conservatives.c::ghl_undensitize_conservatives`) |
+| `ghl_guess_primitives` & selectors/drivers | Undensitized `cons_undens` | Primitives only | Multi-method saves/restores guess across backups. (Ev: `con2prim_multi_method.c::ghl_con2prim_hybrid_multi_method`) |
+| `ghl_enforce_primitive_limits_and_compute_u0` | None | None | Recomputes EOS fields and `u0`; failure can leave partial writes. (Ev: `enforce_primitive_limits_and_compute_u0.c`) |
+| `ghl_compute_conservs` / `_and_Tmunu` | Primitives (`eps`, `u0` required) | Densitized `cons` (+ `Tmunu`) | Post-limit synchronization. (Ev: `compute_conservs.c::ghl_compute_conservs`) |
 
 ### Tabulated NN Retry Hook And `GHL_DISABLE_HDF5` Stubs
 
 - **Tabulated NN retry:** Separate from `params->calc_prim_guess`, when `eos->enable_neural_net_c2p` is true and the first tabulated main attempt fails, `ghl_con2prim_tabulated_multi_method` builds `prims_guess_nn` via `ghl_c2p_nn_guess_primitives`, sets `diagnostics->nn_guess_used = true`, and retries the main routine; if later backup slots fail with the ordinary guess, the driver reuses `prims_guess_nn` to retry each failed backup. `nn_guess_used` records an attempted NN retry, not success ([Neural-Network Primitive Guess](neural-network-primitive-guess.md)).
 - **`GHL_DISABLE_HDF5`:** Tabulated select/multi-method, the tabulated branch of `ghl_enforce_primitive_limits_and_compute_u0`, and the link-visible non-mutating direct tabulated solver stubs in `GRHayL/Con2Prim/hdf5_disabled_stubs.c` all return `ghl_error_used_disabled_hdf5` before dispatching.
 
-Evidence (descriptive behavior): `GRHayL/Con2Prim/con2prim_multi_method.c::ghl_con2prim_tabulated_multi_method`; corroboration: `GRHayL/Con2Prim/hdf5_disabled_stubs.c`.
+Evidence (descriptive behavior): `con2prim_multi_method.c::ghl_con2prim_tabulated_multi_method`; corroboration: `hdf5_disabled_stubs.c`.
 
 ## Sources
 

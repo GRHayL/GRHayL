@@ -11,14 +11,14 @@
 
 ### Build Targets, Output Classes, And Execution Stages
 
-`make tests` and `make datagen` compile and link binaries against `build/lib/libghl*` (requiring `LD_LIBRARY_PATH="$(pwd)/build/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"` for local execution); neither executes tests or generates reference data. Distinguish `targeted` (in generated `Makefile`), `compiled`, `compiled-unrun`, `executed`, and `workflow-only` evidence.
+`make tests` and `make datagen` compile and link binaries against `<builddir>/lib/libghl*` (`<builddir>` defaults to `build`; see [Build And Configure](../architecture/build-and-configure.md#configure-options-and-floating-point-guards)); neither executes tests or generates reference data. To run them locally on Linux, prepend the absolute path of `<builddir>/lib` to `LD_LIBRARY_PATH` (for example `LD_LIBRARY_PATH="$(pwd)/build/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"` after `./configure -r`). Distinguish `targeted` (in generated `Makefile`), `compiled`, `compiled-unrun`, `executed`, and `workflow-only` evidence.
 
 | Output class | Location | Cleanup & provenance boundary |
 | --- | --- | --- |
-| Library & test binaries | `build/`, `build/lib/`, `test/`, `test/data_gen/` | `make clean` keeps `TEXEOBJS` and `data_gen` binaries/objects; `make realclean` deletes `<builddir>/` (default `build/`), `test/`, and `Makefile`. (Ev: `configure::realclean`) |
-| Downloaded root data | Repo root (`*.bin`, `*.h5`, `*.bz2`) | `.github/run_tests.sh` tracks only files it downloads/decompresses plus its private `code_error_workdir` for `EXIT` cleanup. (Ev: `.github/run_tests.sh::code_error_workdir`) |
-| Generation-mode outputs | Repo root (`*_unperturbed.bin`, `*_perturbed.bin`) | Written only when generators or key-`0` modes (`nrpyleakage_main.h`, `unit_test_con2prim_tabulated.c`) are invoked manually. (Ev: `Unit_Tests/nrpyleakage_main.h`) |
-| Checked-in sample data | `Unit_Tests/sample_table/` | Tracked repository inputs, not `configure` outputs. (Ev: `Unit_Tests/sample_table/generate_simple_table.py`) |
+| Library & test binaries | `<builddir>/`, `<builddir>/lib/`, `test/`, `test/data_gen/` | `make clean` keeps `TEXEOBJS` and `data_gen` binaries/objects; `make realclean` deletes `<builddir>/` (default `build/`), `test/`, and `Makefile`. (Ev: `configure::realclean`) |
+| Downloaded root data | Repo root (`*.bin`, `*.h5`, `*.bz2`) | `.github/run_tests.sh` tracks only files it downloads/decompresses plus its private `code_error_workdir` for `EXIT` cleanup. (Ev: `run_tests.sh::code_error_workdir`) |
+| Generation-mode outputs | Repo root (`*_unperturbed.bin`, `*_perturbed.bin`) | Written only when generators or key-`0` modes (`nrpyleakage_main.h`, `unit_test_con2prim_tabulated.c`) are invoked manually. (Ev: `nrpyleakage_main.h`) |
+| Checked-in sample data | `Unit_Tests/sample_table/` | Tracked repository inputs, not `configure` outputs. (Ev: `generate_simple_table.py`) |
 
 ### `.github/run_tests.sh`, Reference Selectors, And Matrix Differences
 
@@ -29,13 +29,13 @@ Claim status: contested; contradiction: CONTR-0003. See [CONTR-0003](../contradi
 - **TestData reference selectors:** `.github/run_tests.sh` reads `.github/con2prim-testdata-ref` for shared hybrid Con2Prim/Core and tabulated Con2Prim data, and `.github/et-legacy-testdata-ref` for ET_Legacy, analytic EOS, Core, Flux_Source, PLM, Neutrinos, and Induction data. Workflows use those selectors for Con2Prim/ET_Legacy/Flux_Source while downloading standalone Core, analytic EOS, Reconstruction, Induction, and Neutrinos files from `TestData` `main`.
 - **Omissions from `run_tests.sh`:** Default `make tests` builds every `Unit_Tests/unit_test_*.c`, whereas `.github/run_tests.sh` skips `unit_test_WENOZ_reconstruction` (run in CI `reconstruction` jobs), `unit_test_tabulated_eos_compose` (run in Ubuntu-GCC `compose-regularized-eos`), and `unit_test_con2prim_debug` (manual-only).
 
-Evidence (CI behavior): `.github/run_tests.sh::con2prim-testdata-ref`; corroboration: `.github/et-legacy-testdata-ref`.
+Evidence (CI behavior): `run_tests.sh::con2prim-testdata-ref`; corroboration: `et-legacy-testdata-ref`.
 
 ### `--disable-hdf5` Test Filtering
 
 Passing `./configure --disable-hdf5` adds `-DGHL_DISABLE_HDF5`, retains `tabulated_primitive_guess_helpers.c`, `Con2Prim/Tabulated/neural_network_guess/`, disabled direct-C2P stubs, and concrete tabulated HLLE flux kernels, and excludes `unit_test_*tabulated*.c`, `unit_test_con2prim_debug.c`, `unit_test_nrpyleakage_{constant_density_sphere,luminosities,optically_thin_gas}.c`, and `Unit_Tests/data_gen/*tabulated*`. Table-free NRPyLeakage `physics`/`classifier_fallback` and `unit_test_c2p_nn_guess` (with HDF5 paths compiled out) remain built; `unit_test_code_error.c` skips HDF5-only keys internally. `.github/run_tests.sh` uses default HDF5 `./configure -r` and is not a no-HDF5 driver.
 
-Evidence (descriptive behavior): `configure::GHL_DISABLE_HDF5`; corroboration: `.github/workflows/github-actions-Ubuntu-clang.yml::c2p_nn_guess`.
+Evidence (descriptive behavior): `configure::GHL_DISABLE_HDF5`; corroboration: `github-actions-Ubuntu-clang.yml::c2p_nn_guess`.
 
 ## Sources
 

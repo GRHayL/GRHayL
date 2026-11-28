@@ -19,7 +19,7 @@ To invert GRHayL geometric density back to cgs at the EOS callback, use the math
 
 CompOSE $Y_q$ is the charge fraction of strongly interacting particles. $Y_q = Y_e$ holds only for locally neutral matter whose sole charged massive lepton is the electron (or a baryonic-only table when the host adds electrons under electron-only neutrality). With muons, $Y_q = Y_e + Y_\mu$: the three-argument callback `(rho, Y_e, T)` cannot infer an independent evolved muon fraction, and current NRPyLeakage lacks muon charged-current channels and assumes equal heavy-lepton species.
 
-Evidence (descriptive behavior): `GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse_to_ghl.c::CGS_TO_CODE_DENSITY`; corroboration: `GRHayL/include/ghl_nrpyleakage.h::NRPyLeakage_units_geom_to_cgs_D`.
+Evidence (descriptive behavior): `NRPyEOS_stellarcollapse_to_ghl.c::CGS_TO_CODE_DENSITY`; corroboration: `ghl_nrpyleakage.h::NRPyLeakage_units_geom_to_cgs_D`.
 
 ### Building The Six Leakage Outputs
 
@@ -39,7 +39,7 @@ In CompOSE tables (which never store neutrinos), the relativistic electron chemi
 
 For free nucleons ($B_i = 1$), extract $X_n = Y_n^{\rm C}$ and $X_p = Y_p^{\rm C}$ from CompOSE net-particle indices `10` (neutrons) and `11` (protons) assuming negligible antinucleons, rather than grouped nuclear fractions or $Y_q$. Map an omitted species at a grid node to zero only when format metadata establish that omission denotes zero.
 
-Evidence (descriptive behavior): `tools/compose/compose_to_grhayl.py::_regularize_plane`; corroboration: `tools/compose/compose_to_grhayl.py::_read_raw_plane` and `Unit_Tests/unit_test_tabulated_eos_compose.c::check_six_value_interpolator`.
+Evidence (descriptive behavior): `compose_to_grhayl.py::_regularize_plane`; corroboration: `compose_to_grhayl.py::_read_raw_plane` and `unit_test_tabulated_eos_compose.c::check_six_value_interpolator`.
 
 ### Safe Callback Execution, Registration, And Grid Rules
 
@@ -49,7 +49,7 @@ Adding a native CompOSE backend inside GRHayL requires more than registering a c
 
 Grid rules: offline StellarCollapse conversions must supply at least two strictly increasing points per axis (positive uniform log $n_b$ and $T$, uniform linear $Y_q$, matching `NRPyEOS_tabulated_helpers.h`); native backends may keep CompOSE's grids and official interpolation order when verified against `compose`; neither route may extrapolate or serve $T = 0$; axis/flattening order must be verified with asymmetric indices; and higher-order CompOSE interpolation will differ off-grid from GRHayL trilinear interpolation.
 
-Evidence (descriptive behavior): `GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c::NRPyEOS_initialize_tabulated_functions`; corroboration: `GRHayL/EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h::NRPyEOS_get_interp_spots`.
+Evidence (descriptive behavior): `NRPyEOS_initialize_tabulated_functions.c::NRPyEOS_initialize_tabulated_functions`; corroboration: `NRPyEOS_tabulated_helpers.h::NRPyEOS_get_interp_spots`.
 
 ### Validation Steps And Unsupported Cases
 
@@ -67,7 +67,7 @@ Build an asymmetric golden-state set spanning low, middle, and high interior nod
 
 Repo tests `Unit_Tests/compose/test_compose_to_grhayl.py`, `Unit_Tests/compose/test_compose_failure_coverage.py`, and `Unit_Tests/unit_test_tabulated_eos_compose.c` run on the synthetic `test-analytic` table in CI; `test_profile_facts` checks only the SRO-141 profile metadata, and a full SRO-141 replay needs an externally supplied table ([EOS Tests And Reference Data](../eos/tests-and-reference-data.md)). Unsupported without additional physics or data: cold/beta-equilibrated tables; muon-bearing states without $Y_q$ closure or with unequal lepton potentials; tables lacking free `X_n`/`X_p`; grouped nuclear substitutions; generated outputs missing $m_n, m_p, I_l$; out-of-bounds extrapolation; exotic/quark/hybrid opacity channels absent from nucleon-only leakage; unpropagated $m_{\rm ref}^{\rho}$ or $m_{\rm ref}^{E}$ changes; raw $Q_7$ treated as `eps`; and undocumented web endpoints.
 
-Evidence (descriptive behavior): `Unit_Tests/compose/test_compose_to_grhayl.py::test_conversion_writes_regularized_stellarcollapse_schema`; corroboration: `Unit_Tests/compose/test_compose_failure_coverage.py::test_helper_rejections`.
+Evidence (descriptive behavior): `test_compose_to_grhayl.py::test_conversion_writes_regularized_stellarcollapse_schema`; corroboration: `test_compose_failure_coverage.py::test_helper_rejections`.
 
 ## Sources
 

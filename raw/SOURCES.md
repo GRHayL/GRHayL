@@ -4,20 +4,22 @@
 
 ## Aggregate Sources
 
+The matching `Glob pattern` cell in [Source Map](../wiki/source-map.md#aggregate-rows) alone defines each aggregate's path membership.
+
 | Source | Provenance | Status | Ingest |
 | --- | --- | --- | --- |
-| `grhayl-core-and-headers` | Top-level library manifest, `GRHayL_Core` shared routines, and public headers under `GRHayL/make.code.defn`, `GRHayL/GRHayL_Core/**`, and `GRHayL/include/**`. | living | ingested |
-| `grhayl-atmosphere-con2prim-eos` | Atmosphere, Con2Prim (including C++ Cerda-Duran and NN guess), and hybrid/tabulated EOS sources under `GRHayL/Atmosphere/**`, `GRHayL/Con2Prim/**`, and `GRHayL/EOS/**`. | living | ingested |
-| `grhayl-flux-induction-reconstruction` | Flux/source, vector-potential induction, and PLM/PPM/WENO-z reconstruction sources under `GRHayL/Flux_Source/**`, `GRHayL/Induction/**`, and `GRHayL/Reconstruction/**`. | living | ingested |
-| `grhayl-neutrinos-and-compose` | NRPyLeakage radiation sources under `GRHayL/Neutrinos/**` and offline CompOSE EOS conversion scripts under `tools/compose/**`. | living | ingested |
-| `grhaylib-cactus-implementation` | Direct-compile Cactus/Einstein Toolkit thorn CCL files, symlink layout, and initialization sources under `implementations/GRHayLib/**`. | living | ingested |
-| `unit-tests-and-sample-tables` | C unit-test drivers, `data_gen/` reference generators, Python CompOSE tests, and sample HDF5 tables under `Unit_Tests/**`. | living | ingested |
-| `doxygen-raw-docs` | Hand-authored Doxygen pages, GRMHD derivation, stylesheets, and BibTeX inputs under `docs/raw/**`. | living | ingested |
-| `scripts-and-ci-automation` | Manifest parser helpers under `scripts/**` and GitHub Actions workflows, composite actions, and test runner under `.github/**`. | living | ingested |
+| `grhayl-core-and-headers` | Top-level library manifest, `GRHayL_Core` shared routines, and public headers. | living | ingested |
+| `grhayl-atmosphere-con2prim-eos` | Atmosphere, Con2Prim (including C++ Cerda-Duran and NN guess), and hybrid/tabulated EOS sources. | living | ingested |
+| `grhayl-flux-induction-reconstruction` | Flux/source, vector-potential induction, and PLM/PPM/WENO-z reconstruction sources. | living | ingested |
+| `grhayl-neutrinos-and-compose` | NRPyLeakage radiation sources and offline CompOSE EOS conversion scripts. | living | ingested |
+| `grhaylib-cactus-implementation` | Direct-compile Cactus/Einstein Toolkit thorn CCL files, symlink layout, and initialization sources. | living | ingested |
+| `unit-tests-and-sample-tables` | C unit-test drivers, `data_gen/` reference generators, Python CompOSE tests, and sample HDF5 tables. | living | ingested |
+| `doxygen-raw-docs` | Hand-authored Doxygen pages, GRMHD derivation, stylesheets, and BibTeX inputs. | living | ingested |
+| `scripts-and-ci-automation` | Manifest parser helpers, GitHub Actions workflows, composite actions, and test runner. | living | ingested |
 
 ## Cited Code And Config Sources
 
-Add an exact local path here only when no aggregate row above covers it.
+Add an exact local path here only when no Source Map `Glob pattern` covers it.
 
 | Source | Status |
 | --- | --- |
@@ -35,7 +37,7 @@ Add an exact local path here only when no aggregate row above covers it.
 | `.editorconfig` | living |
 | `.gitattributes` | living |
 | `.gitignore` | living |
-| `tools/kb_lint.py` | living |
+| `docs/kb_lint.py` | living |
 
 ## External Sources
 
@@ -46,8 +48,8 @@ Add an exact local path here only when no aggregate row above covers it.
 | `https://raw.githubusercontent.com/GRHayL/TestData/main/EOS/simple_table.h5` | background | GRHayL/TestData sample tabulated EOS HDF5 file. | living | partial | Downloaded fallback table for HDF5 unit tests. |
 | `https://stellarcollapse.org/EOS/` | background | StellarCollapse tabulated EOS repository index. | living | partial | Upstream catalog of nuclear EOS HDF5 tables. |
 | `https://stellarcollapse.org/EOS/EOSmaker_svn_r13.tar.gz` | external-spec | StellarCollapse EOSmaker SVN r13 tarball. | frozen | partial | Legacy StellarCollapse HDF5 table conversion reference. |
-| `https://stellarcollapse.org/EOS/LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2` | external-spec | StellarCollapse LS220 tabulated EOS archive. | frozen | partial | Sample LS220 HDF5 table referenced in test setup. |
-| `https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2` | external-spec | StellarCollapse SLy4 tabulated EOS archive. | frozen | partial | Sample SLy4 HDF5 table used by NRPyLeakage tests. |
+| `https://stellarcollapse.org/EOS/LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2` | background | StellarCollapse LS220 tabulated EOS archive. | frozen | partial | Sample LS220 HDF5 table referenced in test setup. |
+| `https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2` | background | StellarCollapse SLy4 tabulated EOS archive. | frozen | partial | Sample SLy4 HDF5 table used by NRPyLeakage tests. |
 | `https://stellarcollapse.org/SROEOS.html` | background | Schneider-Roberts-Ott SRO EOS overview page. | living | partial | SRO Skyrme nuclear EOS table provenance and naming. |
 | `https://stellarcollapse.org/equationofstate.html` | external-spec | StellarCollapse tabulated EOS format documentation. | living | partial | HDF5 dataset names, units, and chemical-potential signs. |
 | `https://compose.obspm.fr/download/3D/SRO/SLy4/eos.pdf` | external-spec | CompOSE SRO SLy4 table datasheet PDF. | frozen | partial | SRO SLy4 table grid bounds and chemical-potential conventions. |
@@ -56,7 +58,7 @@ Add an exact local path here only when no aggregate row above covers it.
 | `https://compose.obspm.fr/eos/141` | background | CompOSE EOS table 141 (SRO SLy4) catalog page. | living | partial | Catalog entry for SRO SLy4 nuclear EOS table. |
 | `https://compose.obspm.fr/software/` | background | CompOSE official software downloads page. | living | partial | Official CompOSE Fortran utilities and `hdf5compose`. |
 | `https://compose.obspm.fr/table/` | background | CompOSE EOS table browser. | living | partial | Online CompOSE table selection and metadata portal. |
-| `https://gitlab.obspm.fr/data_and_software_compose/code-compose/-/raw/master/hdf5compose.f90` | external-spec | Upstream CompOSE `hdf5compose.f90` HDF5 writer. | living | partial | Exact CompOSE HDF5 dataset layout and variable indices. |
+| `https://gitlab.obspm.fr/data_and_software_compose/code-compose/-/raw/master/hdf5compose.f90` | background | Upstream CompOSE `hdf5compose.f90` HDF5 writer. | living | partial | Exact CompOSE HDF5 dataset layout and variable indices. |
 | `https://gitlab.obspm.fr/data_and_software_compose/code-compose/-/tree/master` | background | Upstream CompOSE Fortran source repository. | living | partial | Reference CompOSE interpolation and table generation tools. |
 | `https://github.com/evanoconnor/EOSmaker/blob/master/src/fix_table_units.F90` | background | EOSmaker unit-conversion routine `fix_table_units.F90`. | living | partial | StellarCollapse energy-shift and unit-conversion conventions. |
 | `https://github.com/evanoconnor/EOSmaker/blob/master/src/specific_eos/eos_table_Hempel_sc_sfho.F90` | background | EOSmaker Hempel SFHo table adapter source. | living | partial | Reference CompOSE/Hempel-to-StellarCollapse chemical potentials. |

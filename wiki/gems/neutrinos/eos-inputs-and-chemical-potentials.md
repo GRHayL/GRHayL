@@ -24,7 +24,7 @@ After `(eos, rho, Y_e, T)`, `ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_
 
 Chemical potentials and `T` must share MeV units because leakage forms `mu_e / T` and `(mu_e - muhat) / T` without conversion; `Y_e`, `X_n`, and `X_p` are dimensionless. `X_n` and `X_p` are strictly free-nucleon mass fractions, never total nucleon fractions `1 - Y_e` and `Y_e`, so bound nucleons in nuclei are not counted as free scattering or capture targets. GRHayL reads and interpolates StellarCollapse `mu_e` without a zero-point shift; any alternative EOS supplying a rest-mass-subtracted electron chemical potential must add electron rest mass before passing `mu_e` to leakage.
 
-Evidence (scientific/interface requirement): `GRHayL/include/ghl_eos_functions_declaration.h::ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T`; corroboration: `GRHayL/EOS/Tabulated/interpolators/NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T.c`.
+Evidence (scientific/interface requirement): `ghl_eos_functions_declaration.h::ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T`; corroboration: `NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T.c`.
 
 ### Equilibrium Degeneracies, Stored `munu`, And Unused Mass-Gap Constants
 
@@ -36,7 +36,7 @@ Both GRHayL's StellarCollapse table reader and the CompOSE converter define `muh
 
 `GRHayL/include/ghl_nrpyleakage.h` declares `NRPyLeakage_Q_npmass` and `NRPyLeakage_ZL_Q_npmass`, neither of which is referenced by any current leakage `.c` file. These constants are unrelated to `Q_source`. Do not add or subtract a neutron-proton mass gap $Q$ inside `(mu_e - muhat) / T` or inside nucleon blocking without a paired reaction-model change, and do not reconstruct `muhat` from differently zeroed `mu_n` and `mu_p`. In particular, `muhat(Y_e = 0.5)` is not a rest-mass measurement because even a classical unequal-mass gas has a temperature-dependent kinetic contribution.
 
-Evidence (descriptive behavior): `GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c::NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T`; corroboration: `GRHayL/include/ghl_nrpyleakage.h::NRPyLeakage_Q_npmass`.
+Evidence (descriptive behavior): `NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c::NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T`; corroboration: `ghl_nrpyleakage.h::NRPyLeakage_Q_npmass`.
 
 ### Reaction-Energy Shift, Gradual Underflow, And Adapter Checks
 
@@ -46,7 +46,7 @@ No physical clamp is applied to $q$ or $q/T$ because the current EOS callback su
 
 Adapter validation must check all six callback outputs in declaration order, `mu_e / T`, `(mu_e - muhat) / T`, and the derived blocking populations against known thermodynamic states before comparing final rates or opacities. Matching pressure and internal energy alone does not validate the leakage EOS boundary, and matching raw `mu_n/T` or `mu_p/T` no longer tests active blocking.
 
-Evidence (descriptive behavior): `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h::nrpyl_compute_population`; corroboration: `GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse.h::NRPyEOS_stellarcollapse_read_table`.
+Evidence (descriptive behavior): `NRPyLeakage_nucleon_blocking.h::nrpyl_compute_population`; corroboration: `NRPyEOS_stellarcollapse.h::NRPyEOS_stellarcollapse_read_table`.
 
 ## Sources
 

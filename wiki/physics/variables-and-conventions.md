@@ -15,7 +15,7 @@ GRHayL evolves Valencia-form GRMHD equations using transport velocities `vU[i] =
 - **Conservatives (`ghl_conservative_quantities`):** stores `rho`, `tau`, `SD[3]`, `Y_e`, and `entropy`. `ghl_compute_conservs` writes `rho = sqrt_detgamma * W * prims.rho`, `Y_e = cons.rho * prims.Y_e`, and `entropy = sqrt_detgamma * W * prims.entropy`—so conserved `Y_e` is mass-weighted rather than a primitive fraction, and `entropy` carries `sqrt_detgamma * W` rather than `cons.rho`. `ghl_undensitize_conservatives` divides only by `sqrt_detgamma`; the same struct holds densitized or undensitized values depending on the called routine. Magnetic fields are evolved via vector-potential induction rather than a `BU` member in `ghl_conservative_quantities`.
 - **Conservative energy floor `tau_atm`:** simple and hybrid EOS initialization compute `rho_atm * eps_atm`, whereas tabulated EOS uses `rho_min * eps_min`.
 
-Evidence (scientific/interface requirement): `GRHayL/include/ghl.h::ghl_primitive_quantities`; corroboration: `GRHayL/Con2Prim/compute_conservs.c::ghl_compute_conservs` and `GRHayL/GRHayL_Core/initialize_eos.c`.
+Evidence (scientific/interface requirement): `ghl.h::ghl_primitive_quantities`; corroboration: `compute_conservs.c::ghl_compute_conservs` and `initialize_eos.c`.
 
 ### Magnetic Field Rescaling And Densitized Quantities
 
@@ -23,7 +23,7 @@ Evidence (scientific/interface requirement): `GRHayL/include/ghl.h::ghl_primitiv
 
 Densitized hydrodynamic variables carry `sqrt_detgamma` from `ghl_metric_quantities`. In Induction (`docs/raw/Induction.dox`), `tilde{Phi}` (`phitilde`) is the densitized scalar potential and `tilde{B}` (`Btilde`) is the densitized magnetic field. The `psi6` argument in Induction routines denotes physical `sqrt_detgamma` (equating it to a BSSN conformal factor `e^{6\phi}` assumes a unit-determinant conformal metric): `ghl_HLL_flux_with_B` densitizes staggered `B` internally using `psi6`, whereas `ghl_HLL_flux_with_Btilde` expects already-densitized input ([HLL Flux](../gems/induction/hll-flux.md)).
 
-Evidence (scientific/interface requirement): `GRHayL/include/ghl.h::ONE_OVER_SQRT_4PI`; corroboration: `GRHayL/GRHayL_Core/compute_smallb_and_b2.c::ghl_compute_smallb_and_b2` and `GRHayL/Induction/HLL_flux_with_B.c::ghl_HLL_flux_with_B`.
+Evidence (scientific/interface requirement): `ghl.h::ONE_OVER_SQRT_4PI`; corroboration: `compute_smallb_and_b2.c::ghl_compute_smallb_and_b2` and `HLL_flux_with_B.c::ghl_HLL_flux_with_B`.
 
 ### Metric, Extrinsic Curvature, And EOS Variables
 
@@ -34,7 +34,7 @@ Evidence (scientific/interface requirement): `GRHayL/include/ghl.h::ONE_OVER_SQR
   - Primitive `entropy` is EOS-family dependent: hybrid helpers compute `P / rho^(Gamma - 1)` using the active polytropic index, whereas tabulated entropy is interpolated from the HDF5 table—never interchange them.
   - Tabulated EOS dispatch installs `ghl_tabulated_free_beq_quantities` alongside interpolation pointers; see [EOS Dispatch](../core/eos-dispatch.md).
 
-Evidence (descriptive behavior): `GRHayL/include/ghl.h::ghl_eos_parameters`; corroboration: `GRHayL/GRHayL_Core/initialize_eos.c::ghl_initialize_eos_functions`.
+Evidence (descriptive behavior): `ghl.h::ghl_eos_parameters`; corroboration: `initialize_eos.c::ghl_initialize_eos_functions`.
 
 ## Sources
 

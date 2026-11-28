@@ -18,8 +18,8 @@ For compiler-workflow `paths-ignore` selection on `implementations/**`, see [CI 
 | Claim | Verification boundary in this repository |
 | --- | --- |
 | CCL, `GRHayLib.h`, `SUBDIRS`, and parameter/parser parity | Checkable statically against `GRHayL/include/` and `GRHayL/**/make.code.defn`. (Ev: `implementations/GRHayLib/src/make.code.defn::SUBDIRS`) |
-| Upstream source/header paths resolve under `src/` | Verified locally via tracked symlinks; does not prove Cactus build compatibility. (Ev: `implementations/GRHayLib/src/GRHayLib.h`) |
-| Cactus compile, link, schedule, parameter steering, and runtime cleanup | Unverified here; requires an external Cactus/Einstein Toolkit checkout and build command. (Ev: `implementations/GRHayLib/schedule.ccl`) |
+| Upstream source/header paths resolve under `src/` | Verified locally via tracked symlinks; does not prove Cactus build compatibility. (Ev: `GRHayLib.h`) |
+| Cactus compile, link, schedule, parameter steering, and runtime cleanup | Unverified here; requires an external Cactus/Einstein Toolkit checkout and build command. (Ev: `schedule.ccl`) |
 | Upstream `Unit_Tests/` or `ET_Legacy` prove GRHayLib | Inapplicable; they test standalone GRHayL C routines, not thorn integration. |
 
 ### Static Parity And Drift Checklist
@@ -32,7 +32,7 @@ Verify these items statically whenever `implementations/GRHayLib/` or shared `GR
 4. **Upstream API drift points:** recheck `configuration.ccl` (`requires HDF5`), EOS initializer and `ghl_tabulated_free_memory` signatures, `ghl_parameters` and `ghl_eos_parameters` fields, `ghl_con2prim_id_t` support in [Solver Matrix](../gems/con2prim/solver-matrix.md), PPM overrides, and `CCTK_WRAGH`/`CCTK_TERMINATE` cleanup with `ID_converter_ILGRMHD`.
 5. **Targeted upstream tests & docs guard:** run targeted `Unit_Tests/` only when upstream API behavior changed; compare `git status --short --untracked-files=all -- docs Doxyfile`, `git diff HEAD -- docs Doxyfile`, and `git diff --cached -- docs Doxyfile` with the task's starting state to confirm no unintended staged or unstaged changes and no new untracked doc files (pre-existing edits belong to the starting state). Never invent a local Cactus build command.
 
-Evidence (descriptive behavior): `implementations/GRHayLib/src/initialize_and_shutdown.c::GRHayLib_paramcheck`; corroboration: `GRHayL/include/make.code.defn::install_headers`.
+Evidence (descriptive behavior): `initialize_and_shutdown.c::GRHayLib_paramcheck`; corroboration: `GRHayL/include/make.code.defn::install_headers`.
 
 ## Sources
 

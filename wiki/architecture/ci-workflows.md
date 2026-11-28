@@ -13,23 +13,23 @@ GRHayL defines compiler/OS GitHub Actions workflows under `.github/workflows/`, 
 
 | Workflow | Compiler | OS matrix | Coverage invocation |
 | --- | --- | --- | --- |
-| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | Existing job groups invoke `code-coverage`; `compose-regularized-eos` uploads `compose-coverage.xml` directly. (Ev: `.github/workflows/github-actions-Ubuntu-gcc.yml::compose-regularized-eos`) |
-| `github-actions-Ubuntu-clang.yml` | `clang` | `ubuntu-22.04`, `ubuntu-24.04` | Every job invokes `code-coverage`; `c2p-failure` Ubuntu 24.04 `c2p_nn_guess` runs `--disable-hdf5` and inspects tabulated HLLE symbols without running a tabulated flux test. (Ev: `.github/workflows/github-actions-Ubuntu-clang.yml::c2p-failure`) |
-| `github-actions-Ubuntu-intel.yml` | `intel` / `icx` | `ubuntu-22.04`, `ubuntu-24.04` | Selected jobs invoke `code-coverage`; Intel collection body is commented out. (Ev: `.github/workflows/github-actions-Ubuntu-intel.yml`) |
-| `github-actions-MacOS-gcc.yml` | Homebrew GCC | `macos-15`, `macos-26` | Jobs invoke `code-coverage`; local collection body is commented out. (Ev: `.github/workflows/github-actions-MacOS-gcc.yml`) |
-| `github-actions-MacOS-clang.yml` | Homebrew LLVM clang | `macos-15`, `macos-26` | No job invokes `code-coverage`. (Ev: `.github/workflows/github-actions-MacOS-clang.yml`) |
+| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | Existing job groups invoke `code-coverage`; `compose-regularized-eos` uploads `compose-coverage.xml` directly. (Ev: `github-actions-Ubuntu-gcc.yml::compose-regularized-eos`) |
+| `github-actions-Ubuntu-clang.yml` | `clang` | `ubuntu-22.04`, `ubuntu-24.04` | Every job invokes `code-coverage`; `c2p-failure` Ubuntu 24.04 `c2p_nn_guess` runs `--disable-hdf5` and inspects tabulated HLLE symbols without running a tabulated flux test. (Ev: `github-actions-Ubuntu-clang.yml::c2p-failure`) |
+| `github-actions-Ubuntu-intel.yml` | `intel` / `icx` | `ubuntu-22.04`, `ubuntu-24.04` | Selected jobs invoke `code-coverage`; Intel collection body is commented out. (Ev: `github-actions-Ubuntu-intel.yml`) |
+| `github-actions-MacOS-gcc.yml` | Homebrew GCC | `macos-15`, `macos-26` | Jobs invoke `code-coverage`; local collection body is commented out. (Ev: `github-actions-MacOS-gcc.yml`) |
+| `github-actions-MacOS-clang.yml` | Homebrew LLVM clang | `macos-15`, `macos-26` | No job invokes `code-coverage`. (Ev: `github-actions-MacOS-clang.yml`) |
 
 Claim status: contested; contradiction: CONTR-0005. See [CONTR-0005](../contradictions.md#contr-0005).
 
 Every compiler workflow restricts `push` to `main`, has no `pull_request` branch filter, runs on cron `33 15 1,15 * *`, and skips push/PR runs only when **all** changed paths match `paths-ignore` (`docs/**`, `wiki/**`, Markdown/reStructuredText patterns, and absent `Makefile_old`). Ubuntu-GCC no longer ignores `implementations/**`, so eligible non-Markdown changes there (such as `implementations/GRHayLib/README` or `doc/documentation.tex`) select normal core library jobs without inspecting GRHayLib symlinks or building Cactus; peer workflows still ignore `implementations/**`. Mixed changes containing any non-ignored path and scheduled runs bypass `paths-ignore`.
 
-Evidence (CI behavior): `.github/workflows/github-actions-Ubuntu-gcc.yml::paths-ignore`; corroboration: `.github/workflows/github-actions-Ubuntu-clang.yml::implementations/**`.
+Evidence (CI behavior): `github-actions-Ubuntu-gcc.yml::paths-ignore`; corroboration: `github-actions-Ubuntu-clang.yml::implementations/**`.
 
 ### Job Routing Across Test Groups
 
 | Job | Scoped tests |
 | --- | --- |
-| `ET-Legacy` | `conservs`, `primitives`, `induction_gauge_rhs`, `HLL_flux`, `reconstruction`, `flux_source` (Ev: `.github/workflows/github-actions-Ubuntu-gcc.yml::ET-Legacy`) |
+| `ET-Legacy` | `conservs`, `primitives`, `induction_gauge_rhs`, `HLL_flux`, `reconstruction`, `flux_source` (Ev: `github-actions-Ubuntu-gcc.yml::ET-Legacy`) |
 | `c2p-routines` / `c2p-failure` | Conservative limits, hybrid multi-method, primitive limits/`u0`, conservs/`Tmunu`; `hybrid_failure`, `c2p_nn_guess` |
 | `tabulated-eos` / `piecewise-polytrope-eos` / `con-to-prim-tabulated` | Tabulated EOS read/interpolation, piecewise-polytrope EOS, tabulated Con2Prim |
 | `grhayl-core` / `code-failure` | Core EOS/default, atmosphere, metric, routine-name suite; expected error-code keys |
@@ -53,7 +53,7 @@ Claim status: contested; contradiction: CONTR-0008. See [CONTR-0008](../contradi
 
 In `.github/actions/compile_GRHayL/action.yml`, the macOS GCC `CC` command substitution contains an unmatched quote in its `egrep` call, and the macOS clang branch passes `--cflags` twice so `configure` retains only the later include flag and drops coverage flags. In Ubuntu-GCC, `codecov-finalize` uses `always()` and polls recent returned peer runs (macOS GCC, Ubuntu Clang, Ubuntu Intel) for `completed` without requiring every named workflow to appear, succeed, or upload coverage; macOS Clang is excluded.
 
-Evidence (CI behavior): `.github/actions/compile_GRHayL/action.yml::--cflags`; corroboration: `.github/actions/code-coverage/action.yml::codecov/codecov-action@v5` and `.github/workflows/github-actions-Ubuntu-gcc.yml::codecov-finalize`.
+Evidence (CI behavior): `.github/actions/compile_GRHayL/action.yml::--cflags`; corroboration: `.github/actions/code-coverage/action.yml::codecov/codecov-action@v5` and `github-actions-Ubuntu-gcc.yml::codecov-finalize`.
 
 ### Scripted Runner And Read-Only YAML Check
 
@@ -68,7 +68,7 @@ for p in sorted(pathlib.Path(".github/workflows").glob("*.yml")):
     print(p, sorted(d["on"]), sorted(d["jobs"]))'
 ```
 
-Evidence (CI behavior): `.github/run_tests.sh::unit_test_code_error`; corroboration: `.github/et-legacy-testdata-ref`.
+Evidence (CI behavior): `run_tests.sh::unit_test_code_error`; corroboration: `et-legacy-testdata-ref`.
 
 ## Sources
 

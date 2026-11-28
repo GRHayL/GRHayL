@@ -15,7 +15,7 @@
 - **`ghl_ppm_reconstruction_with_steepening` (`ppm_reconstruction_with_steepening.c`):** follows the same two-call structure while passing `params`, aligned 5-point `pressure` slices, and caller-supplied `Gamma_eff` to `ghl_ppm_compute_for_cell_with_steepening`.
 - **5-point helpers (`ppm_compute_for_cell.c`, `ppm_compute_for_cell_with_steepening.c`, `slope_limit.c`):** compute limited centered slopes via `ghl_slope_limit` (zero when adjacent differences change sign), form provisional parabolic face values, optionally call `ghl_steepen_var`, apply flattening with caller-supplied `ftilde`, and enforce monotonicity.
 
-Evidence (descriptive behavior): `GRHayL/Reconstruction/PPM/ppm_reconstruction.c::ghl_ppm_reconstruction`; corroboration: `GRHayL/Reconstruction/PPM/ppm_compute_for_cell_with_steepening.c::ghl_ppm_compute_for_cell_with_steepening`.
+Evidence (descriptive behavior): `ppm_reconstruction.c::ghl_ppm_reconstruction`; corroboration: `ppm_compute_for_cell_with_steepening.c::ghl_ppm_compute_for_cell_with_steepening`.
 
 ### Flattening, Steepening, Parameters, And Coverage Limits
 
@@ -24,7 +24,7 @@ Evidence (descriptive behavior): `GRHayL/Reconstruction/PPM/ppm_reconstruction.c
 - **Parameters & downstream coupling:** Core `initialize_params.c` sets defaults (`0.33`, `0.75`, `10.0`; `k0 = 0.1`, `eta1 = 20.0`, `eta2 = 0.05`, `epsilon = 0.01`), which `implementations/GRHayLib/` exposes and overwrites from `param.ccl` ([Struct Pack And Unpack](../../core/struct-pack-unpack.md), [GRHayLib Runtime Parameters](../../implementations/grhaylib-runtime-parameters.md)). PPM routines do not validate `ghl_parameters`.
 - **Coverage boundary:** `unit_test_ET_Legacy_reconstruction.c` (using default PPM parameters and polytropic/thermal `Gamma = 2`) exercises both wrappers and `ghl_compute_ftilde` transitively; there is no dedicated `unit_test_PPM_reconstruction.c`, no PPM data generator, and no isolated test of the 5-point helpers or varying `Gamma_eff`.
 
-Evidence (descriptive behavior): `GRHayL/Reconstruction/PPM/shock_detection_ftilde.c::ghl_shock_detection_ftilde`; corroboration: `GRHayL/Reconstruction/PPM/steepen_var.c::ghl_steepen_var`.
+Evidence (descriptive behavior): `shock_detection_ftilde.c::ghl_shock_detection_ftilde`; corroboration: `steepen_var.c::ghl_steepen_var`.
 
 ## Sources
 

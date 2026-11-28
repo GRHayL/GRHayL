@@ -15,7 +15,7 @@ Con2Prim solvers rely on distinct internal numerical engines: `ghl_brent` for Pa
 - **Palenzuela (`utils_Palenzuela1D.h`, `Hybrid/Palenzuela1D/`, `Tabulated/Palenzuela1D/`):** wraps `ghl_compute_SU_Bsq_Ssq_BdotS`, root bracketing, `ghl_brent`, `utilde` limiting, and success-only `which_routine` writes; tabulated `tabulated_Palenzuela1D.c` adds table bounds and an optional second Brent attempt from `T_min`.
 - **Tabulated Palenzuela `Y_e` and `evolve_temp` rules:** `tabulated_Palenzuela1D_energy.c` and `tabulated_Palenzuela1D_entropy.c` consume incoming `prims->Y_e` (never deriving `Y_e` from conserved `Y_e`; callers bypassing guesses must supply `Y_e`). When `params->evolve_temp` is true, callbacks invert energy/entropy for temperature; when false, both use bounded incoming temperature and the entropy callback ignores conserved entropy (though a failed-Brent `T_min` retry can still overwrite temperature). Neither Newman nor Noble shares this `evolve_temp` branch.
 
-Evidence (descriptive behavior): `GRHayL/Con2Prim/brent.c::ghl_brent`; corroboration: `GRHayL/Con2Prim/Tabulated/Palenzuela1D/tabulated_Palenzuela1D.c`.
+Evidence (descriptive behavior): `brent.c::ghl_brent`; corroboration: `tabulated_Palenzuela1D.c`.
 
 ### Noble Newton Loop, Validation, And Stagnation Guards
 
@@ -24,14 +24,14 @@ Evidence (descriptive behavior): `GRHayL/Con2Prim/brent.c::ghl_brent`; corrobora
 - **`general_newton_raphson.c` & `validate_x.c`:** runs per-invocation local budgets accumulating into `harm_aux->n_iter` (propagating nested density-solve errors before consumption). Convergence requires both relative step size (`|dx| / |x|`, absolute when `x == 0`) and recomputed residual objective `|f|` to satisfy `solver_tolerance`.
   For hybrid Noble2D's bounded squared-velocity coordinate, step size uses actual post-validation `x - x_old` and `func_2D.c` scales momentum residual by `(Bsq + Z)^2` and energy residual by `max(|Qdotn|, |Z|, Bsq)` when `ghl_validate_2D` clips at the upper bound (preventing false acceptance of a clipped iterate with large relative error; bound must match `hybrid_Noble2D.c`). Because each iteration's end-of-step residual feeds the next step, callbacks must be deterministic at a given `x` (tabulated Noble2D warm-starts from `harm_aux->temp_guess` within table root precision); an unconverged iterate with validated `x == x_old` returns `ghl_error_c2p_max_iter` immediately.
 
-Evidence (descriptive behavior): `GRHayL/Con2Prim/Hybrid/Noble/general_newton_raphson.c::ghl_general_newton_raphson`; corroboration: `GRHayL/Con2Prim/Hybrid/Noble/validate_x.c::ghl_validate_2D`.
+Evidence (descriptive behavior): `general_newton_raphson.c::ghl_general_newton_raphson`; corroboration: `validate_x.c::ghl_validate_2D`.
 
 ### Noble Closure Under Speed Limiting And Tabulated Noble2D
 
 - **`finalize_Noble.c` & hybrid wrappers (`Hybrid/Noble/Noble1D/`, `Noble2D/`):** When ordinary hybrid Noble finalization limits velocity, it recomputes `rho = D / W_final` and enthalpy density `w = Z / W_final^2`, preserving exact `Z = rho h W_final^2` closure rather than mixing pre-limit `W` with post-limit `rho`. Near the cold-pressure boundary, subtraction amplification of roundoff in `w` can make pressure sign toolchain-sensitive and expose `ghl_error_neg_pressure`; configure a robust backup (such as `Font1D`) when marginal states must recover. `Noble1D_entropy` and `Noble1D_entropy2` (`func_rho2.c`) require `neos == 1` and `Gamma_th == Gamma_ppoly[0]`. Finalization writes `speed_limited` before the pressure check; `n_iter` and `which_routine` are written only after pressure passes.
 - **Tabulated Noble2D (`Tabulated/Noble2D/tabulated_Noble2D.c`):** reuses `ghl_general_newton_raphson` with tabulated init/residual/finalization, rejects nonfinite inputs before bounding, corrects log-coordinate endpoint roundoff, returns recoverable EOS errors, and recomputes `w` with `W_final` when speed-limited.
 
-Evidence (descriptive behavior): `GRHayL/Con2Prim/Hybrid/Noble/finalize_Noble.c`; corroboration: `GRHayL/Con2Prim/Tabulated/Noble2D/tabulated_Noble2D.c`.
+Evidence (descriptive behavior): `finalize_Noble.c`; corroboration: `tabulated_Noble2D.c`.
 
 ### Font1D, Newman1D, Diagnostics Scope, And Archival Cerda-Duran
 
@@ -39,7 +39,7 @@ Evidence (descriptive behavior): `GRHayL/Con2Prim/Hybrid/Noble/finalize_Noble.c`
 - **Tabulated Newman1D (`Tabulated/Newman1D/`):** uses local iterative pressure updates (`maxsteps = 300`), writes `diagnostics->n_iter = step` inside the local helper (so a `T_min` retry overwrites the prior attempt's count), and sets `which_routine` only after success.
 - **Archival Cerda-Duran (`GRHayL/Con2Prim/Tabulated/con2prim_CerdaDuran3D.cc`):** intentionally omitted from `Tabulated/make.code.defn`, `Doxyfile`, selectors, public headers, and tests; uses obsolete non-compiling API identifiers and supplies no C++ build/link evidence.
 
-Evidence (descriptive behavior): `GRHayL/Con2Prim/Hybrid/Font1D/hybrid_Font1D_loop.c`; corroboration: `GRHayL/Con2Prim/Tabulated/Newman1D/tabulated_Newman1D_energy.c` and `GRHayL/Con2Prim/Tabulated/con2prim_CerdaDuran3D.cc`.
+Evidence (descriptive behavior): `hybrid_Font1D_loop.c`; corroboration: `tabulated_Newman1D_energy.c` and `con2prim_CerdaDuran3D.cc`.
 
 ## Sources
 

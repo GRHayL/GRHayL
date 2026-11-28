@@ -15,14 +15,14 @@ Core separates recoverable `ghl_error_codes_t` return values from terminating `g
 - **`ghl_info` and `ghl_Warn_Error` (`info_warn_error.c`, `ghl_io.h`):** `ghl_info` prints a GRHayL-prefixed message to stdout. `ghl_warn`, `ghl_error`, `ghl_abort`, and `ghl_Error` pass `__FILE__`, `__LINE__`, and `__func__` to `ghl_Warn_Error`, which terminates strictly by `exit_code`: `0` returns (`ghl_warn`), `-1` (`ghl_error_abort`) calls `abort()` (`ghl_abort`), and any other nonzero value calls `exit(exit_code)` (`ghl_error` exits `1`; `ghl_Error` uses the caller's code).
 - **Expected-failure testing:** `Unit_Tests/unit_test_code_error.c` exercises keys `0`–`90` (with keys `86`–`88` passing enum values directly) and terminates nonzero via `ghl_abort_if_error`; see [Expected Failure And Error Keys](../tests/expected-failure-and-error-keys.md).
 
-Evidence (descriptive behavior): `GRHayL/GRHayL_Core/abort_if_error.c::ghl_abort_if_error`; corroboration: `GRHayL/GRHayL_Core/info_warn_error.c::ghl_Warn_Error`.
+Evidence (descriptive behavior): `abort_if_error.c::ghl_abort_if_error`; corroboration: `info_warn_error.c::ghl_Warn_Error`.
 
 ### Debug Printers And Min/Max/Clamp Utilities
 
 - **`ghl_debug.h`:** defines inline stderr printers with function/line wrapper macros. `ghl_debug_print_prims` prints thermodynamic fields, `vU[0..2]`, and `BU[0..2]` while omitting `u0`; `ghl_debug_print_cons` prints `D`/`rho`, `tau`, `SD0`, `SD1`, `SD2`, `entropy`, and `Y_e` in that order. `unit_test_con2prim_debug.c` invokes both without asserting printed text.
 - **`min_max_clamp.c`:** implements `ghl_imin`, `ghl_imax`, `ghl_iclamp`, and `ghl_clamp`. Tabulated EOS interpolators instead call a private always-inline `NRPyEOS_iclamp` in `NRPyEOS_tabulated_helpers.h` with identical `min(max(x, x_min), x_max)` order—keep both synchronized if clamp semantics change. Neither clamp validates `x_min <= x_max`, and no direct unit test asserts Core clamp functions.
 
-Evidence (descriptive behavior): `GRHayL/GRHayL_Core/min_max_clamp.c::ghl_iclamp`; corroboration: `GRHayL/EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h::NRPyEOS_iclamp` and `GRHayL/include/ghl_debug.h::ghl_debug_print_prims`.
+Evidence (descriptive behavior): `min_max_clamp.c::ghl_iclamp`; corroboration: `NRPyEOS_tabulated_helpers.h::NRPyEOS_iclamp` and `ghl_debug.h::ghl_debug_print_prims`.
 
 ## Sources
 

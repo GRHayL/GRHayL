@@ -15,7 +15,7 @@ Most `Unit_Tests/` replay drivers compare computed outputs against downloaded or
 - **Strict nonfinite rejection:** `ghl_pert_test_fail` (`GRHayL/include/ghl_unit_tests.h`) rejects any nonfinite trusted, computed, or perturbed value.
 - **Typed wrappers:** `pert_test_fail_conservatives.c` and `ghl_pert_test_fail_primitives_with_cutoffs` (`pert_test_fail_primitives.c`) apply small absolute roundoff allowances scaled to trusted momentum/velocity vectors (and Lorentz-factor conditioning for hybrid density recovery), whereas basic `ghl_pert_test_fail_primitives` compares componentwise without vector-scale allowances. `pert_test_fail_stress_energy.c` applies its absolute cutoff to the difference across the ten symmetric components.
 
-Evidence (descriptive behavior): `GRHayL/include/ghl_unit_tests.h::ghl_pert_test_fail`; corroboration: `Unit_Tests/pert_test_fail_primitives.c::ghl_pert_test_fail_primitives_with_cutoffs`.
+Evidence (descriptive behavior): `ghl_unit_tests.h::ghl_pert_test_fail`; corroboration: `pert_test_fail_primitives.c::ghl_pert_test_fail_primitives_with_cutoffs`.
 
 ### Reference-Data Source Classes And Module Families
 
@@ -36,7 +36,7 @@ Reference data arrives via these routes: local `Unit_Tests/data_gen/unit_test_da
 | Neutrinos | `nrpyleakage_{optically_thin_gas,constant_density_sphere,luminosities}_*` | Uses `*_unperturbed.bin`/`*_perturbed.bin` and `SLy4` ([Neutrinos Tests](../gems/neutrinos/tests-and-reference-data.md)). |
 | Reconstruction & ET_Legacy | `PLM_reconstruction_*`, `WENOZ_reconstruction_*`, `ET_Legacy_*` | ET_Legacy outputs are externally supplied ([ET Legacy Comparison](et-legacy-comparison.md)). |
 
-Evidence (descriptive behavior): `Unit_Tests/pert_test_fail_conservatives.c`; corroboration: `Unit_Tests/pert_test_fail_stress_energy.c`.
+Evidence (descriptive behavior): `pert_test_fail_conservatives.c`; corroboration: `pert_test_fail_stress_energy.c`.
 
 ## Sources
 

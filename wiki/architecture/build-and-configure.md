@@ -36,7 +36,7 @@ Evidence (descriptive behavior): `configure::--buildtype`; corroboration: `confi
 - During `make install`, only headers listed in `GRHayL/include/make.code.defn` (`install_headers`) are copied into `<prefix>/include/ghl`, excluding `ghl_unit_tests.h` and internal storage companion `ghl_eos_functions_declaration.h`.
 - `make install` also copies the versioned shared library and symlink into `<prefix>/lib` and installs `THIRD_PARTY_NOTICES` (FDINT BSD-3 notice) into `<prefix>/share/doc/grhayl`.
 
-Evidence (descriptive behavior): `GRHayL/include/make.code.defn::install_headers`; corroboration: `scripts/parser` and `configure::THIRD_PARTY_NOTICES`.
+Evidence (descriptive behavior): `GRHayL/include/make.code.defn::install_headers`; corroboration: `parser` and `configure::THIRD_PARTY_NOTICES`.
 
 ### HDF5 Detection And `--disable-hdf5` Filtering
 

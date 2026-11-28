@@ -17,7 +17,7 @@ Use this page after editing source, header, documentation, test, or CI files to 
 | `GRHayL/include/` | [Public API Map](public-api-map.md), relevant module `.dox`, `README.md`, [GRHayLib Verification](../implementations/grhaylib-verification.md) | `./configure -r && make tests datagen`; check `GRHayLib.h` and `install_headers` parity. (Ev: `GRHayL/include/make.code.defn`) |
 | `configure` / `generate_makefile.sh` | [Build And Configure](build-and-configure.md), [Generated Boundaries](generated-boundaries.md), `README.md` | Test default and `--disable-hdf5` `./configure -r && make tests`; inspect `generate_makefile.sh` only in a disposable tree (never run `make`). (Ev: `configure::--disable-hdf5`) |
 | `docs/raw/` / `Doxyfile` | [Generated Boundaries](generated-boundaries.md), [CI Workflows](ci-workflows.md) | Run temporary-`OUTPUT_DIRECTORY` Doxygen validation; never generate into tracked `docs/`. (Ev: `Doxyfile::OUTPUT_DIRECTORY`) |
-| `.github/` (`workflows/`, `actions/`, `run_tests.sh`) | [CI Workflows](ci-workflows.md), [Runner And Build Outputs](../tests/runner-and-build-outputs.md), [Contradictions](../contradictions.md) | Parse YAML with `BaseLoader`, `bash -n .github/run_tests.sh`, reproduce matching `configure`/`make` locally in disposable tree. (Ev: `.github/run_tests.sh`) |
+| `.github/` (`workflows/`, `actions/`, `run_tests.sh`) | [CI Workflows](ci-workflows.md), [Runner And Build Outputs](../tests/runner-and-build-outputs.md), [Contradictions](../contradictions.md) | Parse YAML with `BaseLoader`, `bash -n .github/run_tests.sh`, reproduce matching `configure`/`make` locally in disposable tree. (Ev: `run_tests.sh`) |
 
 ### Gem Subsystems
 
@@ -35,8 +35,8 @@ Use this page after editing source, header, documentation, test, or CI files to 
 
 | Changed path | Affected KB & Doxygen routes | Targeted verification checks |
 | --- | --- | --- |
-| `Unit_Tests/` & `Unit_Tests/sample_table/` | [Tests](../tests/index.md), [Generated Boundaries](generated-boundaries.md), [Contradictions](../contradictions.md) | Compile (`make tests datagen`) and run changed tests/generators separately with verified data; run `.github/run_tests.sh` only in a disposable checkout. (Ev: `Unit_Tests/sample_table/generate_simple_table.py`) |
-| `tools/compose/` | [CompOSE Conversion](../gems/neutrinos/compose-eos-conversion-and-regularization.md), [CompOSE Callback](../gems/neutrinos/compose-eos-leakage-callback.md), `tools/compose/README.md` | Run existing Python line/branch coverage and `unit_test_tabulated_eos_compose` C integration checks in disposable output paths. (Ev: `tools/compose/compose_to_grhayl.py`) |
+| `Unit_Tests/` & `Unit_Tests/sample_table/` | [Tests](../tests/index.md), [Generated Boundaries](generated-boundaries.md), [Contradictions](../contradictions.md) | Compile (`make tests datagen`) and run changed tests/generators separately with verified data; run `.github/run_tests.sh` only in a disposable checkout. (Ev: `generate_simple_table.py`) |
+| `tools/compose/` | [CompOSE Conversion](../gems/neutrinos/compose-eos-conversion-and-regularization.md), [CompOSE Callback](../gems/neutrinos/compose-eos-leakage-callback.md), `tools/compose/README.md` | Run existing Python line/branch coverage and `unit_test_tabulated_eos_compose` C integration checks in disposable output paths. (Ev: `compose_to_grhayl.py`) |
 | `implementations/GRHayLib/` | [Implementations](../implementations/index.md), `README.md` | Check CCL, `GRHayLib.h`, symlink, `SUBDIRS`, and parameter/parser parity statically; Cactus build/runtime proof requires an external Cactus/ET environment. (Ev: `implementations/GRHayLib/src/make.code.defn`) |
 
 ## Sources

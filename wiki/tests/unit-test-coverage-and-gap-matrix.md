@@ -15,7 +15,7 @@ This page classifies what GRHayL's `Unit_Tests/` suite exercises directly versus
 - **EOS (`unit_test_piecewise_polytrope.c`, `unit_test_tabulated_eos.c`, `unit_test_tabulated_eos_compose.c`, `unit_test_code_error.c`):** Direct tests cover piecewise polytropes, analytic `simple_table.h5` interpolation/beta-equilibrium, CompOSE Python 100% branch coverage plus C runtime integration, and HDF5/bound error keys. `unit_test_c2p_nn_guess.c` asserts tabulated atmosphere resets indirectly with synthetic metadata and fake callbacks (not table-backed atmosphere qualification). See [EOS Tests](../gems/eos/tests-and-reference-data.md).
 - **Con2Prim (`unit_test_con2prim_multi_method_hybrid.c`, `unit_test_con2prim_tabulated.c`, `unit_test_c2p_nn_guess.c`, `unit_test_hybrid_failure.c`, `unit_test_apply_conservative_limits.c`, `unit_test_enforce_primitive_limits_and_compute_u0.c`, `unit_test_compute_conservs_and_Tmunu.c`, `unit_test_con2prim_debug.c`, ET_Legacy):** Covers diagnostics init, conservative/primitive limits, Font1D/Noble1D_entropy2 failure & round-trip behavior, undensitized guesses, and NN HDF5/inference fallback. **Limits:** hybrid reference binaries are implementation-derived regressions; tabulated NN retry remains table/model-dependent; `unit_test_con2prim_debug.c` is manual-only. See [Con2Prim Tests](../gems/con2prim/tests-and-reference-data.md).
 
-Evidence (descriptive behavior): `Unit_Tests/unit_test_grhayl_core_test_suite.c`; corroboration: `Unit_Tests/unit_test_c2p_nn_guess.c`.
+Evidence (descriptive behavior): `unit_test_grhayl_core_test_suite.c`; corroboration: `unit_test_c2p_nn_guess.c`.
 
 ### Flux_Source, Induction, Neutrinos, And Reconstruction Coverage
 
@@ -24,7 +24,7 @@ Evidence (descriptive behavior): `Unit_Tests/unit_test_grhayl_core_test_suite.c`
 - **Neutrinos (`unit_test_nrpyleakage_{physics,classifier_fallback,optically_thin_gas,constant_density_sphere,luminosities}.c`, `unit_test_code_error.c`):** Table-free `physics` and `classifier_fallback` verify Fermi branches, nucleon blocking, detailed balance, diffusion, free-nucleon endpoints, chemical-potential reference invariance, asymmetric optical-depth stencil, and portable NaN/Inf classification without HDF5; table-backed replay checks optically thin evolution (with RK lookup failure injection), constant-density sphere, and luminosities on `SLy4`. See [Neutrinos Tests](../gems/neutrinos/tests-and-reference-data.md).
 - **Reconstruction (`unit_test_PLM_reconstruction.c`, `unit_test_WENOZ_reconstruction.c`, `unit_test_ET_Legacy_reconstruction.c`):** PLM and WENO-z have direct reference-data tests (note: `.github/run_tests.sh` omits WENO-z while CI workflows run it). **Gap:** no dedicated `unit_test_PPM_reconstruction.c` or PPM data generator exists; PPM is exercised only through `ET_Legacy_reconstruction`. See [Reconstruction Tests](../gems/reconstruction/tests-and-reference-data.md).
 
-Evidence (descriptive behavior): `Unit_Tests/unit_test_nrpyleakage_physics.c`; corroboration: `Unit_Tests/unit_test_tabulated_flux.c`.
+Evidence (descriptive behavior): `unit_test_nrpyleakage_physics.c`; corroboration: `unit_test_tabulated_flux.c`.
 
 ### Cross-Cutting Error Keys, Helpers, And Run-Mode Gaps
 

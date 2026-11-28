@@ -49,7 +49,7 @@ Evidence (descriptive behavior): `generate_makefile.sh::libgrhayl.a`; corroborat
 - Recheck trigger: edits to `README.md`, `docs/raw/mainpage.md`, `.github/run_tests.sh`, or workflow TestData URLs.
 - Resolution check: run `rg -n 'Test_Data|TestData' README.md docs/raw/mainpage.md .github/` and confirm one canonical repository name across docs and scripts.
 
-Evidence (descriptive behavior): `README.md::Test_Data`; corroboration: `.github/run_tests.sh::TestData` and `docs/raw/mainpage.md::TestData`.
+Evidence (descriptive behavior): `README.md::Test_Data`; corroboration: `run_tests.sh::TestData` and `mainpage.md::TestData`.
 
 ### CONTR-0004
 
@@ -57,7 +57,7 @@ Evidence (descriptive behavior): `README.md::Test_Data`; corroboration: `.github
 - Recheck trigger: edits to `README.md` perturbation prose or `Unit_Tests/data_gen/unit_test_data_*.c`.
 - Resolution check: compare `README.md` against `docs/raw/mainpage.md` and `Unit_Tests/data_gen/*.c`, confirming accurate description of generator-specific perturbations.
 
-Evidence (descriptive behavior): `README.md::1e-14`; corroboration: `Unit_Tests/data_gen/unit_test_data_hybrid_flux.c`.
+Evidence (descriptive behavior): `README.md::1e-14`; corroboration: `unit_test_data_hybrid_flux.c`.
 
 ### CONTR-0005
 
@@ -65,7 +65,7 @@ Evidence (descriptive behavior): `README.md::1e-14`; corroboration: `Unit_Tests/
 - Recheck trigger: edits to `paths-ignore` in `.github/workflows/github-actions-*.yml`.
 - Resolution check: inspect `paths-ignore` across every `.github/workflows/github-actions-*.yml` file and verify consistent `implementations/**` and `Makefile_old` policy.
 
-Evidence (CI behavior): `.github/workflows/github-actions-Ubuntu-gcc.yml::Makefile_old`; corroboration: `.github/workflows/github-actions-Ubuntu-clang.yml::implementations/**`.
+Evidence (CI behavior): `github-actions-Ubuntu-gcc.yml::Makefile_old`; corroboration: `github-actions-Ubuntu-clang.yml::implementations/**`.
 
 ### CONTR-0006
 
@@ -73,7 +73,7 @@ Evidence (CI behavior): `.github/workflows/github-actions-Ubuntu-gcc.yml::Makefi
 - Recheck trigger: edits to `.github/actions/code-coverage/action.yml` or coverage job steps in `.github/workflows/github-actions-*.yml`.
 - Resolution check: inspect `code-coverage/action.yml` and every workflow job invoking it, verifying active collection commands or removal of no-op invocations.
 
-Evidence (CI behavior): `.github/actions/code-coverage/action.yml::codecov/codecov-action@v5`; corroboration: `.github/workflows/github-actions-MacOS-gcc.yml`.
+Evidence (CI behavior): `.github/actions/code-coverage/action.yml::codecov/codecov-action@v5`; corroboration: `github-actions-MacOS-gcc.yml`.
 
 ### CONTR-0007
 
@@ -89,7 +89,7 @@ Evidence (CI behavior): `.github/actions/compile_GRHayL/action.yml::--cflags`; c
 - Recheck trigger: edits to `codecov-finalize` in `.github/workflows/github-actions-Ubuntu-gcc.yml` or `codecov.yml`.
 - Resolution check: inspect `codecov-finalize` polling logic and verify whether missing peers, failed conclusions, and upload confirmation are explicitly handled.
 
-Evidence (CI behavior): `.github/workflows/github-actions-Ubuntu-gcc.yml::codecov-finalize`; corroboration: `codecov.yml`.
+Evidence (CI behavior): `github-actions-Ubuntu-gcc.yml::codecov-finalize`; corroboration: `codecov.yml`.
 
 ### CONTR-0009
 
@@ -97,7 +97,7 @@ Evidence (CI behavior): `.github/workflows/github-actions-Ubuntu-gcc.yml::codeco
 - Recheck trigger: edits to `ghl_atmosphere.h`, `set_prims_to_radial_falloff_atm.c`, or `GRHayL/Atmosphere/make.code.defn`.
 - Resolution check: confirm either that `set_prims_to_radial_falloff_atm.c` is completed, listed in `make.code.defn`, documented, and tested, or that the unfinished declaration and file are removed.
 
-Evidence (descriptive behavior): `GRHayL/include/ghl_atmosphere.h::ghl_set_prims_to_radial_falloff_atm`; corroboration: `GRHayL/Atmosphere/make.code.defn` and `GRHayL/Atmosphere/set_prims_to_radial_falloff_atm.c`.
+Evidence (descriptive behavior): `ghl_atmosphere.h::ghl_set_prims_to_radial_falloff_atm`; corroboration: `GRHayL/Atmosphere/make.code.defn` and `set_prims_to_radial_falloff_atm.c`.
 
 ### CONTR-0010
 
@@ -105,7 +105,7 @@ Evidence (descriptive behavior): `GRHayL/include/ghl_atmosphere.h::ghl_set_prims
 - Recheck trigger: edits to `Unit_Tests/unit_test_code_error.c` or tabulated EOS initialization cleanup.
 - Resolution check: inspect `Unit_Tests/unit_test_code_error.c` and verify every live `tab_eos` object is freed before reinitialization or isolated per error case.
 
-Evidence (descriptive behavior): `Unit_Tests/unit_test_code_error.c::tab_eos`; corroboration: `GRHayL/include/ghl_nrpyeos_tabulated.h::NRPyEOS_free_memory`.
+Evidence (descriptive behavior): `unit_test_code_error.c::tab_eos`; corroboration: `ghl_nrpyeos_tabulated.h::NRPyEOS_free_memory`.
 
 ### CONTR-0011
 
@@ -113,7 +113,7 @@ Evidence (descriptive behavior): `Unit_Tests/unit_test_code_error.c::tab_eos`; c
 - Recheck trigger: edits to `GRHayL/GRHayL_Core/initialize_metric.c`, `enforce_detgij_and_initialize_ADM_metric.c`, or `Unit_Tests/unit_test_grhayl_core_test_suite.c`.
 - Resolution check: inspect both metric initializers and verify either checked error returns on nonpositive determinants or an explicit documented and tested recovery rule.
 
-Evidence (descriptive behavior): `GRHayL/GRHayL_Core/initialize_metric.c::ghl_initialize_metric`; corroboration: `GRHayL/GRHayL_Core/enforce_detgij_and_initialize_ADM_metric.c::ghl_enforce_detgtij_and_initialize_ADM_metric`.
+Evidence (descriptive behavior): `initialize_metric.c::ghl_initialize_metric`; corroboration: `enforce_detgij_and_initialize_ADM_metric.c::ghl_enforce_detgtij_and_initialize_ADM_metric`.
 
 ### CONTR-0012
 
@@ -121,4 +121,4 @@ Evidence (descriptive behavior): `GRHayL/GRHayL_Core/initialize_metric.c::ghl_in
 - Recheck trigger: edits to `Unit_Tests/data_gen/unit_test_data_ET_Legacy_reconstruction.c` or `Unit_Tests/unit_test_ET_Legacy_reconstruction.c`.
 - Resolution check: inspect both files and verify either that replay consumes the generated perturbed input or that unused generation code is removed and output provenance is documented.
 
-Evidence (descriptive behavior): `Unit_Tests/unit_test_ET_Legacy_reconstruction.c`; corroboration: `Unit_Tests/data_gen/unit_test_data_ET_Legacy_reconstruction.c`.
+Evidence (descriptive behavior): `unit_test_ET_Legacy_reconstruction.c`; corroboration: `unit_test_data_ET_Legacy_reconstruction.c`.

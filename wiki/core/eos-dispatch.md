@@ -24,14 +24,14 @@ An unrecognized `ghl_eos_t` has no `else` error path: `ghl_initialize_eos_functi
 
 Direct parameter initializers (`ghl_initialize_simple_eos`, `ghl_initialize_hybrid_eos`, `ghl_initialize_tabulated_eos`) call those global pointers internally, so callers must call `ghl_initialize_eos_functions` first or use a `*_functions_and_params` wrapper. Wrappers mutate global dispatch before parameter validation (no rollback on error): simple/hybrid leave the destination struct untouched on error; tabulated frees any candidate and publishes an empty tagged aggregate on failure (callers must free live tables before reinitialization). For family-specific parameter validation, rectangular extrema, `tau_atm`, and tabulated wrapper defaults, see [EOS Initialization And Dispatch](../gems/eos/initialization-and-dispatch.md).
 
-Evidence (descriptive behavior): `GRHayL/GRHayL_Core/initialize_eos.c::ghl_initialize_eos_functions`; corroboration: `GRHayL/include/ghl_eos_functions_declaration.h`.
+Evidence (descriptive behavior): `initialize_eos.c::ghl_initialize_eos_functions`; corroboration: `ghl_eos_functions_declaration.h`.
 
 ### `GHL_DISABLE_HDF5` Dispatch Divergence And Core Test Coverage
 
 - **No-HDF5 divergence:** Under `GHL_DISABLE_HDF5`, `ghl_initialize_tabulated_eos` and `ghl_initialize_tabulated_eos_functions_and_params` return `ghl_error_used_disabled_hdf5` (publishing an empty `ghl_eos_tabulated` aggregate on valid non-live storage) without modifying dispatch. In contrast, calling `ghl_initialize_eos_functions(ghl_eos_tabulated)` directly hits `GHL_HDF5_ERROR_IF_USED` (`ghl_error`), terminating the process.
 - **Test coverage:** `unit_test_grhayl_core_test_suite.c` tests simple/hybrid bounds, rectangular extrema, and constant atmosphere; its tabulated setup/atmosphere checks remain commented out (`TODO`). Error paths live in `unit_test_code_error.c`.
 
-Evidence (descriptive behavior): `GRHayL/GRHayL_Core/initialize_eos.c::ghl_initialize_tabulated_eos`; corroboration: `GRHayL/include/ghl_nrpyeos_tabulated.h::GHL_HDF5_ERROR_IF_USED`.
+Evidence (descriptive behavior): `initialize_eos.c::ghl_initialize_tabulated_eos`; corroboration: `ghl_nrpyeos_tabulated.h::GHL_HDF5_ERROR_IF_USED`.
 
 ## Sources
 

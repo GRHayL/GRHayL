@@ -24,7 +24,7 @@ In `Tutorial-Leakage_Scheme-Implementation.ipynb`, `generate_ET_thorn` selects o
 
 Upstream `nrpy_core/outputC.py` enables SymPy common-subexpression elimination (`cse`) by default with prefix `tmp` starting at `tmp_0`, hoisting repeated expressions into `const` temporaries before final assignments. Individual `tmp_N` variables have no physical meaning and vary across symbolic ordering and SymPy versions; read named final assignments or notebook expressions instead. (`GRHayL/Flux_Source/generate_flux_source.py` uses NRPy 2 independently and does not establish NRPyLeakage's original settings.)
 
-Evidence (generated evidence): `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities.c::tmp_0`; corroboration: `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c::tmp_0`.
+Evidence (generated evidence): `NRPyLeakage_compute_neutrino_opacities.c::tmp_0`; corroboration: `NRPyLeakage_compute_neutrino_luminosities.c::tmp_0`.
 
 ### GRHayL Adaptations And Hand-Applied C Corrections
 
@@ -40,13 +40,13 @@ GRHayL adapts the ancestral outputs into struct-based public calls with `ghl_err
 
 Because no repo-local generator reproduces the complete file set, the following corrections were applied directly to checked-in C and must be preserved across any future regeneration: (1) shared cgs diffusion prefactor `6.0 / NRPyLeakage_c_light`, (2) `rho_cgs * rho_cgs` scaling in nucleon-nucleon bremsstrahlung, (3) single heavy-lepton `Q_free_nux` shared by numerator and inverse loss time, (4) stable `log1p` form for order-zero Fermi-Dirac integral, (5) density-derived free-nucleon blocking with `expm1` overlap algebra, and (6) paired shifted charged-current emission/absorption moments using $q = \widehat\mu - T(\eta_n - \eta_p)$ from a single Kirchhoff-balanced spectral parent. To regenerate a formula safely: edit symbolically in a disposable clone, diff against current C, reapply all GRHayL interfaces and hand-applied corrections, and re-verify tests.
 
-Evidence (descriptive behavior): `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h::nrpyl_effective_emission_rate`; corroboration: `GRHayL/include/ghl_nrpyleakage.h::NRPyLeakage_ZL_Q_npmass`.
+Evidence (descriptive behavior): `NRPyLeakage_rate_helpers.h::nrpyl_effective_emission_rate`; corroboration: `ghl_nrpyleakage.h::NRPyLeakage_ZL_Q_npmass`.
 
 ### Nucleon-Blocking Literature And Code Attribution
 
 `NRPyLeakage_nucleon_blocking.h` follows Ardevol-Pulpillo et al. (ILEAS, *MNRAS* 485, 2019, `doi:10.1093/mnras/stz613`) Appendix B Eqs. (69)-(71) for density-derived free-nucleon degeneracies and Appendix C Eqs. (100)-(109) for thresholded shifted reaction pairing (implemented as an algebraic grey reduction without finite charged-lepton mass, EOS effective masses, or mean-field shifts). Scalar `fdm1h` and `ifd1h` rational fits are ported from Scott Maddox's `fdint/_fdint.pyx` (implementing T. Fukushima's 2015 minimax fits) with FDINT's full BSD-3 license retained in the header. Common density normalization, fraction ordering, `expm1` overlap, and equal-population limits are GRHayL adaptations relying on Sterbenz's exact-subtraction theorem (P. H. Sterbenz, *Floating-Point Computation*, 1974, Sec. 4.3).
 
-Evidence (descriptive behavior): `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h::nrpyl_compute_population`; corroboration: `GRHayL/Neutrinos/NRPyLeakage/make.code.defn::NRPyLeakage_rate_helpers.h`.
+Evidence (descriptive behavior): `NRPyLeakage_nucleon_blocking.h::nrpyl_compute_population`; corroboration: `GRHayL/Neutrinos/NRPyLeakage/make.code.defn::NRPyLeakage_rate_helpers.h`.
 
 ## Sources
 

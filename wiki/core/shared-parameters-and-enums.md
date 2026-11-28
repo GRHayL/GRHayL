@@ -27,18 +27,18 @@ Every C file listed in `GRHayL/GRHayL_Core/make.code.defn` maps to one defining 
 - `ghl_compute_SU_Bsq_Ssq_BdotS` is declared in `GRHayL/include/ghl.h` but implemented in `GRHayL/Con2Prim/compute_SU_Bsq_Ssq_BdotS.c` ([Limits And Conversions](../gems/con2prim/limits-and-conversions.md)).
 - The opaque `ghl_c2p_nn_model` forward declaration in `ghl.h` belongs to [Neural-Network Primitive Guess](../gems/con2prim/neural-network-primitive-guess.md).
 
-Evidence (descriptive behavior): `GRHayL/include/ghl.h::ghl_get_con2prim_routine_name`; corroboration: `GRHayL/Con2Prim/get_con2prim_routine_name.c` and `GRHayL/Con2Prim/compute_SU_Bsq_Ssq_BdotS.c`.
+Evidence (descriptive behavior): `ghl.h::ghl_get_con2prim_routine_name`; corroboration: `get_con2prim_routine_name.c` and `compute_SU_Bsq_Ssq_BdotS.c`.
 
 ### Public Enums And Shared Struct Routes
 
 | Type | Defining route | Purpose |
 | --- | --- | --- |
-| `ghl_error_codes_t` / `ghl_error_keys` | [Errors, IO, Debug, And Utilities](errors-io-debug-utilities.md) | Recoverable return codes (`abort_if_error.c` messages) and `ghl_io.h` macro controls. (Ev: `GRHayL/include/ghl.h::ghl_error_codes_t`) |
-| `ghl_con2prim_id_t` | [Solver Matrix](../gems/con2prim/solver-matrix.md) | Solver IDs (`Noble2D`, `Font1D`, `Palenzuela1D`, `Newman1D`, entropy variants, `None`). (Ev: `GRHayL/include/ghl.h::ghl_con2prim_id_t`) |
-| `ghl_eos_t` / `ghl_eos_table_t` | [EOS Initialization And Dispatch](../gems/eos/initialization-and-dispatch.md) | Simple/hybrid/tabulated family enum and table-format enum (`ghl_eos_table_stellarcollapse`). (Ev: `GRHayL/include/ghl.h::ghl_eos_t`) |
-| `ghl_primitive_quantities` / `ghl_conservative_quantities` / `ghl_extrinsic_curvature` | [Struct Pack And Unpack](struct-pack-unpack.md) | Primitive, conservative, and symmetric `K_{ij}` point structs (`ghl.h`). (Ev: `GRHayL/include/ghl.h::ghl_extrinsic_curvature`) |
-| `ghl_metric_quantities` / `ghl_ADM_aux_quantities` | [Metric And ADM Helpers](metric-adm.md) | ADM 3-metric and 4-metric structs (`ghl.h`). (Ev: `GRHayL/include/ghl.h::ghl_ADM_aux_quantities`) |
-| `ghl_stress_energy` | [Stress-Energy And `smallb`](stress-energy-smallb.md) | `T4[4][4]` stress-energy struct (`ghl.h`). (Ev: `GRHayL/include/ghl.h::ghl_stress_energy`) |
+| `ghl_error_codes_t` / `ghl_error_keys` | [Errors, IO, Debug, And Utilities](errors-io-debug-utilities.md) | Recoverable return codes (`abort_if_error.c` messages) and `ghl_io.h` macro controls. (Ev: `ghl.h::ghl_error_codes_t`) |
+| `ghl_con2prim_id_t` | [Solver Matrix](../gems/con2prim/solver-matrix.md) | Solver IDs (`Noble2D`, `Font1D`, `Palenzuela1D`, `Newman1D`, entropy variants, `None`). (Ev: `ghl.h::ghl_con2prim_id_t`) |
+| `ghl_eos_t` / `ghl_eos_table_t` | [EOS Initialization And Dispatch](../gems/eos/initialization-and-dispatch.md) | Simple/hybrid/tabulated family enum and table-format enum (`ghl_eos_table_stellarcollapse`). (Ev: `ghl.h::ghl_eos_t`) |
+| `ghl_primitive_quantities` / `ghl_conservative_quantities` / `ghl_extrinsic_curvature` | [Struct Pack And Unpack](struct-pack-unpack.md) | Primitive, conservative, and symmetric `K_{ij}` point structs (`ghl.h`). (Ev: `ghl.h::ghl_extrinsic_curvature`) |
+| `ghl_metric_quantities` / `ghl_ADM_aux_quantities` | [Metric And ADM Helpers](metric-adm.md) | ADM 3-metric and 4-metric structs (`ghl.h`). (Ev: `ghl.h::ghl_ADM_aux_quantities`) |
+| `ghl_stress_energy` | [Stress-Energy And `smallb`](stress-energy-smallb.md) | `T4[4][4]` stress-energy struct (`ghl.h`). (Ev: `ghl.h::ghl_stress_energy`) |
 
 ### `ghl_parameters` And `ghl_eos_parameters` Field Groups
 
@@ -46,7 +46,7 @@ Evidence (descriptive behavior): `GRHayL/include/ghl.h::ghl_get_con2prim_routine
 - **`ghl_eos_parameters` (`initialize_eos.c`):** stores `eos_type`, `table_type`, `clean_sound_speed`, atmosphere/min/max bounds (`rho_*`, `tau_atm`, `press_*`, `Y_e_*`, `T_*`, `eps_*`, `entropy_*`), piecewise-polytrope arrays (`neos`, `rho_ppoly`, `Gamma_ppoly`, `K_ppoly`, `eps_integ_const`, `p_ppoly`, `Gamma_th`), and tabulated table arrays/beta-equilibrium fields/`root_finding_precision`. On success, Core EOS initializers replace the destination with a zero-initialized aggregate populated for the active family (setting unused `Y_e_atm` and `T_atm` to zero for simple/hybrid so constant Atmosphere can copy them).
 - **Cross-module edit hazards:** modifying `ghl_con2prim_id_t`, `ghl_error_codes_t`, `ghl_eos_parameters`, `ppm_*`, or `Lorenz_damping_factor` impacts downstream gems, `abort_if_error.c`, and `implementations/GRHayLib/`.
 
-Evidence (descriptive behavior): `GRHayL/GRHayL_Core/initialize_params.c::ghl_initialize_params`; corroboration: `GRHayL/include/ghl.h::ghl_parameters` and `GRHayL/include/ghl.h::ghl_eos_parameters`.
+Evidence (descriptive behavior): `initialize_params.c::ghl_initialize_params`; corroboration: `ghl.h::ghl_parameters` and `ghl.h::ghl_eos_parameters`.
 
 ## Sources
 

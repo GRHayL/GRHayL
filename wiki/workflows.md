@@ -4,7 +4,7 @@
 
 ## Summary
 
-Start at [AGENTS.md](../AGENTS.md), follow branch and sub-branch `index.md` routers directly, and read only the needed leaf or `###` subsection. Record each durable fact once in its defining leaf, compute reverse file dependencies dynamically with `rg -l -F`, keep builds and mutating scripts inside disposable trees, and verify edits with `tools/kb_lint.py` and [Language For Computational Physicists](computational-physics-language.md).
+Start at [AGENTS.md](../AGENTS.md), follow branch and sub-branch `index.md` routers directly, and read only the needed leaf or `###` subsection. Record each durable fact once in its defining leaf, compute reverse file dependencies dynamically with `rg -l -F`, keep builds and mutating scripts inside disposable trees, and verify edits with `docs/kb_lint.py` and [Language For Computational Physicists](computational-physics-language.md).
 
 ## Search Order
 
@@ -20,11 +20,11 @@ Start at [AGENTS.md](../AGENTS.md), follow branch and sub-branch `index.md` rout
 
 ## Ingest
 
-1. Confirm source coverage in [raw/SOURCES.md](../raw/SOURCES.md) via an aggregate row, an exact local row (`Source | Status`), or an external row (`Source | Tier | Provenance | Status | Ingest | Notes`, `Notes <= 80` B). Never store hashes, dates, timestamps, `mtime` values, inventory counts, line numbers, or run results.
+1. Confirm source coverage via an aggregate `Glob pattern` in [source-map.md](source-map.md) (registered by key in [raw/SOURCES.md](../raw/SOURCES.md)), an exact local `raw/SOURCES.md` row (`Source | Status`), or an external row (`Source | Tier | Provenance | Status | Ingest | Notes`, `Notes <= 80` B). Never store hashes, dates, timestamps, `mtime` values, inventory counts, line numbers, or run results.
 2. Select the single defining leaf for the topic under the appropriate branch router.
-3. Synthesize durable facts in direct computational-physics prose, add `<= 300` B `Evidence (<role>):` lines using shortest-unambiguous `` `subpath.c::symbol` `` tags for high-risk claims (C struct members as `struct.field`, binary `.h5` by path only), and list each cited file or URL once in `## Sources`.
+3. Synthesize durable facts in direct computational-physics prose, add `<= 300` B `Evidence (<role>):` lines using unambiguous `` `subpath.c::symbol` `` tags ([KB Rules](SCHEMA.md#claim-and-evidence-rules)) for high-risk claims (C struct members as `struct.field`, binary `.h5` without `::symbol`), and list each cited file or URL once in `## Sources`.
 4. Partition `## Detail` with descriptive `###` headings whenever `## Detail` exceeds `4,000` B (`<= 6,000` B per chunk, `<= 20,000` B per leaf) and keep `1` to `6` relation-prefixed non-parent `## See Also` bullets.
-5. Update the immediate parent `index.md` and [catalog.md](catalog.md) only when adding, moving, renaming, or deleting a leaf; when an aggregate's scope changes, update its [source-map.md](source-map.md) row and its `raw/SOURCES.md` provenance in the same edit.
+5. Update the immediate parent `index.md` and [catalog.md](catalog.md) only when adding, moving, renaming, or deleting a leaf; when an aggregate's path membership changes, edit only its `Glob pattern` in [source-map.md](source-map.md), and revise its `raw/SOURCES.md` provenance only when the described content changes.
 
 ## Query Filing
 
@@ -36,7 +36,7 @@ Do not file one-off answers. File durable syntheses only when they resolve recur
 
 ## Living-Source Change
 
-1. Inspect the changed code, header, manifest, Doxygen, or CI diff and verify [raw/SOURCES.md](../raw/SOURCES.md) coverage plus [Change Impact](architecture/change-impact.md).
+1. Inspect the changed code, header, manifest, Doxygen, or CI diff and verify source coverage (Ingest step 1) plus [Change Impact](architecture/change-impact.md).
 2. Locate citing wiki pages dynamically with `rg -l -F '<changed_path>' wiki/`.
 3. Run `rg -l -F '<changed_symbol>' wiki/` across other wiki pages only when a public function signature, enum/struct layout, header guard, `make.code.defn` manifest entry, or mathematical convention changed—never expand 1-hop across generic [glossary.md](glossary.md) terms.
 4. Reconcile the defining leaf; replace duplicate prose in neighboring leaves with a one-sentence link. Mark a leaf `stale` with a `CONTR-XXXX` entry only when immediate reconciliation is blocked.
@@ -50,7 +50,7 @@ When sources conflict or living-source drift cannot be reconciled in the same ch
 
 ## Safe Reproduction
 
-In the shared repository checkout, run only side-effect-free scoped checks (`PYTHONDONTWRITEBYTECODE=1 python3 -B tools/kb_lint.py`, `git diff HEAD --check`, `./configure --help`, `./scripts/parser`, `sh -n`/`bash -n`, read-only YAML parsing). Run `./configure`, `make`, `make tests`, `make datagen`, `.github/run_tests.sh`, `generate_makefile.sh`, CompOSE converters, and Doxygen builds inside a unique disposable copy with redirected output paths (`OUTPUT_DIRECTORY` for Doxygen, never beside `docs/raw/`). Inspect scripts for downloads, cleanup globs, and failure leftovers before execution; never run `make` on broken `generate_makefile.sh` output, never edit `docs/raw/Reconstruction.dox` during KB work, and never add or enable tests or CI test executions without explicit user permission.
+In the shared repository checkout, run only side-effect-free scoped checks (`PYTHONDONTWRITEBYTECODE=1 python3 -B docs/kb_lint.py`, `git diff HEAD --check`, `./configure --help`, `./scripts/parser`, `sh -n`/`bash -n`, read-only YAML parsing). Run `./configure`, `make`, `make tests`, `make datagen`, `.github/run_tests.sh`, `generate_makefile.sh`, CompOSE converters, and Doxygen builds inside a unique disposable copy with redirected output paths (`OUTPUT_DIRECTORY` for Doxygen, never beside `docs/raw/`). Inspect scripts for downloads, cleanup globs, and failure leftovers before execution; never run `make` on broken `generate_makefile.sh` output, never edit `docs/raw/Reconstruction.dox` during KB work, and never add or enable tests or CI test executions without explicit user permission.
 
 ## Evidence-First Debugging
 
@@ -61,16 +61,16 @@ Follow the runtime failure inspection rule in [AGENTS.md](../AGENTS.md#agent-wor
 Run before completing KB edits:
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 python3 -B tools/kb_lint.py
+PYTHONDONTWRITEBYTECODE=1 python3 -B docs/kb_lint.py
 git diff HEAD --check
 git diff --cached --check
 ```
 
 `git diff HEAD --check` checks the working tree against `HEAD` and `git diff --cached --check` checks the staged copy; run `git add -N` on new pages first so the working-tree check sees them.
 
-`tools/kb_lint.py` must exit `0` and print `KB lint passed.`
+`docs/kb_lint.py` must exit `0` and print `KB lint passed.`
 
-Optional review-time read-only scans (not part of `tools/kb_lint.py`):
+Optional review-time read-only scans (not part of `docs/kb_lint.py`):
 
 ```bash
 # Forbidden volatile metadata, hashes, line citations, dates, and run results:
@@ -89,7 +89,7 @@ Semantic review checklist:
 ## Sources
 
 - [AGENTS.md](../AGENTS.md) - root router, working rules, computational-physics prose mandate, and test/CI restriction
-- [tools/kb_lint.py](../tools/kb_lint.py) - link, reachability, and Evidence-citation checks
+- [docs/kb_lint.py](../docs/kb_lint.py) - link, reachability, and Evidence-citation checks
 - [README.md](../README.md) - build, install, and test workflow overview
 - [configure](../configure) - build configuration options and HDF5 flags
 

@@ -33,7 +33,7 @@ After roundoff normalization of `X_n` and `X_p`, both-zero composition takes a n
 
 All finite-value guards rely on `robust_isfinite` / `robust_isnan` (alias-safe IEEE binary64 `memcpy` bit classification with C99 fallback) paired with `configure`'s rejection of unsafe math / flush-to-zero flags (direct and Cactus builds must preserve `-fp-model=precise -no-ftz` on Intel LLVM).
 
-Evidence (descriptive behavior): `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h::nrpyl_sanitize_opacities`; corroboration: `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h::nrpyl_sanitize_luminosities`.
+Evidence (descriptive behavior): `NRPyLeakage_rate_helpers.h::nrpyl_sanitize_opacities`; corroboration: `NRPyLeakage_rate_helpers.h::nrpyl_sanitize_luminosities`.
 
 ### EOS-Dependent Routine Flows
 
@@ -41,7 +41,7 @@ Evidence (descriptive behavior): `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_rate_
 - **`NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c` (`NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms`):** Runs the shared HDF5/EOS/blocking/shifted-beta-moment sequence, evaluates generated rate, opacity, and optical-depth-limited source blocks, writes `*R_source`, `*Q_source`, and all six `kappa` entries (`nue[0..1]`, `anue[0..1]`, `nux[0..1]`), and runs both `nrpyl_sanitize_sources` and `nrpyl_sanitize_opacities` before returning `ghl_error_nrpyleakage_nonfinite_output` if either group was sanitized. Covered by `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c` (RK4 evolution of `Y_e` and `eps`, checking every EOS lookup with `ghl_abort_if_error`; opacity outputs are executed there but not compared against reference binaries).
 - **`NRPyLeakage_compute_neutrino_opacities.c` (`NRPyLeakage_compute_neutrino_opacities`):** Runs the shared HDF5/EOS/blocking sequence, evaluates $\nu_e$ and $\bar\nu_e$ scattering Fermi integrals $F_2\text{--}F_5$ first, and passes them to `nrpyl_compute_beta_absorption_moments_with_fermi`, reusing $F_2, F_3$ as normalizers for both channels. Any zero-threshold channel ($a = \max(0, -\mathrm{sign}\cdot q/T) = 0$) feeds those four unshifted integrals to `nrpyl_combine_shifted_fermi_moments` to form its $b$-shifted polynomial moments ($b = \max(0, \mathrm{sign}\cdot q/T)$) without re-evaluating Fermi integrals; nonzero-threshold channels evaluate $F_2\text{--}F_5$ at $\eta_\nu - a$. It then evaluates remaining opacity terms, writes all six `kappa` entries, and runs `nrpyl_sanitize_opacities`. Covered by `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c` (serial check; not covered by source-term tests).
 
-Evidence (descriptive behavior): `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities.c::NRPyLeakage_compute_neutrino_opacities`; corroboration: `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`.
+Evidence (descriptive behavior): `NRPyLeakage_compute_neutrino_opacities.c::NRPyLeakage_compute_neutrino_opacities`; corroboration: `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`.
 
 ### Table-Free Routine Flows
 
@@ -49,7 +49,7 @@ Evidence (descriptive behavior): `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compu
 - **`NRPyLeakage_optical_depths_PathOfLeastResistance.c` (`NRPyLeakage_optical_depths_PathOfLeastResistance`):** Accepts `dxx[0..2]` (`x, y, z`), three-point metric stencils `[minus-one, center, plus-one]` (`stencil_gxx`, `stencil_gyy`, `stencil_gzz`), six neighbor opacity and depth structs (`im1`, `ip1`, `jm1`, `jp1`, `km1`, `kp1`), local opacity, and output depth. It averages face diagonal metrics to compute six face path lengths, averages local and neighbor opacities on each face, forms six candidate optical depths per species and slot, selects the minimum via nested `fmin`, and writes all six `tau_i_j_k` entries.
   Because it returns `void` with no input validation, negative face-averaged metrics enter `sqrt` unguarded and nested `fmin` can mask a NaN candidate if another candidate is finite. Covered by `unit_test_nrpyleakage_constant_density_sphere.c` (including `check_sphere_caller_neighbor_order` with asymmetric x-face metrics) and the all-direction asymmetric stencil in `unit_test_nrpyleakage_physics.c`.
 
-Evidence (descriptive behavior): `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_optical_depths_PathOfLeastResistance.c::NRPyLeakage_optical_depths_PathOfLeastResistance`; corroboration: `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_Fermi_Dirac_integrals.c::NRPyLeakage_Fermi_Dirac_integrals`.
+Evidence (descriptive behavior): `NRPyLeakage_optical_depths_PathOfLeastResistance.c::NRPyLeakage_optical_depths_PathOfLeastResistance`; corroboration: `NRPyLeakage_Fermi_Dirac_integrals.c::NRPyLeakage_Fermi_Dirac_integrals`.
 
 ## Sources
 

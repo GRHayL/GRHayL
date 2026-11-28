@@ -28,7 +28,7 @@ Build per [Build And Configure](../../architecture/build-and-configure.md) (`./c
 - **CI workflows:** Every compiler workflow runs `ET-Legacy` (`induction_gauge_rhs`, `HLL_flux`), `induction-interpolators` (`ccc_ADM`, `ccc_BSSN`, `vvv_ADM`; excludes nonexistent `vvv_BSSN`), and `induction-flux` (`unit_test_HLL_flux`).
 - **Build-generator note:** `configure` + `scripts/parser` parse Induction manifests cleanly (`GRHayL/Induction/Interpolators/make.code.defn` terminates its final `SRCS` line without trailing continuation); do not run `make` on broken legacy `generate_makefile.sh` output ([Build And Configure](../../architecture/build-and-configure.md)).
 
-Evidence (CI behavior): `.github/workflows/github-actions-Ubuntu-gcc.yml::induction-interpolators`; corroboration: `.github/workflows/github-actions-Ubuntu-gcc.yml::induction-flux` and `.github/run_tests.sh::unit_test_HLL_flux`.
+Evidence (CI behavior): `github-actions-Ubuntu-gcc.yml::induction-interpolators`; corroboration: `github-actions-Ubuntu-gcc.yml::induction-flux` and `run_tests.sh::unit_test_HLL_flux`.
 
 ## Sources
 

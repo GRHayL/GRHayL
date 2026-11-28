@@ -16,7 +16,7 @@
 - **Preconditions:** Supply finite ADM geometry with positive lapse, finite physical primitives with rescaled `BU` and initialized positive `u0`, and usable EOS enthalpy/sound speed. `_checked` propagates EOS errors only; it does not validate input physics or output finiteness.
 - **Mutable primitive arguments:** Both states call global `ghl_compute_h_and_cs2`. Production tabulated dispatch clamps `rho`, `Y_e`, and `temperature` to configured EOS bounds and recomputes `press` and `eps` in place ([Tabulated Interpolation And Bounds](../eos/tabulated-interpolation-and-bounds.md)). On error, `_checked` leaves `cmin`/`cmax` unchanged while retaining any primitive mutation from the first or failing callback—pass copies if face states must remain immutable.
 
-Evidence (descriptive behavior): `GRHayL/include/ghl_flux_source.h::ghl_calculate_characteristic_speed_dirn0_checked`; corroboration: `GRHayL/Flux_Source/ghl_calculate_characteristic_speed_dirn0.c`.
+Evidence (descriptive behavior): `ghl_flux_source.h::ghl_calculate_characteristic_speed_dirn0_checked`; corroboration: `ghl_calculate_characteristic_speed_dirn0.c`.
 
 ### Induction Coupling And Test Coverage
 
@@ -26,7 +26,7 @@ Evidence (descriptive behavior): `GRHayL/include/ghl_flux_source.h::ghl_calculat
 - `unit_test_hybrid_flux.c` and `unit_test_tabulated_flux.c` replay precomputed speed arrays from generators, while `unit_test_hybrid_flux.c` additionally injects first- and second-callback failures into every `_checked` speed direction to verify unchanged outputs.
 - `unit_test_tabulated_eos_compose.c` validates analytic magnetized speed bounds in all three directions and, in direction 0 only, table-bound clamping of `rho`, `Y_e`, and `temperature` with finite `press` and `eps`.
 
-Evidence (descriptive behavior): `Unit_Tests/unit_test_hybrid_flux.c`; corroboration: `Unit_Tests/unit_test_tabulated_eos_compose.c`.
+Evidence (descriptive behavior): `unit_test_hybrid_flux.c`; corroboration: `unit_test_tabulated_eos_compose.c`.
 
 ## Sources
 

@@ -16,7 +16,7 @@ Con2Prim separates recovery-side helpers (`ghl_apply_conservative_limits`, `ghl_
   - *Simple/hybrid:* sets `rho` from undensitized density, `u0 = 1`, `vU = -betaU`, and cold `press`/`eps`; leaves `BU`, `entropy`, `Y_e`, and `temperature` untouched.
   - *Tabulated:* calls `ghl_compute_SU_Bsq_Ssq_BdotS`, seeds temperature at `T_max`, enforces `(rho, Y_e, eps)` bounds via `ghl_tabulated_enforce_bounds_rho_Ye_eps`, inverts `eps` for `(press, entropy, temperature)`, and runs `ghl_limit_utilde_and_compute_v`. Invalid/nonfinite algebraic inputs fall back to an atmosphere guess preserving finite conservative `Y_e` at positive density within bounds; an EOS-inversion failure preserves bounded `(rho, Y_e, eps)`, keeps `T_max`, substitutes finite atmosphere `press`/`entropy`, and completes velocities unless a later quantity is nonfinite.
 
-Evidence (descriptive behavior): `GRHayL/Con2Prim/apply_conservative_limits.c::ghl_apply_conservative_limits`; corroboration: `GRHayL/Con2Prim/guess_primitives.c::ghl_guess_primitives`.
+Evidence (descriptive behavior): `apply_conservative_limits.c::ghl_apply_conservative_limits`; corroboration: `guess_primitives.c::ghl_guess_primitives`.
 
 ### Post-Recovery Limits, `utilde` Limiter, And Forward Conversions
 
@@ -28,7 +28,7 @@ Evidence (descriptive behavior): `GRHayL/Con2Prim/apply_conservative_limits.c::g
 - **`ghl_limit_utilde_and_compute_v` (`limit_utilde_and_compute_v.c`):** unchecked internal helper taking valid ADM metric, finite `utU[3]`, and finite `max_Lorentz_factor >= 1`; rescales `utU` only when the factor is `< 1` (never increasing speed), writes `prims->u0` and `prims->vU`, and returns whether rescaling occurred (without certifying finiteness).
 - **Contractions & forward conversions:** `ghl_compute_SU_Bsq_Ssq_BdotS` (`compute_SU_Bsq_Ssq_BdotS.c`, declared in `ghl.h`) computes raised `SU`, `Bsq`, `Ssq`, `BdotS` from undensitized conservatives and `BU`, rescaling only a local copy of `SD`. `ghl_compute_conservs` (`compute_conservs.c`) and `ghl_compute_conservs_and_Tmunu` (`compute_conservs_and_Tmunu.c`, writing the ten upper-triangle `T4` components inline without calling `ghl_compute_TDNmunu`) require valid `prims->eps` and `prims->u0` and emit densitized conservatives.
 
-Evidence (descriptive behavior): `GRHayL/Con2Prim/enforce_primitive_limits_and_compute_u0.c::ghl_enforce_primitive_limits_and_compute_u0`; corroboration: `GRHayL/Con2Prim/limit_utilde_and_compute_v.c` and `GRHayL/Con2Prim/compute_SU_Bsq_Ssq_BdotS.c`.
+Evidence (descriptive behavior): `enforce_primitive_limits_and_compute_u0.c::ghl_enforce_primitive_limits_and_compute_u0`; corroboration: `limit_utilde_and_compute_v.c` and `compute_SU_Bsq_Ssq_BdotS.c`.
 
 ## Sources
 

@@ -19,7 +19,7 @@
 - It returns `ghl_error_u0_singular` if the final achieved speed is nonfinite, luminal/superluminal, or above the cap, or if computed `u0` is nonfinite; otherwise it writes `prims->u0` and returns `ghl_success`.
 - **Double-precision accuracy:** for limited states, relative `u0` accuracy is roughly `DBL_EPSILON * max_Lorentz_factor^2` (~`2e-6` at `1e5`, ~`2e-2` at `1e7`). Near `5e7`, a double-precision accepted state can be superluminal in exact arithmetic; above ~`1.34e8`, `1 - inv_sq_max_Lorentz_factor` rounds to `1.0`, so any state requiring limiting returns `ghl_error_u0_singular`. Pointers, metric signature, and lapse positivity are not checked.
 
-Evidence (descriptive behavior): `GRHayL/GRHayL_Core/limit_v_and_compute_u0.c::ghl_limit_v_and_compute_u0`; corroboration: `GRHayL/include/ghl.h::ghl_error_u0_singular`.
+Evidence (descriptive behavior): `limit_v_and_compute_u0.c::ghl_limit_v_and_compute_u0`; corroboration: `ghl.h::ghl_error_u0_singular`.
 
 ### Separation From Con2Prim Limiting And Test Coverage
 
@@ -29,7 +29,7 @@ Evidence (descriptive behavior): `GRHayL/GRHayL_Core/limit_v_and_compute_u0.c::g
 - `Unit_Tests/unit_test_code_error.c` key `4` calls `ghl_limit_v_and_compute_u0` with `NaN` velocities to verify `ghl_error_u0_singular`.
 - `unit_test_hybrid_flux.c` and `unit_test_tabulated_flux.c` call `ghl_limit_v_and_compute_u0` on sub-cap face states only.
 
-Evidence (descriptive behavior): `Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c::ghl_limit_v_and_compute_u0`; corroboration: `Unit_Tests/unit_test_code_error.c::ghl_error_u0_singular`.
+Evidence (descriptive behavior): `unit_test_enforce_primitive_limits_and_compute_u0.c::ghl_limit_v_and_compute_u0`; corroboration: `unit_test_code_error.c::ghl_error_u0_singular`.
 
 ## Sources
 

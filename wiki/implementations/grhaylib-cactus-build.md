@@ -17,7 +17,7 @@
 - **`interface.ccl`:** declares `implements: GRHayLib` and `INCLUDE HEADER: GRHayLib.h in GRHayLib.h`.
 - **`schedule.ccl`:** schedules `GRHayLib_initialize` at `CCTK_WRAGH` only when `ID_converter_ILGRMHD` is not active, and always schedules `GRHayLib_terminate` at `CCTK_TERMINATE`.
 
-Evidence (descriptive behavior): `implementations/GRHayLib/configuration.ccl::requires HDF5`; corroboration: `implementations/GRHayLib/interface.ccl::GRHayLib.h` and `implementations/GRHayLib/schedule.ccl::CCTK_WRAGH`.
+Evidence (descriptive behavior): `configuration.ccl::requires HDF5`; corroboration: `interface.ccl::GRHayLib.h` and `schedule.ccl::CCTK_WRAGH`.
 
 ### Aggregate Header And Direct-Compile Source Symlinks
 
@@ -26,7 +26,7 @@ Evidence (descriptive behavior): `implementations/GRHayLib/configuration.ccl::re
 
 Static CCL, header, and symlink parity can be checked in this repository, whereas Cactus compilation, scheduling, parameter parsing, and runtime execution require an external Cactus/Einstein Toolkit environment; upstream `Unit_Tests/` and `ET_Legacy` tests do not verify the thorn.
 
-Evidence (descriptive behavior): `implementations/GRHayLib/src/make.code.defn::initialize_and_shutdown.c`; corroboration: `implementations/GRHayLib/src/GRHayLib.h::ghl_eos` and `implementations/GRHayLib/README::CarpetX`.
+Evidence (descriptive behavior): `implementations/GRHayLib/src/make.code.defn::initialize_and_shutdown.c`; corroboration: `GRHayLib.h::ghl_eos` and `README::CarpetX`.
 
 ## Sources
 

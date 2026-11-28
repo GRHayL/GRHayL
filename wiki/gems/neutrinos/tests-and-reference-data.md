@@ -21,7 +21,7 @@ Reference generators live inside the test translation units (no matching `Unit_T
 
 `.github/run_tests.sh` fetches Neutrinos binaries using `.github/et-legacy-testdata-ref`, whereas compiler workflows fetch the Neutrinos directory from `GRHayL/TestData` `main`. Locally regenerated key-`0` binaries detect implementation drift against installed formulas rather than independently validating physics.
 
-Evidence (descriptive behavior): `Unit_Tests/nrpyleakage_main.h::main`; corroboration: `.github/run_tests.sh::nrpyleakage_optically_thin_gas`.
+Evidence (descriptive behavior): `nrpyleakage_main.h::main`; corroboration: `run_tests.sh::nrpyleakage_optically_thin_gas`.
 
 ### HDF5 Setup And `--disable-hdf5` Build Filtering
 
@@ -37,7 +37,7 @@ Table-backed tests require an unpacked HDF5 EOS table; CI and `.github/run_tests
 
 Under `--disable-hdf5`, `configure` sets `GHL_DISABLE_HDF5`, retains every guarded NRPyLeakage implementation `.c` file (so `ghl_error_used_disabled_hdf5` return paths remain linkable), excludes `unit_test_nrpyleakage_optically_thin_gas.c`, `unit_test_nrpyleakage_constant_density_sphere.c`, and `unit_test_nrpyleakage_luminosities.c`, and keeps `unit_test_nrpyleakage_physics.c` and `unit_test_nrpyleakage_classifier_fallback.c` built and runnable.
 
-Evidence (descriptive behavior): `configure::unit_test_nrpyleakage_optically_thin_gas`; corroboration: `Unit_Tests/unit_test_nrpyleakage_classifier_fallback.c::main`.
+Evidence (descriptive behavior): `configure::unit_test_nrpyleakage_optically_thin_gas`; corroboration: `unit_test_nrpyleakage_classifier_fallback.c::main`.
 
 ### Per-Test Coverage And Assertion Strength
 
@@ -50,13 +50,13 @@ Evidence (descriptive behavior): `configure::unit_test_nrpyleakage_optically_thi
 
 Because sphere and luminosity replays set absolute tolerance to `0.0`, tiny opacities, depths, and luminosities are not masked by the generic `1e-30` floor; when both unperturbed and perturbed reference values are exactly `0.0`, the computed value must be `0.0` (a negative control rejects `DBL_MIN`).
 
-Evidence (descriptive behavior): `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c::check_sphere_caller_neighbor_order`; corroboration: `Unit_Tests/unit_test_nrpyleakage_luminosities.c::luminosity_pert_test_fail`.
+Evidence (descriptive behavior): `unit_test_nrpyleakage_constant_density_sphere.c::check_sphere_caller_neighbor_order`; corroboration: `unit_test_nrpyleakage_luminosities.c::luminosity_pert_test_fail`.
 
 ### CI Workflow Selection
 
 Every compiler/OS workflow under `.github/workflows/` (Ubuntu GCC, Ubuntu Clang, Ubuntu Intel, macOS GCC, macOS Clang) defines a `neutrinos` job executing the table-free tests and key-`1` replays directly rather than calling `.github/run_tests.sh`. Ubuntu GCC, Ubuntu Clang, and macOS GCC `neutrinos` jobs invoke `.github/actions/code-coverage` (while Intel and macOS Clang comment out the step); for compiler-specific `code-coverage/action.yml` collection behavior and caveats, see [CI Workflows](../../architecture/ci-workflows.md). `.github/run_tests.sh` tracks downloaded/unpacked files in its `EXIT` trap and skips downloads when regular files already exist (see [Runner And Build Outputs](../../tests/runner-and-build-outputs.md)).
 
-Evidence (CI behavior): `.github/workflows/github-actions-Ubuntu-gcc.yml::neutrinos`; corroboration: `.github/et-legacy-testdata-ref`.
+Evidence (CI behavior): `github-actions-Ubuntu-gcc.yml::neutrinos`; corroboration: `et-legacy-testdata-ref`.
 
 ## Sources
 

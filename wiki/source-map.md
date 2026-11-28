@@ -5,7 +5,7 @@
 
 ## Scope
 
-This table maps the multi-file source trees registered in [raw/SOURCES.md](../raw/SOURCES.md) to glob patterns, authority tiers, and uncovered scope, following [KB Rules](SCHEMA.md#citation-rules) and [Claim And Evidence Rules](SCHEMA.md#claim-and-evidence-rules). Each aggregate's `Status` and `Ingest` and all external source tiers live only in [raw/SOURCES.md](../raw/SOURCES.md). Reverse file-to-page dependencies are computed dynamically with `rg -l -F '<path>' wiki/`.
+This table maps the multi-file source trees registered in [raw/SOURCES.md](../raw/SOURCES.md) to glob patterns, authority tiers, and uncovered scope; its `Glob pattern` column alone defines each aggregate's path membership, following [KB Rules](SCHEMA.md#citation-rules) and [Claim And Evidence Rules](SCHEMA.md#claim-and-evidence-rules). Each aggregate's `Status` and `Ingest` and all external source tiers live only in [raw/SOURCES.md](../raw/SOURCES.md). Reverse file-to-page dependencies are computed dynamically with `rg -l -F '<path>' wiki/`.
 
 ## Aggregate Rows
 

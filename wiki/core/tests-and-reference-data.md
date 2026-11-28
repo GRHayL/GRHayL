@@ -15,7 +15,7 @@
 - **`data_gen/unit_test_data_grhayl_core_test_suite.c`:** calls `ghl_randomize_metric` to write lowercase `grhayl_core_test_suite_input.bin`.
 - **`unit_test_code_error.c`:** covers invalid EOS bounds, singular `u0` (key `4`), invalid `ghl_get_con2prim_routine_name` (key `33`), and HDF5/table/bracketing errors as expected nonzero process exits.
 
-Evidence (descriptive behavior): `Unit_Tests/unit_test_grhayl_core_test_suite.c::grhayl_core_test_suite_input.bin`; corroboration: `Unit_Tests/data_gen/unit_test_data_grhayl_core_test_suite.c`.
+Evidence (descriptive behavior): `unit_test_grhayl_core_test_suite.c::grhayl_core_test_suite_input.bin`; corroboration: `unit_test_data_grhayl_core_test_suite.c`.
 
 ### Indirect Core-Dependent Suites, Helpers, And Coverage Gaps
 
@@ -24,7 +24,7 @@ Evidence (descriptive behavior): `Unit_Tests/unit_test_grhayl_core_test_suite.c:
 - **Helper-only files:** `ghl_unit_tests.h` (not installed), `pert_test_fail_{conservatives,primitives,stress_energy}.c`, and `randomize_{metric,primitives}.c` (`randomize_metric.c` fixes `lapse = 1.0`, `shift = 0`); see [Data Generators And Helpers](../tests/data-generators-and-helpers.md).
 - **Direct coverage gaps:** no complete `ghl_initialize_*`/`ghl_return_*` round-trip test; no assertions on `ghl_initialize_params` Con2Prim/PPM defaults; no direct test of uninitialized EOS pointers, full dispatch-target tables, or invalid `ghl_eos_t`; no Core-suite check of singular simple `Gamma == 1`, clamp functions (`ghl_imin`/`ghl_imax`/`ghl_iclamp`/`ghl_clamp`), standalone 3D metric helpers, `ghl_compute_TUPmunu`, or tabulated atmosphere resets.
 
-Evidence (descriptive behavior): `Unit_Tests/unit_test_compute_conservs_and_Tmunu.c::ghl_compute_TDNmunu`; corroboration: `Unit_Tests/randomize_metric.c`.
+Evidence (descriptive behavior): `unit_test_compute_conservs_and_Tmunu.c::ghl_compute_TDNmunu`; corroboration: `randomize_metric.c`.
 
 ## Sources
 

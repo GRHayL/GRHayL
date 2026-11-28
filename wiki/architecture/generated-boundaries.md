@@ -41,14 +41,14 @@ Claim status: contested; contradiction: CONTR-0002. See [CONTR-0002](../contradi
 
 `configure` discovers `Unit_Tests/unit_test_*.c` and `Unit_Tests/data_gen/unit_test_data_*.c` and writes `Makefile` rules that `make tests` and `make datagen` build into `test/` and `test/data_gen/`. `.github/run_tests.sh` downloads `*.bin` reference files, `simple_table.h5`, and compressed StellarCollapse tables (`LS220`, `SLy4`) into repository root and cleans tracked paths on `EXIT`; see [Runner And Build Outputs](../tests/runner-and-build-outputs.md). In HDF5 mode, `unit_test_c2p_nn_guess` creates and removes its own private temporary directory for model files. `Unit_Tests/sample_table/generate_simple_table.py` synthesizes `simple_table.h5`, while the checked-in Hempel SFHo simplified `.h5` file is a tracked sample table, not a `configure` output.
 
-Evidence (descriptive behavior): `Unit_Tests/sample_table/generate_simple_table.py`; corroboration: `Unit_Tests/unit_test_c2p_nn_guess.c`.
+Evidence (descriptive behavior): `generate_simple_table.py`; corroboration: `unit_test_c2p_nn_guess.c`.
 
 ### NRPy-Derived C Code In `Flux_Source` And `Neutrinos`
 
 - **`Flux_Source`:** `GRHayL/Flux_Source/generate_flux_source.py` is the symbolic NRPy 2 driver (`generate_source`, `generate_speeds`, `generate_fluxes`) producing `ghl_calculate_source_terms.c`, `ghl_calculate_characteristic_speed_dirn{0,1,2}.c`, and each HLLE variant subdirectory (`hybrid`, `hybrid_entropy`, `tabulated`, `tabulated_entropy`). `generate_flux_source.sh <empty-staging-dir>` clones the pinned NRPy 2 revision and runs the driver into an empty directory outside `GRHayL/Flux_Source`, checking its file list against the `make.code.defn` manifests. See [Generated NRPy Boundary](../gems/flux-source/generated-nrpy-boundary.md).
 - **`Neutrinos/NRPyLeakage`:** Checked-in C files and headers govern compiled behavior, including hand-applied C corrections not regenerated from ancestral notebooks; see [Generator Provenance](../gems/neutrinos/generator-provenance.md) and [Physics Model And Sources](../gems/neutrinos/physics-model-and-sources.md).
 
-Evidence (generated evidence): `GRHayL/Flux_Source/generate_flux_source.py::generate_fluxes`; corroboration: `GRHayL/Flux_Source/generate_flux_source.sh`.
+Evidence (generated evidence): `generate_flux_source.py::generate_fluxes`; corroboration: `generate_flux_source.sh`.
 
 ## Sources
 

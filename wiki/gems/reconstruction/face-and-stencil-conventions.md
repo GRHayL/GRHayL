@@ -17,11 +17,11 @@ For standard public wrappers (`ghl_minmod_reconstruction`, `ghl_mc_reconstructio
 
 | Method / layer | Input width | Cell span | Notes |
 | --- | --- | --- | --- |
-| PLM public wrappers | `U[4]` | `i-2 .. i+1` | Tests pass `&var[index - 2]`. (Ev: `GRHayL/include/ghl_reconstruction.h::ghl_minmod_reconstruction`) |
-| PPM & WENO-z public wrappers | `U[6]` | `i-3 .. i+2` | Tests pass `&var[index - 3]`; `ghl_compute_ftilde` uses aligned `pressure[6]` and `v_flux_dirn[6]`. (Ev: `GRHayL/include/ghl_reconstruction.h::ghl_wenoz_reconstruction`) |
-| PPM & WENO-z centered helpers | `U[5]` | `c-2 .. c+2` (`MINUS2..PLUS_2`) | Writes left state at `c+1/2` to `Ur` and right state at `c-1/2` to `Ul`; wrapper calls on `c = i-1` (taking `Ur -> Ul`) and `c = i` (taking `Ul -> Ur`). (Ev: `GRHayL/include/ghl_reconstruction.h::reconstruction_stencil`) |
+| PLM public wrappers | `U[4]` | `i-2 .. i+1` | Tests pass `&var[index - 2]`. (Ev: `ghl_reconstruction.h::ghl_minmod_reconstruction`) |
+| PPM & WENO-z public wrappers | `U[6]` | `i-3 .. i+2` | Tests pass `&var[index - 3]`; `ghl_compute_ftilde` uses aligned `pressure[6]` and `v_flux_dirn[6]`. (Ev: `ghl_reconstruction.h::ghl_wenoz_reconstruction`) |
+| PPM & WENO-z centered helpers | `U[5]` | `c-2 .. c+2` (`MINUS2..PLUS_2`) | Writes left state at `c+1/2` to `Ur` and right state at `c-1/2` to `Ul`; wrapper calls on `c = i-1` (taking `Ur -> Ul`) and `c = i` (taking `Ul -> Ur`). (Ev: `ghl_reconstruction.h::reconstruction_stencil`) |
 
-Evidence (scientific/interface requirement): `GRHayL/include/ghl_reconstruction.h::reconstruction_stencil`; corroboration: `GRHayL/Reconstruction/WENOZ/wenoz_reconstruction.c` and `GRHayL/Reconstruction/PPM/ppm_reconstruction.c`.
+Evidence (scientific/interface requirement): `ghl_reconstruction.h::reconstruction_stencil`; corroboration: `wenoz_reconstruction.c` and `ppm_reconstruction.c`.
 
 ### Exposure, Uniform-Grid Assumptions, And Caller Impact
 
@@ -29,7 +29,7 @@ Evidence (scientific/interface requirement): `GRHayL/include/ghl_reconstruction.
 - **No production in-repo callers:** Only `Unit_Tests/` and `Unit_Tests/data_gen/` call Reconstruction directly; `Flux_Source`, `Induction`, and `GRHayLib` contain no in-tree call edges (downstream host codes connect reconstructed states to fluxes).
 - **Numerical assumptions:** Fixed coefficients assume uniform coordinate spacing. Routines take no grid widths, metric, or EOS struct, return no error status, and do not enforce positivity, EOS consistency, or relativistic velocity bounds. Changing PPM parameters in `ghl_parameters` (`ppm_flattening_*`, `ppm_shock_*`) affects `ghl_compute_ftilde`, `ghl_shock_detection_ftilde`, `ghl_steepen_var`, ET_Legacy reconstruction, and `GRHayLib/param.ccl`.
 
-Evidence (descriptive behavior): `GRHayL/Reconstruction/make.code.defn`; corroboration: `docs/raw/Reconstruction.dox`.
+Evidence (descriptive behavior): `GRHayL/Reconstruction/make.code.defn`; corroboration: `Reconstruction.dox`.
 
 ## Sources
 

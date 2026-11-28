@@ -13,16 +13,16 @@ A Con2Prim method is supported only when enum/name mapping, public declaration, 
 
 | Method / key | Hybrid / Simple | Tabulated (HDF5) | Dispatch, tests & GRHayLib notes |
 | --- | --- | --- | --- |
-| `None` | Sentinel only | Sentinel only | First `None` in `backup_routine[3]` stops retries; GRHayLib permits `None` for backup keywords only. (Ev: `GRHayL/Con2Prim/con2prim_multi_method.c::ghl_con2prim_id_None`) |
-| `Noble2D` | Supported | Supported | Both selectors, manifests, Doxygen, hybrid/tabulated tests, and GRHayLib accept it. (Ev: `GRHayL/include/ghl_con2prim.h::ghl_hybrid_Noble2D`) |
-| `Noble1D` | Supported | Unsupported | Hybrid selector/manifest/tests only; GRHayLib rejects it for tabulated EOS. (Ev: `GRHayL/include/ghl_con2prim.h::ghl_hybrid_Noble1D`) |
-| `Noble1D_entropy` | One-piece constant-`Gamma` only | Unsupported | Requires `neos == 1` and `Gamma_th == Gamma_ppoly[0]` (else `ghl_error_invalid_eos_type`) and valid conserved entropy (unchecked; bad entropy fails in recovery, e.g. `ghl_error_neg_pressure`); Core dispatch does not check `params->evolve_entropy` (GRHayLib does). (Ev: `GRHayL/Con2Prim/Hybrid/Noble/Noble1D/hybrid_Noble1D_entropy.c`) |
-| `Noble1D_entropy2` | One-piece constant-`Gamma` only | Unsupported | Direct density residual (`func_rho2.c`) returning positive unclamped root (post-limiter enforces density bounds); covered in `unit_test_hybrid_failure.c`; same GRHayLib restrictions. (Ev: `GRHayL/Con2Prim/Hybrid/Noble/Noble1D/hybrid_Noble1D_entropy2.c`) |
-| `Font1D` | Hybrid supported | Unsupported | Cold `P`/`eps` use EOS-clamped density while `P/rho` enthalpy closure uses recovered conservation-driven density; `Con2Prim.dox` and GRHayLib exclude simple/tabulated EOS. (Ev: `GRHayL/Con2Prim/Hybrid/Font1D/hybrid_Font1D.c`) |
-| `Palenzuela1D` | Supported | Supported | Both selectors, manifests, tests, and GRHayLib accept it for every EOS family. (Ev: `GRHayL/include/ghl_con2prim.h::ghl_tabulated_Palenzuela1D_energy`) |
-| `Palenzuela1D_entropy` | Supported | Supported | Hybrid requires conserved entropy; tabulated requires it only when `params->evolve_temp` is true; Core does not check `evolve_entropy` (GRHayLib does). (Ev: `GRHayL/Con2Prim/Tabulated/Palenzuela1D/tabulated_Palenzuela1D_entropy.c`) |
-| `Newman1D` / `Newman1D_entropy` | Unsupported | Supported | Tabulated selector/manifest/tests only (`unit_test_con2prim_debug.c` uses `Newman1D`); GRHayLib rejects simple/hybrid and requires `evolve_entropy` for entropy variant. (Ev: `GRHayL/include/ghl_con2prim.h::ghl_tabulated_Newman1D_energy`) |
-| Archival `con2prim_CerdaDuran3D.cc` | Unsupported | Unsupported | Unbuilt archival C++ file excluded by `Doxyfile`, manifests, selector, tests, and commented GRHayLib keywords. (Ev: `GRHayL/Con2Prim/Tabulated/con2prim_CerdaDuran3D.cc`) |
+| `None` | Sentinel only | Sentinel only | First `None` in `backup_routine[3]` stops retries; GRHayLib permits `None` for backup keywords only. (Ev: `con2prim_multi_method.c::ghl_con2prim_id_None`) |
+| `Noble2D` | Supported | Supported | Both selectors, manifests, Doxygen, hybrid/tabulated tests, and GRHayLib accept it. (Ev: `ghl_con2prim.h::ghl_hybrid_Noble2D`) |
+| `Noble1D` | Supported | Unsupported | Hybrid selector/manifest/tests only; GRHayLib rejects it for tabulated EOS. (Ev: `ghl_con2prim.h::ghl_hybrid_Noble1D`) |
+| `Noble1D_entropy` | One-piece constant-`Gamma` only | Unsupported | Requires `neos == 1` and `Gamma_th == Gamma_ppoly[0]` (else `ghl_error_invalid_eos_type`) and valid conserved entropy (unchecked; bad entropy fails in recovery, e.g. `ghl_error_neg_pressure`); Core dispatch does not check `params->evolve_entropy` (GRHayLib does). (Ev: `hybrid_Noble1D_entropy.c`) |
+| `Noble1D_entropy2` | One-piece constant-`Gamma` only | Unsupported | Direct density residual (`func_rho2.c`) returning positive unclamped root (post-limiter enforces density bounds); covered in `unit_test_hybrid_failure.c`; same GRHayLib restrictions. (Ev: `hybrid_Noble1D_entropy2.c`) |
+| `Font1D` | Hybrid supported | Unsupported | Cold `P`/`eps` use EOS-clamped density while `P/rho` enthalpy closure uses recovered conservation-driven density; `Con2Prim.dox` and GRHayLib exclude simple/tabulated EOS. (Ev: `hybrid_Font1D.c`) |
+| `Palenzuela1D` | Supported | Supported | Both selectors, manifests, tests, and GRHayLib accept it for every EOS family. (Ev: `ghl_con2prim.h::ghl_tabulated_Palenzuela1D_energy`) |
+| `Palenzuela1D_entropy` | Supported | Supported | Hybrid requires conserved entropy; tabulated requires it only when `params->evolve_temp` is true; Core does not check `evolve_entropy` (GRHayLib does). (Ev: `tabulated_Palenzuela1D_entropy.c`) |
+| `Newman1D` / `Newman1D_entropy` | Unsupported | Supported | Tabulated selector/manifest/tests only (`unit_test_con2prim_debug.c` uses `Newman1D`); GRHayLib rejects simple/hybrid and requires `evolve_entropy` for entropy variant. (Ev: `ghl_con2prim.h::ghl_tabulated_Newman1D_energy`) |
+| Archival `con2prim_CerdaDuran3D.cc` | Unsupported | Unsupported | Unbuilt archival C++ file excluded by `Doxyfile`, manifests, selector, tests, and commented GRHayLib keywords. (Ev: `con2prim_CerdaDuran3D.cc`) |
 
 ### Parameters, Selectors, And Diagnostics
 
@@ -30,7 +30,7 @@ A Con2Prim method is supported only when enum/name mapping, public declaration, 
 - **Routine names & dispatch:** `ghl_get_con2prim_routine_name` (`get_con2prim_routine_name.c`) maps enum values to strings (`NULL` on unknown) without dispatching. Single-shot selectors (`ghl_con2prim_{hybrid,tabulated}_select_method`) take **undensitized** `cons_undens` and return `ghl_error_invalid_c2p_key` (or `ghl_error_used_disabled_hdf5` under `GHL_DISABLE_HDF5`). Multi-method drivers (`ghl_con2prim_{hybrid,tabulated}_multi_method`) wrap optional guessing and backup retries; process-wide pointer `ghl_con2prim_multi_method` is assigned by `ghl_initialize_eos_functions` or GRHayLib.
 - **`ghl_con2prim_diagnostics` (`initialize_diagnostics.c`):** `tau_fix` and `Stilde_fix` start `false` and accumulate `true` in `apply_conservative_limits.c`; `speed_limited` is written per direct call and OR-accumulated across multi-method attempts; `backup[3]` marks attempted backup slots; `which_routine` starts `ghl_con2prim_id_None` and is written only on solver success; `n_iter` starts `0` with solver-specific semantics ([Internal Numerics And Root-Finding](internal-numerics-and-root-finding.md)).
 
-Evidence (descriptive behavior): `GRHayL/Con2Prim/con2prim_multi_method.c::ghl_con2prim_hybrid_select_method`; corroboration: `GRHayL/Con2Prim/get_con2prim_routine_name.c::ghl_get_con2prim_routine_name` and `GRHayL/Con2Prim/initialize_diagnostics.c::ghl_initialize_diagnostics`.
+Evidence (descriptive behavior): `con2prim_multi_method.c::ghl_con2prim_hybrid_select_method`; corroboration: `get_con2prim_routine_name.c::ghl_get_con2prim_routine_name` and `initialize_diagnostics.c::ghl_initialize_diagnostics`.
 
 ## Sources
 

@@ -15,12 +15,12 @@ Simple EOS (`ghl_eos_simple`) sets `neos = 1`, `Gamma_th = Gamma_ppoly[0] = Gamm
 
 | Helper | File | Behavior & preconditions |
 | --- | --- | --- |
-| `NRPyEOS_find_polytropic_index` / `_from_P` | `NRPyEOS_find_polytropic_index.c`, `NRPyEOS_find_polytropic_index_from_P.c` | Selects piece index from `neos - 1` `rho_ppoly` or `p_ppoly` transitions; returns `0` for one-piece EOS. (Ev: `GRHayL/EOS/Hybrid/NRPyEOS_find_polytropic_index.c`) |
-| `NRPyEOS_get_K_and_Gamma` / `NRPyEOS_set_K_ppoly_and_eps_integ_consts` | `NRPyEOS_get_K_and_gamma.c`, `NRPyEOS_set_K_ppoly_and_eps_integ_consts.c` | Looks up active `(K, Gamma)` or enforces pressure/energy continuity across transitions. (Ev: `GRHayL/EOS/Hybrid/NRPyEOS_set_K_ppoly_and_eps_integ_consts.c`) |
-| `NRPyEOS_compute_P_cold` / `_and_eps_cold` | `NRPyEOS_compute_P_cold.c`, `NRPyEOS_compute_P_cold_and_eps_cold.c` | Evaluates cold polytropic `P_cold` and `eps_cold`; `_and_eps_cold` clamps density first via `NRPyEOS_hybrid_enforce_bounds__rho`. (Ev: `GRHayL/EOS/Hybrid/NRPyEOS_compute_P_cold_and_eps_cold.c`) |
-| `NRPyEOS_hybrid_compute_epsilon` / `NRPyEOS_compute_entropy_function` | `NRPyEOS_hybrid_compute_epsilon.c`, `NRPyEOS_compute_entropy_function.c` | Adds thermal energy `(P - P_cold) / ((Gamma_th - 1) * rho)` using bounded cold values and original `rho`; computes `P / rho^(Gamma_ppoly - 1)`. (Ev: `GRHayL/EOS/Hybrid/NRPyEOS_hybrid_compute_epsilon.c`) |
-| `NRPyEOS_hybrid_compute_rho_cold_from_P_cold` / `NRPyEOS_hybrid_enforce_bounds__rho` | `NRPyEOS_hybrid_compute_rho_cold_from_P_cold.c`, `NRPyEOS_enforce_bounds.c` | Inverts `P_cold` (requires nonzero `K_ppoly`) and clamps `rho` to `[rho_min, rho_max]`. (Ev: `GRHayL/EOS/Hybrid/NRPyEOS_enforce_bounds.c`) |
-| `NRPyEOS_hybrid_compute_enthalpy_and_cs2` | `NRPyEOS_hybrid_compute_enthalpy_and_cs2.c` | Backs `ghl_compute_h_and_cs2`; returns `ghl_success` unconditionally without clamping `prims->rho`, checking finiteness, or cleaning negative/superluminal `cs2`; mixes bounded cold terms with original `rho` if caller supplies out-of-domain density. (Ev: `GRHayL/EOS/Hybrid/NRPyEOS_hybrid_compute_enthalpy_and_cs2.c`) |
+| `NRPyEOS_find_polytropic_index` / `_from_P` | `NRPyEOS_find_polytropic_index.c`, `NRPyEOS_find_polytropic_index_from_P.c` | Selects piece index from `neos - 1` `rho_ppoly` or `p_ppoly` transitions; returns `0` for one-piece EOS. (Ev: `NRPyEOS_find_polytropic_index.c`) |
+| `NRPyEOS_get_K_and_Gamma` / `NRPyEOS_set_K_ppoly_and_eps_integ_consts` | `NRPyEOS_get_K_and_gamma.c`, `NRPyEOS_set_K_ppoly_and_eps_integ_consts.c` | Looks up active `(K, Gamma)` or enforces pressure/energy continuity across transitions. (Ev: `NRPyEOS_set_K_ppoly_and_eps_integ_consts.c`) |
+| `NRPyEOS_compute_P_cold` / `_and_eps_cold` | `NRPyEOS_compute_P_cold.c`, `NRPyEOS_compute_P_cold_and_eps_cold.c` | Evaluates cold polytropic `P_cold` and `eps_cold`; `_and_eps_cold` clamps density first via `NRPyEOS_hybrid_enforce_bounds__rho`. (Ev: `NRPyEOS_compute_P_cold_and_eps_cold.c`) |
+| `NRPyEOS_hybrid_compute_epsilon` / `NRPyEOS_compute_entropy_function` | `NRPyEOS_hybrid_compute_epsilon.c`, `NRPyEOS_compute_entropy_function.c` | Adds thermal energy `(P - P_cold) / ((Gamma_th - 1) * rho)` using bounded cold values and original `rho`; computes `P / rho^(Gamma_ppoly - 1)`. (Ev: `NRPyEOS_hybrid_compute_epsilon.c`) |
+| `NRPyEOS_hybrid_compute_rho_cold_from_P_cold` / `NRPyEOS_hybrid_enforce_bounds__rho` | `NRPyEOS_hybrid_compute_rho_cold_from_P_cold.c`, `NRPyEOS_enforce_bounds.c` | Inverts `P_cold` (requires nonzero `K_ppoly`) and clamps `rho` to `[rho_min, rho_max]`. (Ev: `NRPyEOS_enforce_bounds.c`) |
+| `NRPyEOS_hybrid_compute_enthalpy_and_cs2` | `NRPyEOS_hybrid_compute_enthalpy_and_cs2.c` | Backs `ghl_compute_h_and_cs2`; returns `ghl_success` unconditionally without clamping `prims->rho`, checking finiteness, or cleaning negative/superluminal `cs2`; mixes bounded cold terms with original `rho` if caller supplies out-of-domain density. (Ev: `NRPyEOS_hybrid_compute_enthalpy_and_cs2.c`) |
 
 ### Preconditions And Direct Test Coverage
 
@@ -28,7 +28,7 @@ Every `ghl_hybrid_*` declaration in `ghl_eos_functions.h` has matching storage a
 
 `Unit_Tests/unit_test_piecewise_polytrope.c` tests four-piece `K_ppoly`, `eps_integ_const`, and all three `p_ppoly` transitions against independent adjacent-piece formulas, plus a one-piece sentinel and an exact-extent two-piece breakpoint case; invalid `neos`, breakpoint ordering, and gamma-domain errors remain test gaps.
 
-Evidence (descriptive behavior): `GRHayL/EOS/Hybrid/make.code.defn`; corroboration: `Unit_Tests/unit_test_piecewise_polytrope.c`.
+Evidence (descriptive behavior): `GRHayL/EOS/Hybrid/make.code.defn`; corroboration: `unit_test_piecewise_polytrope.c`.
 
 ## Sources
 

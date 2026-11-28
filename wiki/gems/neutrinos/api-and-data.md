@@ -19,7 +19,7 @@
 
 Public headers do not assign named labels to slots `[0]` and `[1]`. Implementation formulas pair slot `[0]` with `R_source` and equilibrium-degeneracy interpolation and pair slot `[1]` with `Q_source` and luminosity suppression; keep `[0]`/`[1]` indexing at caller boundaries. Binary luminosity reference files serialize both `ghl_neutrino_optical_depths` (unperturbed input records) and `ghl_neutrino_luminosities` as raw structs, making field declaration order in both `ghl_neutrino_opacities` and `ghl_neutrino_luminosities` part of luminosity reference layout, whereas constant-density-sphere opacity and optical-depth reference files store twelve separate arrays in species-then-slot order.
 
-Evidence (scientific/interface requirement): `GRHayL/include/ghl_radiation.h::ghl_neutrino_opacities`; corroboration: `GRHayL/include/ghl_radiation.h::ghl_neutrino_luminosities`.
+Evidence (scientific/interface requirement): `ghl_radiation.h::ghl_neutrino_opacities`; corroboration: `ghl_radiation.h::ghl_neutrino_luminosities`.
 
 ### Public NRPyLeakage Entry Points And Portability Boundary
 
@@ -35,7 +35,7 @@ Every implementation file includes `ghl_radiation.h`, binding signatures and bod
 
 Porting NRPyLeakage to another host requires: (1) supplying the six EOS outputs in the units specified in [EOS Inputs And Chemical Potentials](eos-inputs-and-chemical-potentials.md), (2) preserving or translating the three-species/two-slot arrays, (3) replacing GRHayL return codes and `NRPYLEAKAGE_FD_OR_RETURN` without altering early-exit writeback behavior, (4) keeping density, opacity, source, luminosity, and cgs suppression-ratio conversions mutually consistent, (5) carrying the private blocking and rate headers (or equivalent behavior), and (6) revalidating finite-value classification, metric conventions, and path lengths.
 
-Evidence (descriptive behavior): `GRHayL/include/ghl_nrpyleakage.h::NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms`; corroboration: `GRHayL/include/ghl_nrpyleakage.h::NRPYLEAKAGE_FD_OR_RETURN`.
+Evidence (descriptive behavior): `ghl_nrpyleakage.h::NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms`; corroboration: `ghl_nrpyleakage.h::NRPYLEAKAGE_FD_OR_RETURN`.
 
 ### Input Preconditions, Constants, And Floating-Point Discipline
 
@@ -50,7 +50,7 @@ Routines do not perform general null-pointer checks. Caller preconditions establ
 
 `GRHayL/include/ghl_nrpyleakage.h` defines all physical constants, switches, unit macros, `robust_isnan`, `robust_isfinite`, and `NRPYLEAKAGE_FD_OR_RETURN`. On IEEE binary64 systems, `robust_isnan` and `robust_isfinite` use alias-safe `memcpy` to `uint64_t` with exponent/fraction bit masks, falling back to C99 predicates on non-binary64 targets. Because unsafe floating-point flags can corrupt preceding arithmetic, `configure` rejects `-ffast-math`, `-Ofast`, `-ffinite-math-only`, `-funsafe-math-optimizations`, `-fassociative-math`, `-freciprocal-math`, `-fno-signed-zeros`, `-fno-trapping-math`, Intel `-ftz`, and Intel fast floating-point models, probes predefined fast/finite-only macros and gradual underflow, and appends `-fp-model=precise -no-ftz` for Intel LLVM (which direct builds and executable links must retain).
 
-Evidence (normative rule): `configure::no-ftz`; corroboration: `GRHayL/include/ghl_nrpyleakage.h::robust_isfinite`.
+Evidence (normative rule): `configure::no-ftz`; corroboration: `ghl_nrpyleakage.h::robust_isfinite`.
 
 ### Error Behavior And Writeback Guarantees
 
@@ -62,7 +62,7 @@ Evidence (normative rule): `configure::no-ftz`; corroboration: `GRHayL/include/g
 
 No-HDF5 builds still compile all guarded NRPyLeakage implementation files so `ghl_error_used_disabled_hdf5` paths remain linkable; `configure` excludes only the table-backed NRPyLeakage tests while keeping `unit_test_nrpyleakage_physics.c` and `unit_test_nrpyleakage_classifier_fallback.c`. Test-only EOS setup calls (`ghl_initialize_tabulated_eos_functions_and_params`, `ghl_tabulated_compute_eps_from_T`, `ghl_tabulated_compute_T_from_eps`) live in `Unit_Tests/nrpyleakage_main.h` and `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`.
 
-Evidence (descriptive behavior): `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_Fermi_Dirac_integrals.c::NRPyLeakage_Fermi_Dirac_integrals`; corroboration: `GRHayL/include/ghl.h::ghl_error_nrpyleakage_blocking`.
+Evidence (descriptive behavior): `NRPyLeakage_Fermi_Dirac_integrals.c::NRPyLeakage_Fermi_Dirac_integrals`; corroboration: `ghl.h::ghl_error_nrpyleakage_blocking`.
 
 ## Sources
 

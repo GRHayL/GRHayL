@@ -23,7 +23,7 @@ Scripted and workflow runs download `ET_Legacy_*_{input,output,output_pert}.bin`
 - **`ET_Legacy_induction_gauge_rhs`:** enforces strict nonfinite rejection throughout the compared interior against externally supplied legacy outputs.
 - **`ET_Legacy_reconstruction`:** exercises PPM reconstruction paths; its local generator writes perturbed input that replay never reads (`CONTR-0012`).
 
-Evidence (descriptive behavior): `Unit_Tests/unit_test_ET_Legacy_primitives.c`; corroboration: `Unit_Tests/data_gen/unit_test_data_ET_Legacy_conservs.c` and `Unit_Tests/unit_test_ET_Legacy_reconstruction.c`.
+Evidence (descriptive behavior): `unit_test_ET_Legacy_primitives.c`; corroboration: `unit_test_data_ET_Legacy_conservs.c` and `unit_test_ET_Legacy_reconstruction.c`.
 
 ### ET Legacy Family Map And GRHayLib Proof Boundary
 

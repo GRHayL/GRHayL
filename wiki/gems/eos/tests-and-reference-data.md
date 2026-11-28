@@ -16,7 +16,7 @@ Direct EOS validation spans `unit_test_piecewise_polytrope.c` (hybrid), `unit_te
 - **`unit_test_tabulated_eos_compose.c` & `Unit_Tests/compose/`:** CI (`compose-regularized-eos` in Ubuntu GCC) runs `coverage report --fail-under=100` across both `Unit_Tests/compose/test_*.py` suites on `tools/compose/compose_to_grhayl.py` using an asymmetric synthetic CompOSE input and feeds the converted file into `unit_test_tabulated_eos_compose.c`, which verifies all 19 fields at every node, storage-space interpolation and `eps`/`P`/`S`/`h` inversions, the six-output leakage wrapper, no-fallback Palenzuela recovery, analytic speed/flux/source goldens, implementation-derived combined-leakage regression goldens, and cleanup (CI runs the synthetic table; full SRO-141 replay is manual).
 - **`unit_test_code_error.c`:** covers simple/hybrid/tabulated setup, interpolation bounds, too-many-variable calls, malformed `test.h5` reads, invalid EOS/table types, beta-equilibrium bracketing, key `85` (poisoned fresh struct on missing `grhayl_nn_c2p`), and keys `89`–`90` (tabulated Newman1D/Palenzuela1D `ghl_error_table_bisection`). HDF5-only keys skip under `GHL_DISABLE_HDF5`.
 
-Evidence (descriptive behavior): `Unit_Tests/unit_test_tabulated_eos.c`; corroboration: `Unit_Tests/unit_test_tabulated_eos_compose.c` and `Unit_Tests/unit_test_piecewise_polytrope.c`.
+Evidence (descriptive behavior): `unit_test_tabulated_eos.c`; corroboration: `unit_test_tabulated_eos_compose.c` and `unit_test_piecewise_polytrope.c`.
 
 ### Helper Files, Sample Tables, And Coverage Gaps
 

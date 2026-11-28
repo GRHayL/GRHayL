@@ -15,13 +15,13 @@
 - **Fixed parameters:** No runtime WENO parameter struct exists. `wenoz_reconstruction_right_left_faces.c` (which also holds upstream provenance/license comments) hard-codes linear weights `{0.1, 0.6, 0.3}`, regularization epsilon `1e-100`, and MC fallback coefficient `2.0`.
 - **Overflow and non-positivity caveats:** Fixed regularization with unscaled double-precision weight ratios can overflow on extreme smoothness contrasts (for example, `{0, 0, 0, 1e105, 1e105}` yields nonfinite outputs). The MC blend does not guarantee positivity or local-bound preservation: on the strictly positive centered stencil `{9, 1, 1, 9, 25}`, equal smoothness indicators and zero MC slope retain a WENO left-face value near `-1/3`. Callers enforce physical floors separately.
 
-Evidence (descriptive behavior): `GRHayL/Reconstruction/WENOZ/wenoz_reconstruction_right_left_faces.c::ghl_wenoz_reconstruction_right_left_faces`; corroboration: `GRHayL/Reconstruction/WENOZ/wenoz_reconstruction.c::ghl_wenoz_reconstruction`.
+Evidence (descriptive behavior): `wenoz_reconstruction_right_left_faces.c::ghl_wenoz_reconstruction_right_left_faces`; corroboration: `wenoz_reconstruction.c::ghl_wenoz_reconstruction`.
 
 ### Build Membership And Test Routing
 
 `GRHayL/Reconstruction/WENOZ/make.code.defn` builds both WENO-z C files. `Unit_Tests/unit_test_WENOZ_reconstruction.c` compares wrapper `Ur`/`Ul` against `WENOZ_reconstruction_{input,output,output_pert}.bin` (produced by `unit_test_data_WENOZ_reconstruction.c` over `3 <= index < arraylength - 2` with zero boundary placeholders) and does not call the 5-point helper directly. Every compiler workflow runs `WENOZ_reconstruction` in its `reconstruction` job matrix, whereas `.github/run_tests.sh` omits it.
 
-Evidence (descriptive behavior): `GRHayL/Reconstruction/WENOZ/make.code.defn`; corroboration: `Unit_Tests/unit_test_WENOZ_reconstruction.c`.
+Evidence (descriptive behavior): `GRHayL/Reconstruction/WENOZ/make.code.defn`; corroboration: `unit_test_WENOZ_reconstruction.c`.
 
 ## Sources
 

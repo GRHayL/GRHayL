@@ -16,7 +16,7 @@ Declared in `GRHayL/include/ghl_flux_source.h` as `ghl_calculate_source_terms` (
 - **Output & mutation:** Calls `ghl_compute_h_and_cs2(eos, prims, &h, &cs2)` (`cs2` unused). On callback failure, `_checked` returns the exact error and leaves `cons` untouched while any tabulated primitive clamping on `prims` is not rolled back (pass a copy if immutability is needed). On success, writes only `cons->SD[0..2]` and `cons->tau`; `rho`, `Y_e`, and `entropy` keep prior values.
 - **Scope:** Computes stress-energy algebra inline without calling `ghl_compute_TDNmunu`/`TUPmunu`. Neutrino matter sources (`R_source`, `Q_source`) live separately in [Physics Model And Sources](../neutrinos/physics-model-and-sources.md).
 
-Evidence (descriptive behavior): `GRHayL/Flux_Source/ghl_calculate_source_terms.c::ghl_calculate_source_terms_checked`; corroboration: `GRHayL/include/ghl_flux_source.h::ghl_calculate_source_terms`.
+Evidence (descriptive behavior): `ghl_calculate_source_terms.c::ghl_calculate_source_terms_checked`; corroboration: `ghl_flux_source.h::ghl_calculate_source_terms`.
 
 ### Test Coverage
 

@@ -25,7 +25,7 @@ Every standalone C unit-test driver (`Unit_Tests/unit_test_*.c`) and CompOSE Pyt
 | `unit_test_con2prim_debug.c` | Hard-coded tabulated C2P stderr debug dump. | HDF5 manual-only; [Con2Prim Tests](../gems/con2prim/tests-and-reference-data.md) |
 | `unit_test_piecewise_polytrope.c` | Piecewise-polytrope `K_ppoly`, `eps_integ_const`, transitions. | Default, no data; [EOS Tests](../gems/eos/tests-and-reference-data.md) |
 | `unit_test_tabulated_eos.c` | `simple_table.h5` read, interpolators, bounds, beta-eq. | HDF5; [EOS Tests](../gems/eos/tests-and-reference-data.md) |
-| `unit_test_tabulated_eos_compose.c` | Converted CompOSE table EOS/C2P/flux/leakage integration. | HDF5 CI-only; [CompOSE Callback](../gems/neutrinos/compose-eos-leakage-callback.md) |
+| `unit_test_tabulated_eos_compose.c` | Converted CompOSE table EOS/C2P/flux/leakage integration. | HDF5 (CLI table; synthetic in CI); [CompOSE Callback](../gems/neutrinos/compose-eos-leakage-callback.md) |
 | `compose/test_compose_to_grhayl.py` | Python CompOSE conversion, regularization, and metadata. | Python CI; [CompOSE Conversion](../gems/neutrinos/compose-eos-conversion-and-regularization.md) |
 | `compose/test_compose_failure_coverage.py` | Python CompOSE error-branch tests (CI 100% check). | Python CI; [CompOSE Conversion](../gems/neutrinos/compose-eos-conversion-and-regularization.md) |
 | `unit_test_hybrid_flux.c` | Hybrid and hybrid-entropy directional HLLE fluxes. | Default; [Flux_Source Tests](../gems/flux-source/tests-and-reference-data.md) |
@@ -53,7 +53,7 @@ Every standalone C unit-test driver (`Unit_Tests/unit_test_*.c`) and CompOSE Pyt
 | `unit_test_ET_Legacy_induction_gauge_rhs.c` | ET_Legacy BSSN interpolation and gauge RHS replay. | Default; [ET Legacy](et-legacy-comparison.md) |
 | `unit_test_ET_Legacy_reconstruction.c` | ET_Legacy PPM face reconstruction replay. | Default; [ET Legacy](et-legacy-comparison.md) |
 
-Evidence (descriptive behavior): `configure::unit_test_`; corroboration: `Unit_Tests/compose/test_compose_to_grhayl.py` and `Unit_Tests/compose/test_compose_failure_coverage.py`.
+Evidence (descriptive behavior): `configure::unit_test_`; corroboration: `test_compose_to_grhayl.py` and `test_compose_failure_coverage.py`.
 
 ## Sources
 
